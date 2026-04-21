@@ -4,91 +4,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>ASTON 智能报价系统 V6.6</title>
+    <title>ASTON 报价 V6.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f1f5f9; }
-        .btn-active { background: #2563eb !important; color: white !important; border-color: #2563eb !important; }
-        .card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; }
-        .tier-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
-        .tier-table td { padding: 12px; background: #1e293b; color: white; font-weight: 700; border-radius: 8px; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; }
+        .btn-active { background: #2563eb !important; color: white !important; }
+        .card { background: white; border-radius: 1rem; border: 1px solid #e2e8f0; }
+        .tier-table { width: 100%; }
+        .tier-table td { padding: 8px 12px; background: #1e293b; color: white; font-weight: 700; border-radius: 6px; }
         .active-tier td { background: #2563eb !important; }
     </style>
 </head>
-<body class="p-3">
+<body class="p-2">
     <div id="loading" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-xs font-bold text-slate-400">正在同步数据，请稍候...</p>
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+        <p class="text-[10px] font-bold text-slate-400">LOADING V6.7...</p>
     </div>
 
-    <div class="max-w-4xl mx-auto space-y-4">
-        <!-- 商务信息 -->
-        <div class="card p-5 space-y-4">
-            <h2 class="text-xs font-black text-slate-400 uppercase">商务信息 (Business Info)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input list="sales-list" id="sales" oninput="updateSummary()" placeholder="选择业务员..." class="w-full p-3 rounded-xl border text-sm font-bold">
-                <input type="text" id="client" oninput="updateSummary()" placeholder="输入客户名称..." class="w-full p-3 rounded-xl border text-sm font-bold">
+    <div class="max-w-4xl mx-auto space-y-3">
+        <div class="card p-4 space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <input list="sales-list" id="sales" oninput="updateSummary()" placeholder="业务员..." class="w-full p-3 rounded-lg border text-sm font-bold bg-slate-50">
+                <input type="text" id="client" oninput="updateSummary()" placeholder="客户/项目..." class="w-full p-3 rounded-lg border text-sm font-bold bg-slate-50">
             </div>
         </div>
 
-        <!-- 报价主区 -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div class="lg:col-span-7 space-y-4">
-                <div class="card p-5 space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">01. 选择款式</label>
-                        <div id="style-btns" class="grid grid-cols-2 gap-2"></div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">修正系数</label>
-                        <div id="mod-btns" class="grid grid-cols-2 gap-2"></div>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">目标尺码</label>
-                        <div id="size-btns" class="grid grid-cols-4 gap-2"></div>
-                        <div id="size-tip" class="mt-2 text-[10px] text-blue-600 font-bold hidden">基准尺码: <span id="ref-size"></span></div>
-                    </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+            <div class="lg:col-span-7 space-y-3">
+                <div class="card p-4 space-y-4">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase">01. 版型/修正/尺码</label>
+                    <div id="style-btns" class="grid grid-cols-2 gap-2"></div>
+                    <div id="mod-btns" class="grid grid-cols-2 gap-2"></div>
+                    <div id="size-btns" class="grid grid-cols-4 gap-2"></div>
+                    <div id="size-tip" class="p-2 bg-blue-50 rounded-lg text-[10px] text-blue-600 font-bold hidden">基准: <span id="ref-size"></span> | 用料: <span id="display-cons">0</span>㎡</div>
                 </div>
-
-                <div class="card p-5">
-                    <h2 class="text-[10px] font-bold text-emerald-600 uppercase mb-4">02. 特色工艺项</h2>
-                    <div id="proc-btns" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                <div class="card p-4">
+                    <label class="block text-[10px] font-bold text-emerald-600 uppercase mb-3">02. 特色工艺</label>
+                    <div id="proc-btns" class="grid grid-cols-1 gap-2"></div>
                 </div>
-
-                <div class="card p-5 space-y-4">
-                    <h2 class="text-[10px] font-bold text-orange-600 uppercase">03. 面料选择</h2>
-                    <div class="flex p-1 bg-slate-100 rounded-lg gap-1">
-                        <button id="loose" class="flex-1 py-2 rounded-md font-bold text-[10px] btn-active" onclick="setMode('loose')">散剪模式</button>
-                        <button id="roll" class="flex-1 py-2 rounded-md font-bold text-[10px]" onclick="setMode('roll')">整卷模式</button>
-                    </div>
-                    <input type="text" id="f-search" oninput="renderFabrics()" placeholder="🔍 搜索面料库..." class="w-full p-3 rounded-xl border text-sm">
-                    <div id="f-list" class="max-h-48 overflow-y-auto space-y-2"></div>
+                <div class="card p-4 space-y-3">
+                    <label class="block text-[10px] font-bold text-orange-600 uppercase">03. 面料搜索</label>
+                    <input type="text" id="f-search" oninput="renderFabrics()" placeholder="🔍 搜索面料..." class="w-full p-3 rounded-lg border text-sm">
+                    <div id="f-list" class="max-h-40 overflow-y-auto space-y-2"></div>
                 </div>
             </div>
 
-            <!-- 结果区 -->
             <div class="lg:col-span-5">
-                <div class="card p-6 bg-slate-900 text-white sticky top-4 space-y-6 text-center">
-                    <div id="p-header" class="hidden text-left border-b border-slate-700 pb-3 mb-3">
-                        <p class="text-xs font-bold">Sales: <span id="s-val"></span></p>
-                        <p class="text-xs font-bold">Client: <span id="c-val"></span></p>
-                    </div>
+                <div class="card p-5 bg-slate-900 text-white sticky top-2 space-y-5 text-center">
                     <div>
-                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Unit Price USD</p>
-                        <div class="flex justify-center items-baseline gap-1">
-                            <span class="text-2xl text-blue-500 font-bold">$</span>
-                            <span id="res-usd" class="text-6xl font-black">0.00</span>
-                        </div>
+                        <p class="text-slate-500 text-[10px] font-bold uppercase mb-1">Final Price USD</p>
+                        <div class="flex justify-center items-baseline"><span class="text-xl text-blue-500 font-bold">$</span><span id="res-usd" class="text-5xl font-black">0.00</span></div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-                        <div><p class="text-slate-500 text-[10px] font-bold">RMB</p><p id="res-rmb" class="text-xl font-bold">¥ 0.00</p></div>
-                        <div><p class="text-emerald-500 text-[10px] font-bold">MOQ</p><p id="res-moq" class="text-xl font-bold text-emerald-400">0</p></div>
+                    <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-800">
+                        <div><p class="text-slate-500 text-[9px] uppercase">RMB</p><p id="res-rmb" class="text-lg font-bold">¥ 0.00</p></div>
+                        <div><p class="text-emerald-500 text-[9px] uppercase">MOQ</p><p id="res-moq" class="text-lg font-bold text-emerald-400">0</p></div>
                     </div>
-                    <div class="pt-4 border-t border-slate-800">
-                        <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-4">Spot Tiered Prices</h3>
+                    <div class="pt-3 border-t border-slate-800">
                         <table class="tier-table"><tbody id="tier-body"></tbody></table>
                     </div>
-                    <button class="w-full bg-blue-600 py-4 rounded-xl font-bold text-xs uppercase" onclick="doPrint()">导出报告 / 打印</button>
+                    <button class="w-full bg-blue-600 py-3 rounded-lg font-bold text-xs uppercase" onclick="window.print()">打印报价单</button>
                 </div>
             </div>
         </div>
@@ -107,8 +81,7 @@
         };
 
         let activeStyle = DB.styles[1] || DB.styles[0];
-        let activeMods = []; let activeSizes = []; let mode = 'loose';
-        let selFabric = DB.fabrics[0] || null;
+        let activeMods = []; let activeSizes = []; let selFabric = DB.fabrics[0] || null;
 
         function init() {
             try {
@@ -130,34 +103,30 @@
                     b.className = "p-2 rounded-lg text-[10px] border bg-white text-slate-400 font-bold";
                     b.onclick = () => {
                         if(activeSizes.includes(k)) activeSizes = activeSizes.filter(x => x!==k); else activeSizes.push(k);
-                        b.classList.toggle('btn-active'); b.classList.toggle('text-slate-400'); updateSizes();
+                        b.classList.toggle('btn-active'); b.classList.toggle('text-white'); b.classList.toggle('text-slate-400'); updateSizes();
                     };
                     sz.appendChild(b);
                 });
                 renderUI();
-                document.getElementById('loading').style.display = 'none';
-            } catch(e) {
-                console.error(e);
-                document.getElementById('loading').innerHTML = '<p class="text-red-500 font-bold">加载失败，请检查数据格式</p>';
-            }
+            } catch(e) { console.error(e); } 
+            finally { setTimeout(() => document.getElementById('loading').style.display = 'none', 1000); }
         }
 
-        function renderUI() {
-            renderMods(); renderProc(); renderFabrics(); calculate();
-        }
+        function renderUI() { renderMods(); renderProc(); renderFabrics(); calculate(); }
 
         function renderMods() {
             const g = document.getElementById('mod-btns'); g.innerHTML = "";
-            const pref = activeStyle.name.split('.')[0];
-            DB.modifiers.filter(m => m.target.includes(pref) || m.target.includes("通用")).forEach(m => {
-                const b = document.createElement('button'); b.innerText = m.name;
-                const act = activeMods.some(x => x.name === m.name);
-                b.className = `p-2 rounded-lg text-[10px] border font-bold ${act?'btn-active':'bg-white text-slate-500'}`;
-                b.onclick = () => {
-                    if(act) activeMods = activeMods.filter(x => x.name !== m.name); else activeMods.push(m);
-                    renderMods(); calculate();
-                };
-                g.appendChild(b);
+            DB.modifiers.forEach(m => {
+                if(m.target === "通用" || activeStyle.name.includes(m.target) || m.target.includes(activeStyle.name.split('.')[0])) {
+                    const b = document.createElement('button'); b.innerText = m.name;
+                    const act = activeMods.some(x => x.name === m.name);
+                    b.className = `p-2 rounded-lg text-[10px] border font-bold ${act?'btn-active':'bg-white text-slate-500'}`;
+                    b.onclick = () => {
+                        if(act) activeMods = activeMods.filter(x => x.name !== m.name); else activeMods.push(m);
+                        renderMods(); calculate();
+                    };
+                    g.appendChild(b);
+                }
             });
         }
 
@@ -165,12 +134,14 @@
             const g = document.getElementById('proc-btns');
             const checked = Array.from(document.querySelectorAll('#proc-btns input:checked')).map(i => i.dataset.name);
             g.innerHTML = "";
-            const pref = activeStyle.name.split('.')[0];
-            DB.processes.filter(p => p.targets.includes(pref) || p.targets.includes("通用")).forEach(p => {
-                const d = document.createElement('div');
-                d.className = "p-3 bg-white border rounded-xl flex items-center justify-between cursor-pointer";
-                d.innerHTML = `<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="${p.name}" ${checked.includes(p.name)?'checked':''}> <span class="text-[10px] font-bold">${p.name}</span></div> <span class="text-[10px] text-emerald-600 font-bold">¥${p.price}</span>`;
-                g.appendChild(d);
+            DB.processes.forEach(p => {
+                const match = p.targets.some(t => t === "通用" || activeStyle.name.includes(t) || t.includes(activeStyle.name.split('.')[0]));
+                if(match) {
+                    const d = document.createElement('div');
+                    d.className = "p-3 bg-white border rounded-xl flex items-center justify-between";
+                    d.innerHTML = `<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="${p.name}" ${checked.includes(p.name)?'checked':''}> <span class="text-[10px] font-bold">${p.name}</span></div> <span class="text-[10px] text-emerald-600 font-bold">¥${p.price}</span>`;
+                    g.appendChild(d);
+                }
             });
         }
 
@@ -178,10 +149,9 @@
             const s = document.getElementById('f-search').value.toLowerCase();
             const g = document.getElementById('f-list'); g.innerHTML = "";
             DB.fabrics.filter(f => f.name.toLowerCase().includes(s)).forEach(f => {
-                const p = mode === 'loose' ? f.price_loose : f.price_roll;
                 const d = document.createElement('div');
                 d.className = `p-3 border rounded-xl flex justify-between cursor-pointer ${selFabric?.id === f.id ? 'bg-orange-50 border-orange-400' : 'bg-white'}`;
-                d.innerHTML = `<span class="text-[10px] font-bold">${f.name}</span> <span class="text-[10px] text-orange-600 font-bold">¥${p}</span>`;
+                d.innerHTML = `<span class="text-[10px] font-bold">${f.name}</span> <span class="text-[10px] text-orange-600 font-bold">¥${f.price_loose}</span>`;
                 d.onclick = () => { selFabric = f; renderFabrics(); };
                 g.appendChild(d);
             });
@@ -197,48 +167,34 @@
             calculate();
         }
 
-        function setMode(m) { mode = m; document.getElementById('loose').className = m==='loose'?'flex-1 py-2 rounded-md font-bold text-[10px] btn-active':'flex-1 py-2 rounded-md font-bold text-[10px]'; document.getElementById('roll').className = m==='roll'?'flex-1 py-2 rounded-md font-bold text-[10px] btn-active':'flex-1 py-2 rounded-md font-bold text-[10px]'; renderFabrics(); }
         function updateSummary() { document.getElementById('s-val').innerText = document.getElementById('sales').value; document.getElementById('c-val').innerText = document.getElementById('client').value; }
-        function doPrint() { document.getElementById('p-header').style.display = 'block'; window.print(); }
 
         function calculate() {
             const ref = document.getElementById('ref-size').innerText;
             if(!activeStyle || !ref || !selFabric) return;
-            
-            const qCons = activeStyle.sizes[ref] || 0;
-            const keys = Object.keys(activeStyle.sizes);
-            const moqSz = keys[keys.indexOf(ref)-1] || ref;
-            const mCons = activeStyle.sizes[moqSz] || 0;
-            
-            let f = 1.0; activeMods.forEach(m => f *= m.factor);
-            const finalQCons = qCons * f;
-            const finalMCons = mCons * f;
+            let qCons = activeStyle.sizes[ref] || 0;
+            let f = 1.0; activeMods.forEach(m => f *= m.factor); qCons *= f;
+            document.getElementById('display-cons').innerText = qCons.toFixed(3);
 
-            const fP = mode === 'loose' ? selFabric.price_loose : selFabric.price_roll;
             let extra = 0;
             document.querySelectorAll('#proc-btns input:checked').forEach(i => {
                 const p = DB.processes.find(x => x.name === i.dataset.name);
-                extra += p.price;
+                if(p) extra += p.price;
             });
 
-            const rmb = (finalQCons * fP * 1.1 + activeStyle.baseLabor + extra + 1.5) / 0.7;
-            const usd = rmb / 6.7;
-
+            const rmb = (qCons * selFabric.price_loose * 1.1 + activeStyle.baseLabor + extra + 1.5) / (DB.config.margin_coefficient || 0.7);
+            const usd = rmb / (DB.config.exchange_rate || 6.7);
             document.getElementById('res-usd').innerText = usd.toFixed(2);
             document.getElementById('res-rmb').innerText = "¥ " + rmb.toFixed(2);
             
-            let moq = 0;
-            if(selFabric.unit === 'kg') { moq = (selFabric.rollQty / (finalMCons * 0.22)); } 
-            else { moq = (selFabric.rollQty / (finalMCons / (1.45/100))); }
-            moq = Math.round(moq);
+            let moq = Math.round(selFabric.rollQty / (qCons * 0.22));
             document.getElementById('res-moq').innerText = moq;
 
             const diff = usd < 1.5 ? 0.05 : usd < 3 ? 0.1 : usd < 5 ? 0.15 : 0.2;
             const tb = document.getElementById('tier-body'); tb.innerHTML = "";
-            const getIdx = (q) => q < 100 ? 0 : q < 300 ? 1 : q < 500 ? 2 : 3;
-            const curIdx = getIdx(moq);
-            const brackets = [{l:"0-99"}, {l:"100-299"}, {l:"300-499"}, {l:">500"}];
-            brackets.forEach((b, i) => {
+            const curIdx = moq < 100 ? 0 : moq < 300 ? 1 : moq < 500 ? 2 : 3;
+            const brks = [{l:"0-99"}, {l:"100-299"}, {l:"300-499"}, {l:">500"}];
+            brks.forEach((b, i) => {
                 const p = usd + (curIdx - i) * diff;
                 const tr = document.createElement('tr'); if(i===curIdx) tr.className = "active-tier";
                 tr.innerHTML = `<td>${b.l}</td><td class="text-right">$${p.toFixed(2)}</td>`;
