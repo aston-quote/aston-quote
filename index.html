@@ -3,121 +3,163 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>ASTON 报价 V6.8 最终版</title>
+    <title>ASTON 报价软件 | 专业桌面版 V7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; }
-        .btn-active { background: #2563eb !important; color: white !important; border-color: #2563eb !important; }
-        .card { background: white; border-radius: 1rem; border: 1px solid #e2e8f0; }
-        .tier-td { padding: 8px; background: #1e293b; color: white; font-weight: 700; border-radius: 6px; }
-        .active-tier-td { background: #2563eb !important; }
-        input, select { appearance: none; -webkit-appearance: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-width: 1200px; }
+        .sidebar { width: 320px; flex-shrink: 0; }
+        .main-content { flex-grow: 1; }
+        .result-panel { width: 380px; flex-shrink: 0; }
+        .card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .btn-active { background: #0f172a !important; color: white !important; border-color: #0f172a !important; }
+        .btn-hover:hover { background: #f8fafc; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="p-2">
-    <div id="loading" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
-        <p class="text-[10px] font-bold text-slate-400">LOADING V6.8...</p>
-    </div>
-
-    <div class="max-w-4xl mx-auto space-y-3">
-        <div class="card p-4 grid grid-cols-2 gap-3">
-            <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Sales Person</label>
-                <select id="sales-sel" onchange="calculate()" class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold">
-                    <option value="">Choose...</option>
-                    <option value="Alicia 李丽">Alicia 李丽</option><option value="Caitlin 赵萌萌">Caitlin 赵萌萌</option><option value="Elsa吕晓娈">Elsa吕晓娈</option><option value="Bella白惠文">Bella白惠文</option><option value="Linn刘逍">Linn刘逍</option><option value="Allie王安冉">Allie王安冉</option><option value="Nancy王钰静">Nancy王钰静</option><option value="Cecily郑晨希">Cecily郑晨希</option><option value="Casey裴枭君">Casey裴枭君</option><option value="Cloud刘佩旺">Cloud刘佩旺</option><option value="Tessa柴瑞蝶">Tessa柴瑞蝶</option><option value="Taylor李倩">Taylor李倩</option><option value="Aria刘思彤">Aria刘思彤</option><option value="Rowan张家乐">Rowan张家乐</option><option value="秦宜萍">秦宜萍</option><option value="张茹冰">张茹冰</option>
-                </select>
-            </div>
-            <div>
-                <label class="text-[9px] font-bold text-slate-400 uppercase block mb-1">Client</label>
-                <input type="text" id="client" oninput="calculate()" placeholder="Name..." class="w-full p-3 bg-slate-50 border rounded-xl text-sm font-bold">
-            </div>
+<body class="h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic">ASTON</div>
+            <h1 class="font-black text-slate-800 tracking-tight uppercase">Intelligent Quotation Station <span class="text-blue-600">V7.0</span></h1>
         </div>
+        <div class="flex gap-4 items-center">
+            <select id="sales-sel" onchange="calculate()" class="border p-2 rounded-lg text-sm font-bold bg-slate-50">
+                <option value="">选择业务员</option>
+                <option value="Alicia 李丽">Alicia 李丽</option><option value="Caitlin 赵萌萌">Caitlin 赵萌萌</option><option value="Elsa吕晓娈">Elsa吕晓娈</option><option value="Bella白惠文">Bella白惠文</option><option value="Linn刘逍">Linn刘逍</option><option value="Allie王安冉">Allie王安冉</option><option value="Nancy王钰静">Nancy王钰静</option><option value="Cecily郑晨希">Cecily郑晨希</option><option value="Casey裴枭君">Casey裴枭君</option><option value="Cloud刘佩旺">Cloud刘佩旺</option><option value="Tessa柴瑞蝶">Tessa柴瑞蝶</option><option value="Taylor李倩">Taylor李倩</option><option value="Aria刘思彤">Aria刘思彤</option><option value="Rowan张家乐">Rowan张家乐</option><option value="秦宜萍">秦宜萍</option><option value="张茹冰">张茹冰</option>
+            </select>
+            <input type="text" id="client" oninput="calculate()" placeholder="客户/项目名称" class="border p-2 rounded-lg text-sm font-bold bg-slate-50 w-48">
+        </div>
+    </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-            <div class="lg:col-span-7 space-y-3">
-                <div class="card p-4 space-y-4">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase">01. Style & Sizes</label>
-                    <div id="style-btns" class="grid grid-cols-2 gap-2"></div>
-                    <div id="mod-btns" class="grid grid-cols-2 gap-2"></div>
-                    <div id="size-btns" class="grid grid-cols-4 gap-2"></div>
-                    <div class="flex bg-slate-50 p-3 rounded-xl gap-3 items-center border">
-                        <img id="style-img" src="" class="h-16 w-16 object-contain rounded-lg bg-white border">
-                        <div class="flex-1">
-                            <p id="style-name" class="text-xs font-black uppercase"></p>
-                            <p id="size-info" class="text-[10px] font-bold text-blue-600 mt-1"></p>
+    <main class="flex flex-1 overflow-hidden p-6 gap-6">
+        <!-- Col 1: Style Selection -->
+        <section class="sidebar flex flex-col gap-4 overflow-y-auto pr-2">
+            <div class="card p-5 space-y-4">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">01. 基础版型</h2>
+                <div id="style-btns" class="grid grid-cols-1 gap-2"></div>
+            </div>
+            <div class="card p-5">
+                <img id="style-img" src="" class="w-full h-48 object-contain rounded-lg bg-slate-50 border p-2">
+                <div id="style-name" class="mt-4 font-black text-slate-800 uppercase text-center text-sm"></div>
+            </div>
+        </section>
+
+        <!-- Col 2: Customization -->
+        <section class="main-content flex flex-col gap-4 overflow-y-auto px-2">
+            <div class="card p-6 space-y-6">
+                <div>
+                    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">02. 规格参数</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-bold text-slate-500">风格修正系数 (可多选)</label>
+                            <div id="mod-btns" class="grid grid-cols-1 gap-2"></div>
+                        </div>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-bold text-slate-500">尺码矩阵 (基准判定)</label>
+                            <div id="size-btns" class="grid grid-cols-3 gap-2"></div>
+                            <div id="size-info" class="mt-2 text-xs font-bold text-blue-600 bg-blue-50 p-2 rounded-lg text-center"></div>
                         </div>
                     </div>
                 </div>
-                <div class="card p-4">
-                    <h3 class="text-[10px] font-black text-emerald-600 uppercase mb-3">02. Add-ons</h3>
-                    <div id="proc-list" class="space-y-2"></div>
+
+                <div class="pt-6 border-t">
+                    <h2 class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4">03. 特色工艺与辅料</h2>
+                    <div id="proc-list" class="grid grid-cols-2 gap-3"></div>
                 </div>
-                <div class="card p-4 space-y-2">
-                    <h3 class="text-[10px] font-black text-orange-600 uppercase">03. Fabrics</h3>
-                    <input type="text" id="f-search" oninput="renderFabrics()" placeholder="Search..." class="w-full p-3 rounded-xl border text-sm">
-                    <div id="f-list" class="max-h-40 overflow-y-auto space-y-2"></div>
-                </div>
-            </div>
-            <div class="lg:col-span-5">
-                <div class="card p-5 bg-slate-900 text-white sticky top-2 space-y-5 text-center shadow-xl">
-                    <div>
-                        <p class="text-slate-500 text-[10px] font-bold uppercase mb-1">Quote USD</p>
-                        <div class="flex justify-center items-baseline"><span class="text-xl text-blue-500 font-bold">$</span><span id="res-usd" class="text-5xl font-black">0.00</span></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 pt-4 border-t border-slate-800">
-                        <div><p class="text-slate-500 text-[9px] uppercase tracking-widest">RMB</p><p id="res-rmb" class="text-lg font-bold">¥ 0.00</p></div>
-                        <div><p class="text-emerald-500 text-[9px] uppercase tracking-widest">MOQ</p><p id="res-moq" class="text-lg font-bold text-emerald-400">0</p></div>
-                    </div>
-                    <div class="pt-4 border-t border-slate-800">
-                        <table class="w-full border-separate border-spacing-y-1"><tbody id="tier-body"></tbody></table>
-                    </div>
-                    <button class="w-full bg-blue-600 py-3 rounded-xl font-black text-xs uppercase" onclick="window.print()">Print PDF</button>
+
+                <div class="pt-6 border-t">
+                    <h2 class="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-4">04. 面料母库</h2>
+                    <input type="text" id="f-search" oninput="renderFabrics()" placeholder="输入面料名称快速检索..." class="w-full p-3 border rounded-xl bg-slate-50 mb-4 text-sm font-bold">
+                    <div id="f-list" class="grid grid-cols-1 gap-2 overflow-y-auto max-h-64"></div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <!-- Col 3: Pricing Panel -->
+        <section class="result-panel flex flex-col gap-4">
+            <div class="card bg-slate-900 text-white p-8 flex flex-col justify-between items-center text-center h-full shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.82v-1.91c-1.64-.32-3.13-1.21-4.14-2.58l1.41-1.41c.69.93 1.7 1.54 2.73 1.8.84.21 1.73.1 2.45-.3.56-.3.9-.92.9-1.55 0-1-.7-1.49-1.4-1.74l-2.02-.68c-1.41-.48-2.61-1.39-2.61-3.26 0-1.57.94-2.92 2.31-3.48V5h2.82v1.86c1.23.21 2.37.77 3.28 1.63l-1.41 1.41c-.56-.51-1.28-.86-2.05-1.01-.84-.16-1.73-.01-2.42.39-.52.31-.83.87-.83 1.48 0 .86.58 1.34 1.22 1.56l2.02.68c1.7.57 2.89 1.58 2.89 3.5 0 1.71-1.12 3.12-2.61 3.59z"/></svg>
+                </div>
+                
+                <div class="w-full space-y-2">
+                    <p class="text-slate-400 text-[11px] font-black uppercase tracking-[0.2em]">Estimated Unit Price</p>
+                    <div class="flex justify-center items-baseline gap-1">
+                        <span class="text-3xl text-blue-500 font-black">$</span>
+                        <span id="res-usd" class="text-7xl font-black">0.00</span>
+                    </div>
+                    <div class="flex justify-around pt-6 border-t border-slate-800">
+                        <div class="text-left">
+                            <p class="text-slate-500 text-[9px] font-bold uppercase">RMB Price</p>
+                            <p id="res-rmb" class="text-2xl font-black">¥ 0.00</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-emerald-500 text-[9px] font-bold uppercase">Batch MOQ</p>
+                            <p id="res-moq" class="text-2xl font-black text-emerald-400">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full py-6 border-t border-slate-800">
+                    <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Spot Tiered Pricing (现货阶梯)</h4>
+                    <table class="w-full border-separate border-spacing-y-2">
+                        <tbody id="tier-body"></tbody>
+                    </table>
+                </div>
+
+                <div class="w-full grid grid-cols-1 gap-3">
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-black text-xs uppercase tracking-widest transition-all" onclick="window.print()">
+                        Export Quotation Report
+                    </button>
+                    <button class="w-full bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-black text-[10px] text-slate-400 uppercase transition-all" onclick="copyQuote()">
+                        Copy Text Summary
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
 
     <script>
         const DB = {
-            styles: [{"name": "0. 手动录入新款", "img": "https://via.placeholder.com/200?text=MANUAL+ENTRY", "baseLabor": 25.0, "sizes": {}}, {"name": "1. 上衣", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 6.0, "sizes": {"NB": 0.4, "0-3M": 0.42, "3-6M": 0.44, "6-12M": 0.46, "12-18M": 0.48, "18-24M": 0.5, "2Y": 0.53, "3Y": 0.55, "4Y": 0.6, "5Y": 0.65, "6Y": 0.7, "7Y": 0.75, "8Y": 0.8, "9Y": 0.85, "10Y": 0.9, "11Y": 0.95, "12Y": 1.0, "男士S": 1.2, "男士M": 1.25, "男士L": 1.3, "男士XL": 1.35, "男士XXL": 1.4, "女士S": 1.1, "女士M": 1.15, "女士L": 1.2, "女士XL": 1.25, "女士XXL": 1.3}}, {"name": "2. 短爬", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 5.0, "sizes": {"NB": 0.38, "0-3M": 0.4, "3-6M": 0.42, "6-12M": 0.44, "12-18M": 0.46, "18-24M": 0.48, "2Y": 0.5, "3Y": 0.6, "4Y": 0.65, "5Y": 0.7, "6Y": 0.75, "7Y": 0.8, "8Y": 0.85, "9Y": 0.9, "10Y": 0.95, "11Y": 1.0, "12Y": 1.05, "男士S": 1.3, "男士M": 1.35, "男士L": 1.4, "男士XL": 1.45, "男士XXL": 1.5, "女士S": 1.2, "女士M": 1.25, "女士L": 1.3, "女士XL": 1.35, "女士XXL": 1.4}}, {"name": "3. 下装", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 4.0, "sizes": {"NB": 0, "0-3M": 6.1, "3-6M": 0.5, "6-12M": 0.52, "12-18M": 0.54, "18-24M": 0.56, "2Y": 0.58, "3Y": 0.7, "4Y": 0.73, "5Y": 0.75, "6Y": 0.8, "7Y": 0.85, "8Y": 0.9, "9Y": 0.95, "10Y": 1.0, "11Y": 1.05, "12Y": 1.1, "男士S": 1.3, "男士M": 1.35, "男士L": 1.55, "男士XL": 1.6, "男士XXL": 1.65, "女士S": 1.25, "女士M": 1.7, "女士L": 1.4, "女士XL": 1.45, "女士XXL": 1.5}}, {"name": "4. 连体衣", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 7.0, "sizes": {"NB": 0.63, "0-3M": 0.66, "3-6M": 0.69, "6-12M": 0.72, "12-18M": 0.75, "18-24M": 0.78, "2Y": 0.81, "3Y": 0.84, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}, {"name": "5. 套装", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 8.0, "sizes": {"NB": 0.7, "0-3M": 0.75, "3-6M": 0.8, "6-12M": 0.85, "12-18M": 0.9, "18-24M": 0.95, "2Y": 1.0, "3Y": 1.12, "4Y": 1.24, "5Y": 1.36, "6Y": 1.48, "7Y": 1.6, "8Y": 1.75, "9Y": 1.9, "10Y": 2.05, "11Y": 2.1, "12Y": 2.25, "男士S": 2.6, "男士M": 2.7, "男士L": 2.9, "男士XL": 2.9, "男士XXL": 3.0, "女士S": 2.4, "女士M": 2.5, "女士L": 2.6, "女士XL": 2.7, "女士XXL": 2.8}}, {"name": "6. 长裙", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 0, "sizes": {"NB": 0.0, "0-3M": 0.0, "3-6M": 0.0, "6-12M": 0.0, "12-18M": 0.0, "18-24M": 0.0, "2Y": 0.0, "3Y": 0.0, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}, {"name": "7. 毯子", "img": "https://via.placeholder.com/200?text=NO+IMAGE", "baseLabor": 0, "sizes": {"NB": 0.0, "0-3M": 0.0, "3-6M": 0.0, "6-12M": 0.0, "12-18M": 0.0, "18-24M": 0.0, "2Y": 0.0, "3Y": 0.0, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}],
+            styles: [{"name": "1. 上衣", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 6.0, "sizes": {"NB": 0.4, "0-3M": 0.42, "3-6M": 0.44, "6-12M": 0.46, "12-18M": 0.48, "18-24M": 0.5, "2Y": 0.53, "3Y": 0.55, "4Y": 0.6, "5Y": 0.65, "6Y": 0.7, "7Y": 0.75, "8Y": 0.8, "9Y": 0.85, "10Y": 0.9, "11Y": 0.95, "12Y": 1.0, "男士S": 1.2, "男士M": 1.25, "男士L": 1.3, "男士XL": 1.35, "男士XXL": 1.4, "女士S": 1.1, "女士M": 1.15, "女士L": 1.2, "女士XL": 1.25, "女士XXL": 1.3}}, {"name": "2. 短爬", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 5.0, "sizes": {"NB": 0.38, "0-3M": 0.4, "3-6M": 0.42, "6-12M": 0.44, "12-18M": 0.46, "18-24M": 0.48, "2Y": 0.5, "3Y": 0.6, "4Y": 0.65, "5Y": 0.7, "6Y": 0.75, "7Y": 0.8, "8Y": 0.85, "9Y": 0.9, "10Y": 0.95, "11Y": 1.0, "12Y": 1.05, "男士S": 1.3, "男士M": 1.35, "男士L": 1.4, "男士XL": 1.45, "男士XXL": 1.5, "女士S": 1.2, "女士M": 1.25, "女士L": 1.3, "女士XL": 1.35, "女士XXL": 1.4}}, {"name": "3. 下装", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 4.0, "sizes": {"NB": 0, "0-3M": 6.1, "3-6M": 0.5, "6-12M": 0.52, "12-18M": 0.54, "18-24M": 0.56, "2Y": 0.58, "3Y": 0.7, "4Y": 0.73, "5Y": 0.75, "6Y": 0.8, "7Y": 0.85, "8Y": 0.9, "9Y": 0.95, "10Y": 1.0, "11Y": 1.05, "12Y": 1.1, "男士S": 1.3, "男士M": 1.35, "男士L": 1.55, "男士XL": 1.6, "男士XXL": 1.65, "女士S": 1.25, "女士M": 1.7, "女士L": 1.4, "女士XL": 1.45, "女士XXL": 1.5}}, {"name": "4. 连体衣", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 7.0, "sizes": {"NB": 0.63, "0-3M": 0.66, "3-6M": 0.69, "6-12M": 0.72, "12-18M": 0.75, "18-24M": 0.78, "2Y": 0.81, "3Y": 0.84, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}, {"name": "5. 套装", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 8.0, "sizes": {"NB": 0.7, "0-3M": 0.75, "3-6M": 0.8, "6-12M": 0.85, "12-18M": 0.9, "18-24M": 0.95, "2Y": 1.0, "3Y": 1.12, "4Y": 1.24, "5Y": 1.36, "6Y": 1.48, "7Y": 1.6, "8Y": 1.75, "9Y": 1.9, "10Y": 2.05, "11Y": 2.1, "12Y": 2.25, "男士S": 2.6, "男士M": 2.7, "男士L": 2.9, "男士XL": 2.9, "男士XXL": 3.0, "女士S": 2.4, "女士M": 2.5, "女士L": 2.6, "女士XL": 2.7, "女士XXL": 2.8}}, {"name": "6. 长裙", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 0, "sizes": {"NB": 0.0, "0-3M": 0.0, "3-6M": 0.0, "6-12M": 0.0, "12-18M": 0.0, "18-24M": 0.0, "2Y": 0.0, "3Y": 0.0, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}, {"name": "7. 毯子", "img": "https://via.placeholder.com/300?text=ASTON+PRODUCT", "baseLabor": 0, "sizes": {"NB": 0.0, "0-3M": 0.0, "3-6M": 0.0, "6-12M": 0.0, "12-18M": 0.0, "18-24M": 0.0, "2Y": 0.0, "3Y": 0.0, "4Y": 0.0, "5Y": 0.0, "6Y": 0.0, "7Y": 0.0, "8Y": 0.0, "9Y": 0.0, "10Y": 0.0, "11Y": 0.0, "12Y": 0.0, "男士S": 0.0, "男士M": 0.0, "男士L": 0.0, "男士XL": 0.0, "男士XXL": 0.0, "女士S": 0.0, "女士M": 0.0, "女士L": 0.0, "女士XL": 0.0, "女士XXL": 0.0}}],
             processes: [{"name": "开门襟(4扣内)", "category": "上衣", "price": 2.0, "targets": ["1. 上衣"]}, {"name": "单层帽", "category": "上衣", "price": 1.0, "targets": ["1. 上衣"]}, {"name": "双层帽", "category": "上衣", "price": 2.0, "targets": ["1. 上衣"]}, {"name": "加打揽", "category": "上衣", "price": 4.0, "targets": ["1. 上衣"]}, {"name": "偏开襟", "category": "上衣", "price": 3.0, "targets": ["1. 上衣"]}, {"name": "领口/腿口等对色螺纹", "category": "上衣", "price": 2.0, "targets": ["1. 上衣"]}, {"name": "上拉链", "category": "上衣", "price": 3.0, "targets": ["1. 上衣"]}, {"name": "侧开叉", "category": "上衣", "price": 2.0, "targets": ["1. 上衣"]}, {"name": "上衣衬衣领（娃娃领）", "category": "上衣", "price": 3.0, "targets": ["1. 上衣"]}, {"name": "加口袋", "category": "上衣", "price": 1.0, "targets": ["1. 上衣"]}, {"name": "拼接", "category": "上衣", "price": 2.0, "targets": ["1. 上衣"]}, {"name": "袋鼠口袋", "category": "上衣", "price": 1.5, "targets": ["1. 上衣"]}, {"name": "定染拉链", "category": "上衣", "price": 6.5, "targets": ["1. 上衣"]}, {"name": "现货拉链", "category": "上衣", "price": 2.5, "targets": ["1. 上衣"]}, {"name": "袖笼花边", "category": "上衣", "price": 1.5, "targets": ["1. 上衣"]}, {"name": "开门襟(4扣内)", "category": "短爬", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "单层帽", "category": "短爬", "price": 1.0, "targets": ["2. 短爬"]}, {"name": "双层帽", "category": "短爬", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "加打揽", "category": "短爬", "price": 4.0, "targets": ["2. 短爬"]}, {"name": "偏开襟", "category": "短爬", "price": 3.0, "targets": ["2. 短爬"]}, {"name": "领口/袖口等对色螺纹", "category": "短爬", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "腿口上皮筋或者螺纹", "category": "短片", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "上拉链", "category": "短爬", "price": 3.0, "targets": ["2. 短爬"]}, {"name": "侧开叉", "category": "短爬", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "上衣衬衣领（娃娃领）", "category": "短爬", "price": 3.0, "targets": ["2. 短爬"]}, {"name": "加口袋", "category": "短爬", "price": 1.0, "targets": ["2. 短爬"]}, {"name": "拼接", "category": "短爬", "price": 2.0, "targets": ["2. 短爬"]}, {"name": "袋鼠口袋", "category": "短爬", "price": 1.5, "targets": ["2. 短爬"]}, {"name": "定染拉链", "category": "短爬", "price": 6.5, "targets": ["2. 短爬"]}, {"name": "现货拉链", "category": "短爬", "price": 2.5, "targets": ["2. 短爬"]}, {"name": "袖笼花边", "category": "短爬", "price": 1.5, "targets": ["2. 短爬"]}, {"name": "两侧口袋", "category": "下装", "price": 3.0, "targets": ["3. 下装"]}, {"name": "单独加一个口袋", "category": "下装", "price": 1.0, "targets": ["3. 下装"]}, {"name": "上腰", "category": "下装", "price": 1.0, "targets": ["3. 下装"]}, {"name": "穿腰绳", "category": "下装", "price": 0.5, "targets": ["3. 下装"]}, {"name": "对色螺纹", "category": "下装", "price": 2.0, "targets": ["3. 下装"]}, {"name": "高腰", "category": "下装", "price": 2.0, "targets": ["3. 下装"]}, {"name": "腿口松紧带", "category": "下装", "price": 2.0, "targets": ["3. 下装"]}, {"name": "定染拉链", "category": "连体衣", "price": 6.5, "targets": ["4. 连体衣"]}, {"name": "上拉链", "category": "连体衣", "price": 3.0, "targets": ["4.连体衣"]}, {"name": "门襟开扣（4扣内）", "category": "连体衣", "price": 2.0, "targets": ["4. 连体衣"]}, {"name": "腿部扣子", "category": "连体衣", "price": 2.0, "targets": ["4. 连体衣"]}, {"name": "袖笼花边", "category": "连体衣", "price": 1.5, "targets": ["4. 连体衣"]}, {"name": "前门襟加花边", "category": "连体衣", "price": 3.0, "targets": ["4. 连体衣"]}, {"name": "后腰加3层花边", "category": "连体衣", "price": 3.0, "targets": ["4. 连体衣"]}, {"name": "脚底4mm圆点防滑印", "category": "连体衣", "price": 2.0, "targets": ["4. 连体衣"]}, {"name": "撞色袖口 腿口 门襟 领口", "category": "连体衣", "price": 2.0, "targets": ["4. 连体衣"]}, {"name": "拼接", "category": "连体衣", "price": 2.0, "targets": ["4. 连体衣"]}, {"name": "开门襟(4扣内)", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "单层帽", "category": "套装", "price": 1.0, "targets": ["5. 套装"]}, {"name": "双层帽", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "加打揽", "category": "套装", "price": 4.0, "targets": ["5. 套装"]}, {"name": "偏开襟", "category": "套装", "price": 3.0, "targets": ["5. 套装"]}, {"name": "领口腿口等对色螺纹", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "上拉链", "category": "套装", "price": 3.0, "targets": ["5. 套装"]}, {"name": "两侧开叉", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "上衣衬衣领（娃娃领）", "category": "套装", "price": 3.0, "targets": ["5. 套装"]}, {"name": "加口袋", "category": "套装", "price": 1.0, "targets": ["5. 套装"]}, {"name": "拼接", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "袋鼠口袋", "category": "套装", "price": 1.5, "targets": ["5. 套装"]}, {"name": "定染拉链", "category": "套装", "price": 6.5, "targets": ["5. 套装"]}, {"name": "现货拉链", "category": "套装", "price": 2.5, "targets": ["5. 套装"]}, {"name": "袖笼花边", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}, {"name": "两侧口袋", "category": "套装", "price": 3.0, "targets": ["5. 套装"]}, {"name": "上腰", "category": "套装", "price": 1.0, "targets": ["5. 套装"]}, {"name": "穿腰绳", "category": "套装", "price": 0.5, "targets": ["5. 套装"]}, {"name": "高腰", "category": "套装", "price": 2.0, "targets": ["5. 套装"]}],
             modifiers: [{"name": "标准", "factor": 1.0, "target": "通用"}, {"name": "修身", "factor": 0.9, "target": "1. 上衣,2.短爬, 3. 下装, 4. 连体衣5,套装,6.连衣裙"}, {"name": "宽松", "factor": 1.2, "target": "1. 上衣,2.短爬, 3. 下装, 4. 连体衣5,套装,7.连衣裙"}, {"name": "加大宽松", "factor": 1.35, "target": "1. 上衣,2.短爬, 3. 下装, 4. 连体衣5,套装,8.连衣裙"}, {"name": "短袖", "factor": 0.9, "target": "1. 上衣,2.短爬, 4. 连体衣"}, {"name": "无袖", "factor": 0.8, "target": "1. 上衣,2.短爬, 4. 连体衣"}, {"name": "偏开", "factor": 1.25, "target": "1. 上衣,2.短爬, 4. 连体衣"}, {"name": "短袖短裤", "factor": 0.7, "target": "5,套装，"}, {"name": "短袖长裤", "factor": 0.92, "target": "6,套装，"}, {"name": "长袖短裤", "factor": 0.85, "target": "7,套装，"}, {"name": "短裤", "factor": 0.65, "target": "3.下装"}, {"name": "偏开长裤", "factor": 1.15, "target": "1,套装，"}, {"name": "偏开短裤", "factor": 1.0, "target": "1,套装，"}, {"name": "七分裤", "factor": 0.88, "target": "3.下装"}, {"name": "单层帽", "factor": 1.14, "target": "1. 上衣,2.短爬,4. 连体衣5,套装,"}, {"name": "双层帽", "factor": 1.26, "target": "1. 上衣,2.短爬,4. 连体衣6,套装,"}],
-            fabrics: [{"id": "0635#", "name": "磨毛棉氨纶卫衣布", "gsm": 270.0, "width": 173.0, "price_loose": 23.0, "price_roll": 16.8, "unit": "kg", "rollQty": 23.0}, {"id": "0894#", "name": "4*2氨纶罗纹", "gsm": 220.0, "width": 165.0, "price_loose": 23.0, "price_roll": 13.5, "unit": "kg", "rollQty": 23.0}, {"id": "018#", "name": "棉毛布", "gsm": 205.0, "width": 185.0, "price_loose": 23.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "093#", "name": "全棉汗布", "gsm": 160.0, "width": 185.0, "price_loose": 20.0, "price_roll": 10.0, "unit": "kg", "rollQty": 23.0}, {"id": "010#", "name": "全棉卫衣布", "gsm": 230.0, "width": 185.0, "price_loose": 23.0, "price_roll": 14.5, "unit": "kg", "rollQty": 23.0}, {"id": "099#", "name": "竹节汗布", "gsm": 170.0, "width": 185.0, "price_loose": 20.0, "price_roll": 11.0, "unit": "kg", "rollQty": 23.0}, {"id": "0324#", "name": "2*2罗纹", "gsm": 180.0, "width": 110.0, "price_loose": 23.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "071#H", "name": "拉绒卫衣布", "gsm": 315.0, "width": 185.0, "price_loose": 23.0, "price_roll": 15.5, "unit": "kg", "rollQty": 23.0}, {"id": "0860#", "name": "1*1棉氨罗纹", "gsm": 260.0, "width": 165.0, "price_loose": 23.0, "price_roll": 15.0, "unit": "kg", "rollQty": 23.0}, {"id": "0447#", "name": "32支棉氨汗布", "gsm": 190.0, "width": 170.0, "price_loose": 20.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "0334#", "name": "棉氨纶卫衣布", "gsm": 250.0, "width": 185.0, "price_loose": 23.0, "price_roll": 15.8, "unit": "kg", "rollQty": 23.0}, {"id": "031#", "name": "全棉卫衣布", "gsm": 320.0, "width": 185.0, "price_loose": 25.0, "price_roll": 16.5, "unit": "kg", "rollQty": 23.0}, {"id": "0367#", "name": "磨毛棉氨纶卫衣布", "gsm": 335.0, "width": 175.0, "price_loose": 25.0, "price_roll": 17.8, "unit": "kg", "rollQty": 23.0}, {"id": "0508#", "name": "无尘天丝澳代尔汗布", "gsm": 160.0, "width": 175.0, "price_loose": 20.0, "price_roll": 10.0, "unit": "kg", "rollQty": 23.0}, {"id": "0838#KD", "name": "1*1罗纹093配套螺纹", "gsm": 230.0, "width": 180.0, "price_loose": 20.0, "price_roll": 13.5, "unit": "kg", "rollQty": 23.0}, {"id": "0678#", "name": "棉坑条罗纹", "gsm": 250.0, "width": 110.0, "price_loose": 35.0, "price_roll": 14.5, "unit": "kg", "rollQty": 23.0}, {"id": "047#", "name": "加厚全棉真卫衣", "gsm": 360.0, "width": 185.0, "price_loose": 25.0, "price_roll": 18.0, "unit": "kg", "rollQty": 23.0}, {"id": "0486#", "name": "32支棉世博绒", "gsm": 330.0, "width": 185.0, "price_loose": 25.0, "price_roll": 14.5, "unit": "kg", "rollQty": 23.0}, {"id": "0857#", "name": "超薄单面汗布", "gsm": 140.0, "width": 185.0, "price_loose": 19.0, "price_roll": 9.0, "unit": "kg", "rollQty": 23.0}, {"id": "0711#B", "name": "全棉卫衣绒布", "gsm": 360.0, "width": 185.0, "price_loose": 30.0, "price_roll": 18.0, "unit": "kg", "rollQty": 23.0}, {"id": "NT228318", "name": "竹纤维氨纶汗布", "gsm": 210.0, "width": 170.0, "price_loose": 23.0, "price_roll": 13.5, "unit": "kg", "rollQty": 23.0}, {"id": "NT228317", "name": "竹纤维氨纶汗布", "gsm": 260.0, "width": 170.0, "price_loose": 25.0, "price_roll": 16.5, "unit": "kg", "rollQty": 23.0}, {"id": "30040", "name": "轻磨毛棉毛布", "gsm": 200.0, "width": 192.0, "price_loose": 20.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "60040#", "name": "轻磨毛棉氨双面布", "gsm": 240.0, "width": 180.0, "price_loose": 25.0, "price_roll": 14.5, "unit": "kg", "rollQty": 23.0}, {"id": "A50040", "name": "轻磨毛棉氨汗布", "gsm": 160.0, "width": 190.0, "price_loose": 20.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "9179#", "name": "涤棉氨华夫格", "gsm": 200.0, "width": 165.0, "price_loose": 23.0, "price_roll": 12.0, "unit": "kg", "rollQty": 23.0}, {"id": "FC001", "name": "蜂巢提花面料", "gsm": 185.0, "width": 195.0, "price_loose": 14.0, "price_roll": 13.0, "unit": "kg", "rollQty": 23.0}, {"id": "JY1012", "name": "移圈罗纹", "gsm": 200.0, "width": 195.0, "price_loose": 14.0, "price_roll": 13.0, "unit": "kg", "rollQty": 23.0}, {"id": "SM-819", "name": "全涤天鹅绒", "gsm": 220.0, "width": 160.0, "price_loose": 12.0, "price_roll": 6.5, "unit": "kg", "rollQty": 23.0}, {"id": "SM-819", "name": "全涤天鹅绒", "gsm": 240.0, "width": 160.0, "price_loose": 12.0, "price_roll": 7.0, "unit": "kg", "rollQty": 23.0}, {"id": "SM-818", "name": "涤氨天鹅绒", "gsm": 220.0, "width": 185.0, "price_loose": 13.0, "price_roll": 6.5, "unit": "kg", "rollQty": 23.0}, {"id": "SM-820", "name": "8020天鹅绒", "gsm": 220.0, "width": 155.0, "price_loose": 25.0, "price_roll": 12.5, "unit": "kg", "rollQty": 23.0}, {"id": "SM-820", "name": "8020天鹅绒", "gsm": 240.0, "width": 160.0, "price_loose": 30.0, "price_roll": 13.5, "unit": "kg", "rollQty": 23.0}, {"id": "GD8901", "name": "水晶超柔短毛绒", "gsm": 180.0, "width": 162.0, "price_loose": 15.0, "price_roll": 7.5, "unit": "kg", "rollQty": 30.0}, {"id": "GD-1101", "name": "双面法兰绒", "gsm": 290.0, "width": 185.0, "price_loose": 15.0, "price_roll": 9.0, "unit": "kg", "rollQty": 50.0}, {"id": "/", "name": "羊羔绒", "gsm": 220.0, "width": 160.0, "price_loose": 15.0, "price_roll": 7.5, "unit": "kg", "rollQty": 25.0}, {"id": "GD8910", "name": "单面舒棉绒", "gsm": 200.0, "width": 160.0, "price_loose": 15.0, "price_roll": 7.5, "unit": "kg", "rollQty": 25.0}, {"id": "GD8922", "name": "100D单刷单面摇粒绒", "gsm": 180.0, "width": 165.0, "price_loose": 15.0, "price_roll": 7.5, "unit": "kg", "rollQty": 25.0}, {"id": "/", "name": "双刷单摇粒绒", "gsm": 220.0, "width": 160.0, "price_loose": 15.0, "price_roll": 8.0, "unit": "kg", "rollQty": 25.0}, {"id": "GD6710", "name": "双刷单摇粒绒", "gsm": 270.0, "width": 165.0, "price_loose": 15.0, "price_roll": 9.0, "unit": "kg", "rollQty": 25.0}, {"id": "GD25230", "name": "豆豆绒（压泡绒）", "gsm": 230.0, "width": 160.0, "price_loose": 14.0, "price_roll": 7.0, "unit": "kg", "rollQty": 25.0}, {"id": "A-7-230", "name": "150D/144F双刷单摇", "gsm": 230.0, "width": 155.0, "price_loose": 15.0, "price_roll": 9.0, "unit": "kg", "rollQty": 25.0}, {"id": "/", "name": "泰迪绒", "gsm": 445.0, "width": 160.0, "price_loose": 20.0, "price_roll": 13.0, "unit": "kg", "rollQty": 40.0}, {"id": "3003#", "name": "色织汗布", "gsm": 180.0, "width": 175.0, "price_loose": 21.0, "price_roll": 13.5, "unit": "kg", "rollQty": 23.0}, {"id": "5003#", "name": "色织卫衣布", "gsm": 240.0, "width": 185.0, "price_loose": 25.0, "price_roll": 14.5, "unit": "kg", "rollQty": 24.0}, {"id": "JY2032", "name": "2CM格子空气层保暖面料", "gsm": 320.0, "width": 180.0, "price_loose": 23.0, "price_roll": 16.5, "unit": "kg", "rollQty": 23.0}, {"id": "BX-827", "name": "300g双面毛巾布", "gsm": 300.0, "width": 150.0, "price_loose": 23.0, "price_roll": 19.0, "unit": "kg", "rollQty": 60.0}, {"id": "BX-843", "name": "250g单面毛巾布", "gsm": 250.0, "width": 152.0, "price_loose": 19.0, "price_roll": 16.0, "unit": "kg", "rollQty": 70.0}, {"id": "BX-804", "name": "针织毛巾布", "gsm": 220.0, "width": 152.0, "price_loose": 18.0, "price_roll": 12.8, "unit": "kg", "rollQty": 23.0}, {"id": "GZZZ001", "name": "针织毛巾布", "gsm": 245.0, "width": 165.0, "price_loose": 18.0, "price_roll": 14.5, "unit": "kg", "rollQty": 23.0}, {"id": "GZZZ002", "name": "300G全棉双面毛巾布", "gsm": 300.0, "width": 150.0, "price_loose": 25.0, "price_roll": 20.0, "unit": "kg", "rollQty": 23.0}, {"id": "A-317#", "name": "轻薄亚麻棉", "gsm": 130.0, "width": 140.0, "price_loose": 20.0, "price_roll": 17.5, "unit": "kg", "rollQty": 50.0}, {"id": "5147#", "name": "亚麻棉", "gsm": 205.0, "width": 140.0, "price_loose": 15.0, "price_roll": 13.0, "unit": "kg", "rollQty": 50.0}, {"id": "None", "name": "棉毛布涂料数码印花", "gsm": 0, "width": 0, "price_loose": 0, "price_roll": 0, "unit": "kg", "rollQty": 0}, {"id": "None", "name": "卫衣布涂料数码印花", "gsm": 0, "width": 0, "price_loose": 0, "price_roll": 0, "unit": "kg", "rollQty": 0}, {"id": "None", "name": "竹纤维氨纶汗布", "gsm": 0, "width": 0, "price_loose": 0, "price_roll": 0, "unit": "kg", "rollQty": 0}, {"id": "None", "name": "氨纶汗布数码印花", "gsm": 0, "width": 0, "price_loose": 0, "price_roll": 0, "unit": "kg", "rollQty": 0}],
-            config: {"exchange_rate": 6.7, "margin_coefficient": 0.7, "packaging_cost": 0.0}
+            fabrics: [{"id": "0635#", "name": "磨毛棉氨纶卫衣布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "0894#", "name": "4*2氨纶罗纹", "price_loose": 23.0, "rollQty": 23.0}, {"id": "018#", "name": "棉毛布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "093#", "name": "全棉汗布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "010#", "name": "全棉卫衣布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "099#", "name": "竹节汗布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "0324#", "name": "2*2罗纹", "price_loose": 23.0, "rollQty": 23.0}, {"id": "071#H", "name": "拉绒卫衣布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "0860#", "name": "1*1棉氨罗纹", "price_loose": 23.0, "rollQty": 23.0}, {"id": "0447#", "name": "32支棉氨汗布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "0334#", "name": "棉氨纶卫衣布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "031#", "name": "全棉卫衣布", "price_loose": 25.0, "rollQty": 23.0}, {"id": "0367#", "name": "磨毛棉氨纶卫衣布", "price_loose": 25.0, "rollQty": 23.0}, {"id": "0508#", "name": "无尘天丝澳代尔汗布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "0838#KD", "name": "1*1罗纹093配套螺纹", "price_loose": 20.0, "rollQty": 23.0}, {"id": "0678#", "name": "棉坑条罗纹", "price_loose": 35.0, "rollQty": 23.0}, {"id": "047#", "name": "加厚全棉真卫衣", "price_loose": 25.0, "rollQty": 23.0}, {"id": "0486#", "name": "32支棉世博绒", "price_loose": 25.0, "rollQty": 23.0}, {"id": "0857#", "name": "超薄单面汗布", "price_loose": 19.0, "rollQty": 23.0}, {"id": "0711#B", "name": "全棉卫衣绒布", "price_loose": 30.0, "rollQty": 23.0}, {"id": "NT228318", "name": "竹纤维氨纶汗布", "price_loose": 23.0, "rollQty": 23.0}, {"id": "NT228317", "name": "竹纤维氨纶汗布", "price_loose": 25.0, "rollQty": 23.0}, {"id": "30040", "name": "轻磨毛棉毛布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "60040#", "name": "轻磨毛棉氨双面布", "price_loose": 25.0, "rollQty": 23.0}, {"id": "A50040", "name": "轻磨毛棉氨汗布", "price_loose": 20.0, "rollQty": 23.0}, {"id": "9179#", "name": "涤棉氨华夫格", "price_loose": 23.0, "rollQty": 23.0}, {"id": "FC001", "name": "蜂巢提花面料", "price_loose": 14.0, "rollQty": 23.0}, {"id": "JY1012", "name": "移圈罗纹", "price_loose": 14.0, "rollQty": 23.0}, {"id": "SM-819", "name": "全涤天鹅绒", "price_loose": 12.0, "rollQty": 23.0}, {"id": "SM-819", "name": "全涤天鹅绒", "price_loose": 12.0, "rollQty": 23.0}, {"id": "SM-818", "name": "涤氨天鹅绒", "price_loose": 13.0, "rollQty": 23.0}, {"id": "SM-820", "name": "8020天鹅绒", "price_loose": 25.0, "rollQty": 23.0}, {"id": "SM-820", "name": "8020天鹅绒", "price_loose": 30.0, "rollQty": 23.0}, {"id": "GD8901", "name": "水晶超柔短毛绒", "price_loose": 15.0, "rollQty": 30.0}, {"id": "GD-1101", "name": "双面法兰绒", "price_loose": 15.0, "rollQty": 50.0}, {"id": "/", "name": "羊羔绒", "price_loose": 15.0, "rollQty": 25.0}, {"id": "GD8910", "name": "单面舒棉绒", "price_loose": 15.0, "rollQty": 25.0}, {"id": "GD8922", "name": "100D单刷单面摇粒绒", "price_loose": 15.0, "rollQty": 25.0}, {"id": "/", "name": "双刷单摇粒绒", "price_loose": 15.0, "rollQty": 25.0}, {"id": "GD6710", "name": "双刷单摇粒绒", "price_loose": 15.0, "rollQty": 25.0}, {"id": "GD25230", "name": "豆豆绒（压泡绒）", "price_loose": 14.0, "rollQty": 25.0}, {"id": "A-7-230", "name": "150D/144F双刷单摇", "price_loose": 15.0, "rollQty": 25.0}, {"id": "/", "name": "泰迪绒", "price_loose": 20.0, "rollQty": 40.0}, {"id": "3003#", "name": "色织汗布", "price_loose": 21.0, "rollQty": 23.0}, {"id": "5003#", "name": "色织卫衣布", "price_loose": 25.0, "rollQty": 24.0}, {"id": "JY2032", "name": "2CM格子空气层保暖面料", "price_loose": 23.0, "rollQty": 23.0}, {"id": "BX-827", "name": "300g双面毛巾布", "price_loose": 23.0, "rollQty": 60.0}, {"id": "BX-843", "name": "250g单面毛巾布", "price_loose": 19.0, "rollQty": 70.0}, {"id": "BX-804", "name": "针织毛巾布", "price_loose": 18.0, "rollQty": 23.0}, {"id": "GZZZ001", "name": "针织毛巾布", "price_loose": 18.0, "rollQty": 23.0}, {"id": "GZZZ002", "name": "300G全棉双面毛巾布", "price_loose": 25.0, "rollQty": 23.0}, {"id": "A-317#", "name": "轻薄亚麻棉", "price_loose": 20.0, "rollQty": 50.0}, {"id": "5147#", "name": "亚麻棉", "price_loose": 15.0, "rollQty": 50.0}, {"id": "None", "name": "棉毛布涂料数码印花", "price_loose": 0, "rollQty": 0}, {"id": "None", "name": "卫衣布涂料数码印花", "price_loose": 0, "rollQty": 0}, {"id": "None", "name": "竹纤维氨纶汗布", "price_loose": 0, "rollQty": 0}, {"id": "None", "name": "氨纶汗布数码印花", "price_loose": 0, "rollQty": 0}]
         };
 
-        let activeStyle = DB.styles[1] || DB.styles[0];
-        let activeMods = []; let activeSizes = []; let selFabric = DB.fabrics[0] || null;
+        let activeStyle = DB.styles[0]; let activeMods = []; let activeSizes = []; let selFabric = DB.fabrics[0];
 
         function init() {
-            try {
-                const st = document.getElementById('style-btns');
-                DB.styles.forEach((s, i) => {
-                    const b = document.createElement('button'); b.innerText = s.name;
-                    b.className = `p-2 rounded-lg text-[10px] border font-bold ${i===1?'btn-active':'bg-white text-slate-500'}`;
-                    b.onclick = () => {
-                        document.querySelectorAll('#style-btns button').forEach(x => x.className = "p-2 rounded-lg text-[10px] border font-bold bg-white text-slate-500");
-                        b.className = "p-2 rounded-lg text-[10px] border font-bold btn-active"; activeStyle = s; renderUI();
-                    };
-                    st.appendChild(b);
-                });
-                const sz = document.getElementById('size-btns');
-                const keys = DB.styles[1] ? Object.keys(DB.styles[1].sizes) : [];
-                keys.forEach(k => {
-                    const b = document.createElement('button'); b.innerText = k;
-                    b.className = "p-2 rounded-lg text-[10px] border bg-white text-slate-400 font-bold";
-                    b.onclick = () => {
-                        if(activeSizes.includes(k)) activeSizes = activeSizes.filter(x => x!==k); else activeSizes.push(k);
-                        b.classList.toggle('btn-active'); b.classList.toggle('text-white'); b.classList.toggle('text-slate-400'); updateSizes();
-                    };
-                    sz.appendChild(b);
-                });
-                renderUI();
-            } catch(e) { console.error(e); }
-            finally { setTimeout(() => document.getElementById('loading').style.display = 'none', 800); }
+            const st = document.getElementById('style-btns');
+            DB.styles.forEach((s, i) => {
+                const b = document.createElement('button');
+                b.innerText = s.name;
+                b.className = `p-3 text-left rounded-xl text-xs border font-bold transition-all btn-hover ${i===0?'btn-active':'bg-white text-slate-600'}`;
+                b.onclick = () => {
+                    document.querySelectorAll('#style-btns button').forEach(x => x.className = "p-3 text-left rounded-xl text-xs border font-bold transition-all bg-white text-slate-600 btn-hover");
+                    b.className = "p-3 text-left rounded-xl text-xs border font-bold transition-all btn-active";
+                    activeStyle = s; renderUI();
+                };
+                st.appendChild(b);
+            });
+
+            const sz = document.getElementById('size-btns');
+            Object.keys(DB.styles[0].sizes).forEach(k => {
+                const b = document.createElement('button');
+                b.innerText = k;
+                b.className = "p-2 rounded-lg text-[10px] border bg-white text-slate-400 font-black hover:border-slate-400 transition-all";
+                b.onclick = () => {
+                    if(activeSizes.includes(k)) activeSizes = activeSizes.filter(x => x!==k);
+                    else activeSizes.push(k);
+                    b.classList.toggle('btn-active');
+                    updateSizes();
+                };
+                sz.appendChild(b);
+            });
+            renderUI();
         }
 
         function renderUI() {
@@ -132,11 +174,13 @@
             DB.modifiers.forEach(m => {
                 const targetRaw = m.target.replace(/[0-9.\s]/g, '');
                 if(targetRaw === "通用" || styleRaw.includes(targetRaw) || targetRaw.includes(styleRaw)) {
-                    const b = document.createElement('button'); b.innerText = m.name;
+                    const b = document.createElement('button');
                     const act = activeMods.some(x => x.name === m.name);
-                    b.className = `p-2 rounded-lg text-[10px] border font-bold ${act?'btn-active':'bg-white text-slate-500'}`;
+                    b.innerText = m.name + " (" + m.factor + ")";
+                    b.className = `p-2 rounded-lg text-[10px] border font-bold transition-all ${act?'btn-active':'bg-white text-slate-500'}`;
                     b.onclick = () => {
-                        if(act) activeMods = activeMods.filter(x => x.name !== m.name); else activeMods.push(m);
+                        if(act) activeMods = activeMods.filter(x => x.name !== m.name);
+                        else activeMods.push(m);
                         renderMods(); calculate();
                     };
                     g.appendChild(b);
@@ -155,9 +199,15 @@
                     return tRaw === "通用" || styleRaw.includes(tRaw) || tRaw.includes(styleRaw);
                 });
                 if(isMatch) {
-                    const d = document.createElement('div');
-                    d.className = "p-3 bg-white border rounded-xl flex items-center justify-between";
-                    d.innerHTML = `<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="${p.name}" ${checked.includes(p.name)?'checked':''} class="w-4 h-4"> <span class="text-[10px] font-bold">${p.name}</span></div> <span class="text-[10px] text-emerald-600 font-bold">¥${p.price}</span>`;
+                    const d = document.createElement('label');
+                    d.className = "p-3 bg-slate-50 border rounded-xl flex items-center justify-between cursor-pointer hover:bg-white transition-all";
+                    d.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" onchange="calculate()" data-name="${p.name}" ${checked.includes(p.name)?'checked':''} class="w-4 h-4 rounded">
+                            <span class="text-[11px] font-bold text-slate-700">${p.name}</span>
+                        </div>
+                        <span class="text-[11px] font-black text-emerald-600">¥${p.price.toFixed(2)}</span>
+                    `;
                     g.appendChild(d);
                 }
             });
@@ -167,9 +217,16 @@
             const s = document.getElementById('f-search').value.toLowerCase();
             const g = document.getElementById('f-list'); g.innerHTML = "";
             DB.fabrics.filter(f => f.name.toLowerCase().includes(s)).forEach(f => {
+                const act = selFabric?.id === f.id;
                 const d = document.createElement('div');
-                d.className = `p-3 border rounded-xl flex justify-between cursor-pointer ${selFabric?.id === f.id ? 'bg-orange-50 border-orange-400' : 'bg-white'}`;
-                d.innerHTML = `<span class="text-[10px] font-bold">${f.name}</span> <span class="text-[10px] text-orange-600 font-bold">¥${f.price_loose}</span>`;
+                d.className = `p-4 border rounded-xl flex justify-between items-center cursor-pointer transition-all ${act ? 'bg-orange-50 border-orange-400 ring-2 ring-orange-100' : 'bg-white hover:border-slate-300'}`;
+                d.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs font-black text-slate-800">${f.name}</span>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase mt-1">Roll MOQ: ${f.rollQty}</span>
+                    </div>
+                    <span class="text-sm font-black text-orange-600">¥${f.price_loose.toFixed(2)}</span>
+                `;
                 d.onclick = () => { selFabric = f; renderFabrics(); };
                 g.appendChild(d);
             });
@@ -177,40 +234,62 @@
         }
 
         function updateSizes() {
-            const keys = DB.styles[1] ? Object.keys(DB.styles[1].sizes) : [];
+            const keys = Object.keys(DB.styles[0].sizes);
             const sorted = activeSizes.sort((a,b) => keys.indexOf(a) - keys.indexOf(b));
             const mid = sorted[Math.floor(sorted.length / 2)];
-            document.getElementById('size-info').innerText = mid ? `Mid Size: ${mid}` : "";
+            document.getElementById('size-info').innerText = mid ? "基准尺码 (中位偏大): " + mid : "请至少选择一个尺码";
             calculate();
         }
 
         function calculate() {
-            const mid = document.getElementById('size-info').innerText.replace('Mid Size: ', '');
+            const midText = document.getElementById('size-info').innerText;
+            const mid = midText.includes(':') ? midText.split(': ')[1] : null;
             if(!activeStyle || !mid || !selFabric) return;
+
             let qCons = activeStyle.sizes[mid] || 0;
             let f = 1.0; activeMods.forEach(m => f *= m.factor); qCons *= f;
+
             let extra = 0;
             document.querySelectorAll('#proc-list input:checked').forEach(i => {
                 const p = DB.processes.find(x => x.name === i.dataset.name);
                 if(p) extra += p.price;
             });
+
             const rmb = (qCons * selFabric.price_loose * 1.1 + activeStyle.baseLabor + extra + 1.5) / 0.7;
             const usd = rmb / 6.7;
+
             document.getElementById('res-usd').innerText = usd.toFixed(2);
             document.getElementById('res-rmb').innerText = "¥ " + rmb.toFixed(2);
+            
             let moq = Math.round(selFabric.rollQty / (qCons * 0.22));
             document.getElementById('res-moq').innerText = moq;
+
             const diff = usd < 1.5 ? 0.05 : usd < 3 ? 0.1 : usd < 5 ? 0.15 : 0.2;
             const tb = document.getElementById('tier-body'); tb.innerHTML = "";
             const curIdx = moq < 100 ? 0 : moq < 300 ? 1 : moq < 500 ? 2 : 3;
-            const brks = [{l:"0-99"}, {l:"100-299"}, {l:"300-499"}, {l:">500"}];
+            const brks = [{l:"50-99", q:50}, {l:"100-299", q:100}, {l:"300-499", q:300}, {l:"500+", q:500}];
+            
             brks.forEach((b, i) => {
                 const p = usd + (curIdx - i) * diff;
                 const tr = document.createElement('tr'); 
-                tr.innerHTML = `<td class="tier-td ${i===curIdx?'active-tier-td':''} text-[10px]">${b.l}</td><td class="text-right font-mono text-sm">$${p.toFixed(2)}</td>`;
+                tr.innerHTML = `
+                    <td class="tier-td ${i===curIdx?'active-tier-td':''} text-[10px] tracking-widest uppercase">${b.l} PCS</td>
+                    <td class="text-right font-black text-xl">$${p.toFixed(2)}</td>
+                `;
                 tb.appendChild(tr);
             });
         }
+
+        function copyQuote() {
+            const usd = document.getElementById('res-usd').innerText;
+            const moq = document.getElementById('res-moq').innerText;
+            const sales = document.getElementById('sales-sel').value;
+            const client = document.getElementById('client').value;
+            const text = `ASTON QUOTATION\nClient: ${client || 'N/A'}\nStyle: ${activeStyle.name}\nFabric: ${selFabric.name}\nBase Price: $${usd}\nMOQ: ${moq} pcs\nQuoted by: ${sales || 'ASTON AI'}\nValid for 7 days.`;
+            navigator.clipboard.writeText(text);
+            alert("报价摘要已复制到剪贴板！");
+        }
+
         init();
     </script>
 </body>
