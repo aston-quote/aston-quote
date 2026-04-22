@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.2 逻辑增强版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.3 逻辑补丁版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
@@ -19,7 +19,7 @@
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div id="loader-content" class="flex flex-col items-center">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
-            <p class="text-xs font-bold text-slate-400">系统数据加载中 V8.2...</p>
+            <p class="text-xs font-bold text-slate-400">系统数据加载中 V8.3...</p>
         </div>
     </div>
     
@@ -29,7 +29,7 @@
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
                         <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic text-xl">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.2</span></h1>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.3</span></h1>
                     </div>
                     <div class="flex flex-col gap-2 w-64">
                         <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></select></div>
@@ -71,7 +71,7 @@
 
             <div class="card p-6 space-y-4">
                 <div class="flex flex-col gap-4">
-                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (多选)</h3>
+                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (单选)</h3>
                     <div class="grid grid-cols-2 gap-2">
                         <button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-3 text-sm font-black rounded-xl bg-blue-600 text-white shadow-md transition-all">散剪模式 (Loose Price)</button>
                         <button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-3 text-sm font-black rounded-xl text-slate-400 bg-slate-100 hover:bg-white transition-all">整卷模式 (Roll Price)</button>
@@ -114,7 +114,7 @@
 
     <script src="./data.js"></script>
     <script>
-        let activeStyle=null, activeMods=[], selectedSize=null, selectedFabrics=[], activePkg=null, priceMode='loose';
+        let activeStyle=null, activeMods=[], selectedSize=null, selFabric=null, activePkg=null, priceMode='loose';
         
         function init() {
             try {
@@ -207,13 +207,12 @@
         function renderFabrics() {
             const s=document.getElementById('f-search').value.toLowerCase(); const g=document.getElementById('f-list'); g.innerHTML="";
             DB.fabrics.filter(f=>f.name.toLowerCase().includes(s)||f.id.includes(s)).forEach(f=>{
-                const act=selectedFabrics.some(sf => sf.id === f.id);
+                const act=selFabric?.id === f.id;
                 const tr=document.createElement('tr'); tr.className="cursor-pointer hover:bg-slate-50 " + (act?'bg-orange-50':'');
                 const pVal = priceMode === 'loose' ? f.price_loose : f.price_roll;
-                tr.innerHTML='<td class="p-3 border-b"><input type="checkbox" ' + (act?'checked':'') + ' class="w-4 h-4 rounded"></td><td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-blue-600 font-bold">¥' + pVal.toFixed(2) + '</td>';
+                tr.innerHTML='<td class="p-3 border-b"><input type="radio" name="fab-radio" ' + (act?'checked':'') + ' class="w-4 h-4 rounded"></td><td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-blue-600 font-bold">¥' + pVal.toFixed(2) + '</td>';
                 tr.onclick=()=>{ 
-                    if(act) selectedFabrics = selectedFabrics.filter(sf => sf.id !== f.id); 
-                    else selectedFabrics.push(f);
+                    selFabric = f;
                     renderFabrics(); 
                 };
                 g.appendChild(tr);
@@ -240,13 +239,12 @@
             let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
             document.getElementById('usage-info').innerText = "单件核算用料: " + finalCons.toFixed(3) + " ㎡";
 
-            let fSum = selectedFabrics.reduce((acc, f) => acc + (priceMode === 'loose' ? f.price_loose : f.price_roll), 0);
-            if (selectedFabrics.length === 0) fSum = parseFloat(document.getElementById('mf-price').value) || 0;
+            let fSum = selFabric ? (priceMode === 'loose' ? selFabric.price_loose : selFabric.price_roll) : (parseFloat(document.getElementById('mf-price').value) || 0);
             
-            // MOQ logic from memory
-            const mainFabric = selectedFabrics[0] || { rollQty: 20, gsm: 200, width: 150 };
-            const fabricUnitUsage = (mainFabric.gsm / 1000) * finalCons; // Usage in KG per unit
-            let moq = Math.round(mainFabric.rollQty / fabricUnitUsage) || 0;
+            // MOQ logic with 1.05 safety factor
+            const mainFabric = selFabric || { rollQty: 20, gsm: 200, width: 150 };
+            const fabricUnitUsage = (mainFabric.gsm / 1000) * finalCons; // KG per unit
+            let moq = Math.round((mainFabric.rollQty / fabricUnitUsage) * 1.05) || 0;
             document.getElementById('res-moq').innerText = moq;
 
             let extra=0; let extraDetails = "";
@@ -274,13 +272,13 @@
             });
 
             document.getElementById('audit-box').innerText = 
-                "核心公式: [(用料*面料价*1.1损耗 + 工费 + 工艺 + 包装) / 0.7利润] / 6.7汇率\n\n" +
+                "核心公式: [(用料*单价*1.1损耗 + 工费 + 工艺 + 包装) / 0.7利润] / 6.7汇率\n\n" +
                 "1. 核算用料: " + finalCons.toFixed(3) + " ㎡\n" +
                 "2. 面料总价: " + finalCons.toFixed(3) + " ㎡ * ¥" + fSum.toFixed(2) + " * 1.1 = ¥" + (finalCons * fSum * 1.1).toFixed(2) + "\n" +
                 "3. 基础工费: ¥" + labor.toFixed(2) + "\n" +
                 "4. 特色工艺: ¥" + extra.toFixed(2) + " (" + (extraDetails || "无") + ")\n" +
                 "5. 包装费用: ¥" + pkgP.toFixed(2) + "\n" +
-                "6. 起订量计算: " + mainFabric.rollQty + "KG / (" + finalCons.toFixed(3) + "㎡ * " + mainFabric.gsm + "GSM / 1000) = " + moq + " 件\n" +
+                "6. 起订量计算: [" + mainFabric.rollQty + "KG / (" + finalCons.toFixed(3) + "㎡ * " + mainFabric.gsm + "GSM / 1000)] * 1.05 = " + moq + " 件\n" +
                 "------------------\n" +
                 "单件成本: ¥" + rmb.toFixed(2) + " | 美金: $" + usd.toFixed(2);
         }
