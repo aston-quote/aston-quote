@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.1 深度定制版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.2 逻辑增强版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
@@ -19,7 +19,7 @@
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div id="loader-content" class="flex flex-col items-center">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
-            <p class="text-xs font-bold text-slate-400">系统数据加载中 V8.1...</p>
+            <p class="text-xs font-bold text-slate-400">系统数据加载中 V8.2...</p>
         </div>
     </div>
     
@@ -29,7 +29,7 @@
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
                         <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic text-xl">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.1</span></h1>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.2</span></h1>
                     </div>
                     <div class="flex flex-col gap-2 w-64">
                         <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></select></div>
@@ -61,7 +61,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="card p-6 space-y-3"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">02. 版型修正</h3><div id="mod-btns" class="grid grid-cols-2 gap-2"></div></div>
-                <div class="card p-6 space-y-3"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">03. 尺码矩阵</h3><div id="size-btns" class="grid grid-cols-5 md:grid-cols-6 gap-2"></div></div>
+                <div class="card p-6 space-y-3"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">03. 尺码矩阵 (单选)</h3><div id="size-btns" class="grid grid-cols-5 md:grid-cols-6 gap-2"></div></div>
             </div>
 
             <div class="card p-6 space-y-4">
@@ -86,7 +86,6 @@
                         <tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody>
                     </table></div>
                 </div>
-                <!-- 手动面料价格移至下方 -->
                 <div class="p-4 bg-orange-50 border border-orange-200 rounded-xl grid grid-cols-3 gap-3">
                     <div><label class="text-[9px] font-bold text-orange-800 uppercase">手动面料单价 (RMB)</label><input type="number" id="mf-price" value="0" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 text-xs font-bold"></div>
                     <div><label class="text-[9px] font-bold text-orange-800 uppercase">克重 GSM</label><input type="number" id="mf-gsm" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
@@ -115,7 +114,7 @@
 
     <script src="./data.js"></script>
     <script>
-        let activeStyle=null, activeMods=[], activeSizes=[], selectedFabrics=[], activePkg=null, priceMode='loose';
+        let activeStyle=null, activeMods=[], selectedSize=null, selectedFabrics=[], activePkg=null, priceMode='loose';
         
         function init() {
             try {
@@ -139,10 +138,11 @@
                 const targetStyle = DB.styles.length > 1 ? DB.styles[1] : DB.styles[0];
                 Object.keys(targetStyle.sizes).forEach(k=>{
                     const b=document.createElement('button'); b.innerText=k;
-                    b.className="p-1 rounded-lg text-[9px] border bg-white text-slate-400 font-bold hover:border-slate-400";
+                    b.className="size-item p-1 rounded-lg text-[9px] border bg-white text-slate-400 font-bold hover:border-slate-400";
                     b.onclick=()=>{
-                        if(activeSizes.includes(k)) activeSizes=activeSizes.filter(x=>x!==k); else activeSizes.push(k);
-                        b.classList.toggle('btn-active'); updateSizes();
+                        document.querySelectorAll('.size-item').forEach(x=>x.classList.remove('btn-active'));
+                        b.classList.add('btn-active');
+                        selectedSize=k; updateSizeUI();
                     };
                     sz.appendChild(b);
                 });
@@ -221,9 +221,8 @@
             calculate();
         }
 
-        function updateSizes() {
-            const keys=Object.keys(activeStyle.sizes); const sorted=activeSizes.sort((a,b)=>keys.indexOf(a)-keys.indexOf(b));
-            const mid=sorted[Math.floor(sorted.length/2)]; document.getElementById('size-info').innerText=mid?"基准尺码: "+mid:"请选择尺码矩阵";
+        function updateSizeUI() {
+            document.getElementById('size-info').innerText = selectedSize ? "当前基准尺码: " + selectedSize : "请选择尺码矩阵";
             calculate();
         }
 
@@ -233,11 +232,10 @@
                     i.parentElement.parentElement.classList.toggle('proc-active', i.checked);
                 });
             }
-            const mid=document.getElementById('size-info').innerText.replace('基准尺码: ','');
             let qCons=0, labor=0;
             if(activeStyle.name.includes("手动")) {
                 qCons=parseFloat(document.getElementById('m-cons').value)||0; labor=parseFloat(document.getElementById('m-labor').value)||0;
-            } else { if(!mid || mid.includes("请选择")) return; qCons=activeStyle.sizes[mid]||0; labor=activeStyle.baseLabor; }
+            } else { if(!selectedSize) return; qCons=activeStyle.sizes[selectedSize]||0; labor=activeStyle.baseLabor; }
             
             let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
             document.getElementById('usage-info').innerText = "单件核算用料: " + finalCons.toFixed(3) + " ㎡";
@@ -245,8 +243,12 @@
             let fSum = selectedFabrics.reduce((acc, f) => acc + (priceMode === 'loose' ? f.price_loose : f.price_roll), 0);
             if (selectedFabrics.length === 0) fSum = parseFloat(document.getElementById('mf-price').value) || 0;
             
-            let moq=Math.round(20/(finalCons*0.22))||0; document.getElementById('res-moq').innerText=moq;
-            
+            // MOQ logic from memory
+            const mainFabric = selectedFabrics[0] || { rollQty: 20, gsm: 200, width: 150 };
+            const fabricUnitUsage = (mainFabric.gsm / 1000) * finalCons; // Usage in KG per unit
+            let moq = Math.round(mainFabric.rollQty / fabricUnitUsage) || 0;
+            document.getElementById('res-moq').innerText = moq;
+
             let extra=0; let extraDetails = "";
             document.querySelectorAll('#proc-list input:checked').forEach(i=>{
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
@@ -278,6 +280,7 @@
                 "3. 基础工费: ¥" + labor.toFixed(2) + "\n" +
                 "4. 特色工艺: ¥" + extra.toFixed(2) + " (" + (extraDetails || "无") + ")\n" +
                 "5. 包装费用: ¥" + pkgP.toFixed(2) + "\n" +
+                "6. 起订量计算: " + mainFabric.rollQty + "KG / (" + finalCons.toFixed(3) + "㎡ * " + mainFabric.gsm + "GSM / 1000) = " + moq + " 件\n" +
                 "------------------\n" +
                 "单件成本: ¥" + rmb.toFixed(2) + " | 美金: $" + usd.toFixed(2);
         }
