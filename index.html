@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.0 兼容补丁版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.1 深度定制版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
@@ -9,6 +9,7 @@
         .btn-active { background: #2563eb !important; color: white !important; border-color: #2563eb !important; }
         .tier-td { padding: 10px; background: #1e293b; color: white; font-weight: 700; border-radius: 8px; }
         .active-tier-td { background: #2563eb !important; }
+        .proc-active { background: #f0fdf4 !important; border-color: #22c55e !important; }
         input, select { appearance: none; -webkit-appearance: none; border-radius: 0.75rem; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -18,7 +19,7 @@
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div id="loader-content" class="flex flex-col items-center">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
-            <p id="loader-text" class="text-xs font-bold text-slate-400">系统数据加载中 V8.0...</p>
+            <p class="text-xs font-bold text-slate-400">系统数据加载中 V8.1...</p>
         </div>
     </div>
     
@@ -28,29 +29,30 @@
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
                         <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic text-xl">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.0</span></h1>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.1</span></h1>
                     </div>
                     <div class="flex flex-col gap-2 w-64">
                         <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></select></div>
                         <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">目的国</label><select id="country-sel" onchange="calculate()" class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></select></div>
-                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">客户/项目名称</label><input type="text" id="client" oninput="calculate()" placeholder="请输入..." class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">项目名称</label><input type="text" id="client" oninput="calculate()" placeholder="请输入..." class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></div>
                     </div>
                 </div>
                 <div class="flex-1 card p-6 flex gap-10 items-center bg-slate-50 border-dashed border-2">
                     <div class="flex flex-col items-center gap-4">
-                        <img id="style-img" src="" class="h-64 w-64 object-contain rounded-2xl bg-white border shadow-md" onerror="this.src='https://via.placeholder.com/300?text=图片加载失败'">
+                        <img id="style-img" src="" class="h-64 w-64 object-contain rounded-2xl bg-white border shadow-md" onerror="this.src='https://via.placeholder.com/300?text=图片载入中'">
                         <p id="style-desc" class="text-xs font-bold text-slate-500 italic max-w-xs text-center"></p>
                     </div>
-                    <div class="space-y-3">
+                    <div class="space-y-4">
                         <p id="style-name" class="text-2xl font-black uppercase text-slate-800 leading-tight"></p>
-                        <p id="size-info" class="text-xs font-bold text-blue-600 bg-blue-100 px-4 py-2 rounded-full inline-block">请选择尺码矩阵</p>
+                        <div class="space-y-2">
+                            <p id="size-info" class="text-xs font-bold text-blue-600 bg-blue-100 px-4 py-2 rounded-full inline-block">未选尺码</p>
+                            <p id="usage-info" class="text-xs font-black text-emerald-600 bg-emerald-100 px-4 py-2 rounded-full block w-fit">单件用料: 0.000 ㎡</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. 版型选择</h3>
-                <div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+            <div class="card p-6 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. 版型选择</h3><div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
                 <div id="manual-area" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-xl grid grid-cols-2 gap-4">
                     <div><label class="text-[10px] font-bold text-blue-800 uppercase">手动工费 (RMB)</label><input type="number" id="m-labor" value="25" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 font-bold"></div>
                     <div><label class="text-[10px] font-bold text-blue-800 uppercase">手动用料 (㎡)</label><input type="number" id="m-cons" value="0.5" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 font-bold"></div>
@@ -63,43 +65,37 @@
             </div>
 
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺 (多选)</h3>
+                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺 (点击勾选)</h3>
                 <div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
             </div>
 
             <div class="card p-6 space-y-4">
-                <div class="flex justify-between items-end">
-                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (可滚动)</h3>
-                    <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
-                        <button id="mode-loose" onclick="setPriceMode('loose')" class="px-3 py-1 text-[10px] font-black rounded bg-blue-600 text-white shadow-sm transition-all">散剪模式</button>
-                        <button id="mode-roll" onclick="setPriceMode('roll')" class="px-3 py-1 text-[10px] font-black rounded text-slate-400 hover:bg-white transition-all">整卷模式</button>
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (多选)</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-3 text-sm font-black rounded-xl bg-blue-600 text-white shadow-md transition-all">散剪模式 (Loose Price)</button>
+                        <button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-3 text-sm font-black rounded-xl text-slate-400 bg-slate-100 hover:bg-white transition-all">整卷模式 (Roll Price)</button>
                     </div>
                 </div>
+                <input type="text" id="f-search" oninput="renderFabrics()" placeholder="搜索面料..." class="w-full p-3 border rounded-xl text-sm font-bold bg-slate-50">
+                <div class="overflow-hidden border rounded-xl">
+                    <div class="overflow-y-auto" style="max-height: 320px;"><table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-[10px] font-bold uppercase text-slate-500 sticky top-0 z-10">
+                            <tr><th class="p-3 w-10"></th><th class="p-3">ID / 面料名称</th><th class="p-3">规格</th><th class="p-3" id="th-price">单价</th></tr>
+                        </thead>
+                        <tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody>
+                    </table></div>
+                </div>
+                <!-- 手动面料价格移至下方 -->
                 <div class="p-4 bg-orange-50 border border-orange-200 rounded-xl grid grid-cols-3 gap-3">
-                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">手动面料价格</label><input type="number" id="mf-price" value="0" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 text-xs font-bold"></div>
+                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">手动面料单价 (RMB)</label><input type="number" id="mf-price" value="0" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 text-xs font-bold"></div>
                     <div><label class="text-[9px] font-bold text-orange-800 uppercase">克重 GSM</label><input type="number" id="mf-gsm" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
                     <div><label class="text-[9px] font-bold text-orange-800 uppercase">幅宽 Width</label><input type="number" id="mf-width" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
                 </div>
-                <input type="text" id="f-search" oninput="renderFabrics()" placeholder="输入面料名称或 ID 搜索..." class="w-full p-3 border rounded-xl text-sm font-bold bg-slate-50">
-                <div class="overflow-hidden border rounded-xl">
-                    <div class="overflow-y-auto" style="max-height: 320px;">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-100 text-[10px] font-bold uppercase text-slate-500 sticky top-0 z-10">
-                                <tr><th class="p-3 w-10"></th><th class="p-3">ID / 面料名称</th><th class="p-3">规格</th><th class="p-3" id="th-price">散剪单价</th></tr>
-                            </thead>
-                            <tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
-            <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. 包装方式</h3>
-                <div id="pkg-btns" class="grid grid-cols-3 gap-2"></div>
-                <div class="p-4 bg-slate-50 border rounded-xl flex justify-between items-center">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase">手动包装费 (RMB)</span>
-                    <input type="number" id="m-pkg" value="0" oninput="calculate()" class="w-24 p-2 border rounded-lg text-sm font-black text-right">
-                </div>
+            <div class="card p-6 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. 包装方式</h3><div id="pkg-btns" class="grid grid-cols-3 gap-2"></div>
+                <div class="p-4 bg-slate-50 border rounded-xl flex justify-between items-center"><span class="text-[10px] font-bold text-slate-500 uppercase">手动包装费 (RMB)</span><input type="number" id="m-pkg" value="0" oninput="calculate()" class="w-24 p-2 border rounded-lg text-sm font-black text-right"></div>
             </div>
         </div>
 
@@ -107,15 +103,12 @@
             <div class="card bg-slate-900 text-white p-8 space-y-8 sticky top-8 shadow-2xl text-center">
                 <div><p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">建议美金报价</p><div class="text-7xl font-black tracking-tighter">$<span id="res-usd">0.00</span></div></div>
                 <div class="grid grid-cols-2 gap-4 py-6 border-y border-slate-800">
-                    <div><p class="text-slate-500 text-[9px] uppercase font-bold">人民币总成本</p><p id="res-rmb" class="text-2xl font-black">¥ 0.00</p></div>
-                    <div><p class="text-emerald-500 text-[9px] uppercase font-bold">起订量 MOQ</p><p id="res-moq" class="text-2xl font-black text-emerald-400">0</p></div>
+                    <div><p class="text-slate-500 text-[9px] uppercase font-bold">总计 RMB</p><p id="res-rmb" class="text-2xl font-black">¥ 0.00</p></div>
+                    <div><p class="text-emerald-500 text-[9px] uppercase font-bold">MOQ</p><p id="res-moq" class="text-2xl font-black text-emerald-400">0</p></div>
                 </div>
                 <div class="space-y-4"><h4 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">现货阶梯报价</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
-                <div class="pt-6 border-t border-slate-800 text-left">
-                    <h4 class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3 text-center">报价计算过程审计</h4>
-                    <div id="audit-box" class="bg-slate-800 p-4 rounded-xl text-[10px] font-mono text-slate-400 leading-relaxed whitespace-pre-wrap"></div>
-                </div>
-                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest">导出报价单 PDF</button>
+                <div class="pt-6 border-t border-slate-800 text-left"><h4 class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3 text-center">报价计算过程审计</h4><div id="audit-box" class="bg-slate-800 p-4 rounded-xl text-[10px] font-mono text-slate-400 leading-relaxed whitespace-pre-wrap"></div></div>
+                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest">导出 PDF 报价单</button>
             </div>
         </div>
     </div>
@@ -126,7 +119,7 @@
         
         function init() {
             try {
-                if (typeof DB === 'undefined') { showError("数据库 data.js 未找到，请确认已上传！"); return; }
+                if (typeof DB === 'undefined') { showError("数据库 data.js 未找到！"); return; }
                 activeStyle = DB.styles[0]; activePkg = DB.pkgs[0];
                 const ss=document.getElementById('sales-sel'); DB.sales.forEach(n=>ss.add(new Option(n,n)));
                 const cs=document.getElementById('country-sel'); DB.countries.forEach(n=>cs.add(new Option(n,n)));
@@ -164,22 +157,19 @@
                     };
                     pb.appendChild(b);
                 });
-                renderUI(); 
-                document.getElementById('loader').style.display='none';
+                renderUI(); document.getElementById('loader').style.display='none';
             } catch (e) { showError("系统错误: " + e.message); }
         }
 
         function setPriceMode(mode) {
             priceMode = mode;
-            document.getElementById('mode-loose').className = mode === 'loose' ? 'px-3 py-1 text-[10px] font-black rounded bg-blue-600 text-white shadow-sm' : 'px-3 py-1 text-[10px] font-black rounded text-slate-400 hover:bg-white transition-all';
-            document.getElementById('mode-roll').className = mode === 'roll' ? 'px-3 py-1 text-[10px] font-black rounded bg-blue-600 text-white shadow-sm' : 'px-3 py-1 text-[10px] font-black rounded text-slate-400 hover:bg-white transition-all';
-            document.getElementById('th-price').innerText = mode === 'loose' ? '散剪单价' : '整卷单价';
+            document.getElementById('mode-loose').className = mode === 'loose' ? 'w-full py-3 text-sm font-black rounded-xl bg-blue-600 text-white shadow-md transition-all' : 'w-full py-3 text-sm font-black rounded-xl text-slate-400 bg-slate-100 hover:bg-white transition-all';
+            document.getElementById('mode-roll').className = mode === 'roll' ? 'w-full py-3 text-sm font-black rounded-xl bg-blue-600 text-white shadow-md transition-all' : 'w-full py-3 text-sm font-black rounded-xl text-slate-400 bg-slate-100 hover:bg-white transition-all';
+            document.getElementById('th-price').innerText = mode === 'loose' ? '散剪价格' : '整卷价格';
             renderFabrics();
         }
 
-        function showError(msg) { 
-            document.getElementById('loader-content').innerHTML = '<div class="text-red-500 font-bold p-6 bg-white rounded-2xl shadow-xl text-center">' + msg + '</div>'; 
-        }
+        function showError(msg) { document.getElementById('loader-content').innerHTML = '<div class="text-red-500 font-bold p-6 bg-white rounded-2xl shadow-xl text-center">' + msg + '</div>'; }
 
         function renderUI() {
             document.getElementById('style-img').src = activeStyle.img;
@@ -202,12 +192,13 @@
         }
 
         function renderProc() {
-            const g=document.getElementById('proc-list'); g.innerHTML=""; const currentStyleClean=activeStyle.name.replace(/[0-9.\s]/g,'');
+            const g=document.getElementById('proc-list'); g.innerHTML=""; const sR=activeStyle.name.replace(/[0-9.\s]/g,'');
             DB.processes.forEach(p=>{
                 const targets = p.targets.map(t => t.replace(/[0-9.\s]/g,''));
-                if(targets.includes("通用") || targets.some(t => currentStyleClean.includes(t) || t.includes(currentStyleClean))) {
-                    const d=document.createElement('label'); d.className="p-3 bg-white border rounded-xl flex justify-between items-center cursor-pointer hover:border-emerald-400 transition-all";
-                    d.innerHTML='<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="' + p.name + '" class="w-5 h-5 rounded"><span class="text-xs font-bold text-slate-700">' + p.name + '</span></div><span class="text-xs font-black text-emerald-600" id="price-' + p.name + '">¥' + p.price.toFixed(2) + '</span>';
+                if(targets.includes("通用") || targets.some(t => sR.includes(t) || t.includes(sR))) {
+                    const d=document.createElement('label'); 
+                    d.className="p-3 bg-white border rounded-xl flex justify-between items-center cursor-pointer transition-all hover:border-emerald-400";
+                    d.innerHTML='<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate(true)" data-name="' + p.name + '" class="w-5 h-5 rounded"><span class="text-xs font-bold text-slate-700">' + p.name + '</span></div><span class="text-xs font-black text-emerald-600" id="price-' + p.name + '">¥' + p.price.toFixed(2) + '</span>';
                     g.appendChild(d);
                 }
             });
@@ -219,7 +210,7 @@
                 const act=selectedFabrics.some(sf => sf.id === f.id);
                 const tr=document.createElement('tr'); tr.className="cursor-pointer hover:bg-slate-50 " + (act?'bg-orange-50':'');
                 const pVal = priceMode === 'loose' ? f.price_loose : f.price_roll;
-                tr.innerHTML='<td class="p-3 border-b"><input type="checkbox" ' + (act?'checked':'') + ' class="w-4 h-4 rounded"></td><td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-blue-600">¥' + pVal.toFixed(2) + '</td>';
+                tr.innerHTML='<td class="p-3 border-b"><input type="checkbox" ' + (act?'checked':'') + ' class="w-4 h-4 rounded"></td><td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-blue-600 font-bold">¥' + pVal.toFixed(2) + '</td>';
                 tr.onclick=()=>{ 
                     if(act) selectedFabrics = selectedFabrics.filter(sf => sf.id !== f.id); 
                     else selectedFabrics.push(f);
@@ -236,16 +227,26 @@
             calculate();
         }
 
-        function calculate() {
+        function calculate(updateProcColor=false) {
+            if(updateProcColor) {
+                document.querySelectorAll('#proc-list input').forEach(i => {
+                    i.parentElement.parentElement.classList.toggle('proc-active', i.checked);
+                });
+            }
             const mid=document.getElementById('size-info').innerText.replace('基准尺码: ','');
             let qCons=0, labor=0;
             if(activeStyle.name.includes("手动")) {
                 qCons=parseFloat(document.getElementById('m-cons').value)||0; labor=parseFloat(document.getElementById('m-labor').value)||0;
             } else { if(!mid || mid.includes("请选择")) return; qCons=activeStyle.sizes[mid]||0; labor=activeStyle.baseLabor; }
+            
+            let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
+            document.getElementById('usage-info').innerText = "单件核算用料: " + finalCons.toFixed(3) + " ㎡";
+
             let fSum = selectedFabrics.reduce((acc, f) => acc + (priceMode === 'loose' ? f.price_loose : f.price_roll), 0);
             if (selectedFabrics.length === 0) fSum = parseFloat(document.getElementById('mf-price').value) || 0;
-            let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
+            
             let moq=Math.round(20/(finalCons*0.22))||0; document.getElementById('res-moq').innerText=moq;
+            
             let extra=0; let extraDetails = "";
             document.querySelectorAll('#proc-list input:checked').forEach(i=>{
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
@@ -262,21 +263,23 @@
             const usd=rmb/6.7;
             document.getElementById('res-usd').innerText=usd.toFixed(2);
             document.getElementById('res-rmb').innerText="¥ "+rmb.toFixed(2);
+            
             const tb=document.getElementById('tier-body'); tb.innerHTML="";
             const cur=moq<100?0:moq<300?1:moq<500?2:3; const bks=["0-99","100-299","300-499",">500"];
             bks.forEach((l,i)=>{
                 const p=usd+(cur-i)*(usd<3?0.1:0.15);
                 tb.innerHTML+='<tr><td class="tier-td ' + (i===cur?'active-tier-td':'') + ' text-[9px] uppercase tracking-widest">' + l + '</td><td class="text-right font-black text-2xl text-white font-mono">$' + p.toFixed(2) + '</td></tr>';
             });
+
             document.getElementById('audit-box').innerText = 
-                "核算公式: [(用料*单价*1.1 + 工费 + 工艺 + 包装) / 0.7] / 6.7\n\n" +
-                "1. 核算用料: " + qCons.toFixed(3) + " * " + fMod.toFixed(2) + " (修正) = " + finalCons.toFixed(3) + " ㎡\n" +
-                "2. 面料总价: ¥" + fSum.toFixed(2) + " (" + (priceMode==='loose'?'散剪':'整卷') + ")\n" +
-                "3. 工费: ¥" + labor.toFixed(2) + "\n" +
+                "核心公式: [(用料*面料价*1.1损耗 + 工费 + 工艺 + 包装) / 0.7利润] / 6.7汇率\n\n" +
+                "1. 核算用料: " + finalCons.toFixed(3) + " ㎡\n" +
+                "2. 面料总价: " + finalCons.toFixed(3) + " ㎡ * ¥" + fSum.toFixed(2) + " * 1.1 = ¥" + (finalCons * fSum * 1.1).toFixed(2) + "\n" +
+                "3. 基础工费: ¥" + labor.toFixed(2) + "\n" +
                 "4. 特色工艺: ¥" + extra.toFixed(2) + " (" + (extraDetails || "无") + ")\n" +
-                "5. 包装: ¥" + pkgP.toFixed(2) + "\n" +
+                "5. 包装费用: ¥" + pkgP.toFixed(2) + "\n" +
                 "------------------\n" +
-                "人民币: ¥" + rmb.toFixed(2) + " | 美金: $" + usd.toFixed(2);
+                "单件成本: ¥" + rmb.toFixed(2) + " | 美金: $" + usd.toFixed(2);
         }
         window.addEventListener('DOMContentLoaded', init);
     </script>
