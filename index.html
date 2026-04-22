@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V7.9 汉化稳健版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.0 兼容补丁版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
@@ -18,18 +18,17 @@
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div id="loader-content" class="flex flex-col items-center">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
-            <p class="text-xs font-bold text-slate-400">系统加载中 V7.9...</p>
+            <p id="loader-text" class="text-xs font-bold text-slate-400">系统数据加载中 V8.0...</p>
         </div>
     </div>
     
     <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
-        <!-- 左侧表单 -->
         <div class="flex-1 space-y-6">
             <div class="flex items-start gap-8">
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
                         <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic text-xl">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V7.9</span></h1>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">智能报价系统 <span class="text-blue-600 text-sm">V8.0</span></h1>
                     </div>
                     <div class="flex flex-col gap-2 w-64">
                         <div class="space-y-1"><label class="text-[9px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-2 border rounded-lg text-sm font-bold bg-white w-full"></select></div>
@@ -39,12 +38,12 @@
                 </div>
                 <div class="flex-1 card p-6 flex gap-10 items-center bg-slate-50 border-dashed border-2">
                     <div class="flex flex-col items-center gap-4">
-                        <img id="style-img" src="" class="h-64 w-64 object-contain rounded-2xl bg-white border shadow-md" onerror="this.src='https://via.placeholder.com/300?text=图片未找到'">
+                        <img id="style-img" src="" class="h-64 w-64 object-contain rounded-2xl bg-white border shadow-md" onerror="this.src='https://via.placeholder.com/300?text=图片加载失败'">
                         <p id="style-desc" class="text-xs font-bold text-slate-500 italic max-w-xs text-center"></p>
                     </div>
                     <div class="space-y-3">
                         <p id="style-name" class="text-2xl font-black uppercase text-slate-800 leading-tight"></p>
-                        <p id="size-info" class="text-xs font-bold text-blue-600 bg-blue-100 px-4 py-2 rounded-full inline-block">请选择尺码</p>
+                        <p id="size-info" class="text-xs font-bold text-blue-600 bg-blue-100 px-4 py-2 rounded-full inline-block">请选择尺码矩阵</p>
                     </div>
                 </div>
             </div>
@@ -64,13 +63,13 @@
             </div>
 
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺 (支持多选)</h3>
+                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺 (多选)</h3>
                 <div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
             </div>
 
             <div class="card p-6 space-y-4">
                 <div class="flex justify-between items-end">
-                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (多选叠加)</h3>
+                    <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (可滚动)</h3>
                     <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
                         <button id="mode-loose" onclick="setPriceMode('loose')" class="px-3 py-1 text-[10px] font-black rounded bg-blue-600 text-white shadow-sm transition-all">散剪模式</button>
                         <button id="mode-roll" onclick="setPriceMode('roll')" class="px-3 py-1 text-[10px] font-black rounded text-slate-400 hover:bg-white transition-all">整卷模式</button>
@@ -104,36 +103,30 @@
             </div>
         </div>
 
-        <!-- 右侧结果 -->
         <div class="w-full lg:w-96">
             <div class="card bg-slate-900 text-white p-8 space-y-8 sticky top-8 shadow-2xl text-center">
                 <div><p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-2">建议美金报价</p><div class="text-7xl font-black tracking-tighter">$<span id="res-usd">0.00</span></div></div>
                 <div class="grid grid-cols-2 gap-4 py-6 border-y border-slate-800">
                     <div><p class="text-slate-500 text-[9px] uppercase font-bold">人民币总成本</p><p id="res-rmb" class="text-2xl font-black">¥ 0.00</p></div>
-                    <div><p class="text-emerald-500 text-[9px] uppercase font-bold">基础起订量</p><p id="res-moq" class="text-2xl font-black text-emerald-400">0</p></div>
+                    <div><p class="text-emerald-500 text-[9px] uppercase font-bold">起订量 MOQ</p><p id="res-moq" class="text-2xl font-black text-emerald-400">0</p></div>
                 </div>
-                
-                <div class="space-y-4"><h4 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">现货阶梯报价 (档差)</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
-                
+                <div class="space-y-4"><h4 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">现货阶梯报价</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
                 <div class="pt-6 border-t border-slate-800 text-left">
-                    <h4 class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3 text-center">计算过程实时审计</h4>
+                    <h4 class="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-3 text-center">报价计算过程审计</h4>
                     <div id="audit-box" class="bg-slate-800 p-4 rounded-xl text-[10px] font-mono text-slate-400 leading-relaxed whitespace-pre-wrap"></div>
                 </div>
-
-                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest">导出 PDF 报价单</button>
+                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest">导出报价单 PDF</button>
             </div>
         </div>
     </div>
 
-    <script>
-        document.write('<script src="./data.js?v=' + new Date().getTime() + '"><\/script>');
-    </script>
+    <script src="./data.js"></script>
     <script>
         let activeStyle=null, activeMods=[], activeSizes=[], selectedFabrics=[], activePkg=null, priceMode='loose';
         
         function init() {
             try {
-                if (typeof DB === 'undefined') { showError("致命错误: 数据库文件加载失败"); return; }
+                if (typeof DB === 'undefined') { showError("数据库 data.js 未找到，请确认已上传！"); return; }
                 activeStyle = DB.styles[0]; activePkg = DB.pkgs[0];
                 const ss=document.getElementById('sales-sel'); DB.sales.forEach(n=>ss.add(new Option(n,n)));
                 const cs=document.getElementById('country-sel'); DB.countries.forEach(n=>cs.add(new Option(n,n)));
@@ -172,8 +165,8 @@
                     pb.appendChild(b);
                 });
                 renderUI(); 
-            } catch (e) { showError("初始化失败: " + e.message); }
-            finally { setTimeout(() => { const ldr = document.getElementById('loader'); if (ldr && !ldr.innerHTML.includes('错误')) ldr.style.display='none'; }, 800); }
+                document.getElementById('loader').style.display='none';
+            } catch (e) { showError("系统错误: " + e.message); }
         }
 
         function setPriceMode(mode) {
@@ -184,7 +177,9 @@
             renderFabrics();
         }
 
-        function showError(msg) { document.getElementById('loader-content').innerHTML = '<div class="text-red-500 font-bold p-6 bg-white rounded-2xl shadow-xl text-center">' + msg + '</div>'; }
+        function showError(msg) { 
+            document.getElementById('loader-content').innerHTML = '<div class="text-red-500 font-bold p-6 bg-white rounded-2xl shadow-xl text-center">' + msg + '</div>'; 
+        }
 
         function renderUI() {
             document.getElementById('style-img').src = activeStyle.img;
@@ -207,12 +202,10 @@
         }
 
         function renderProc() {
-            const g=document.getElementById('proc-list'); g.innerHTML=""; const sR=activeStyle.name.replace(/[0-9.\s]/g,'');
+            const g=document.getElementById('proc-list'); g.innerHTML=""; const currentStyleClean=activeStyle.name.replace(/[0-9.\s]/g,'');
             DB.processes.forEach(p=>{
-                // 增强版型匹配逻辑
                 const targets = p.targets.map(t => t.replace(/[0-9.\s]/g,''));
-                const current = sR;
-                if(targets.includes("通用") || targets.some(t => current.includes(t) || t.includes(current))) {
+                if(targets.includes("通用") || targets.some(t => currentStyleClean.includes(t) || t.includes(currentStyleClean))) {
                     const d=document.createElement('label'); d.className="p-3 bg-white border rounded-xl flex justify-between items-center cursor-pointer hover:border-emerald-400 transition-all";
                     d.innerHTML='<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="' + p.name + '" class="w-5 h-5 rounded"><span class="text-xs font-bold text-slate-700">' + p.name + '</span></div><span class="text-xs font-black text-emerald-600" id="price-' + p.name + '">¥' + p.price.toFixed(2) + '</span>';
                     g.appendChild(d);
@@ -227,7 +220,7 @@
                 const tr=document.createElement('tr'); tr.className="cursor-pointer hover:bg-slate-50 " + (act?'bg-orange-50':'');
                 const pVal = priceMode === 'loose' ? f.price_loose : f.price_roll;
                 tr.innerHTML='<td class="p-3 border-b"><input type="checkbox" ' + (act?'checked':'') + ' class="w-4 h-4 rounded"></td><td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-blue-600">¥' + pVal.toFixed(2) + '</td>';
-                tr.onclick=(e)=>{ 
+                tr.onclick=()=>{ 
                     if(act) selectedFabrics = selectedFabrics.filter(sf => sf.id !== f.id); 
                     else selectedFabrics.push(f);
                     renderFabrics(); 
@@ -239,23 +232,20 @@
 
         function updateSizes() {
             const keys=Object.keys(activeStyle.sizes); const sorted=activeSizes.sort((a,b)=>keys.indexOf(a)-keys.indexOf(b));
-            const mid=sorted[Math.floor(sorted.length/2)]; document.getElementById('size-info').innerText=mid?"当前基准尺码: "+mid:"请勾选尺码矩阵";
+            const mid=sorted[Math.floor(sorted.length/2)]; document.getElementById('size-info').innerText=mid?"基准尺码: "+mid:"请选择尺码矩阵";
             calculate();
         }
 
         function calculate() {
-            const mText=document.getElementById('size-info').innerText; const mid=mText.replace('当前基准尺码: ','');
+            const mid=document.getElementById('size-info').innerText.replace('基准尺码: ','');
             let qCons=0, labor=0;
             if(activeStyle.name.includes("手动")) {
                 qCons=parseFloat(document.getElementById('m-cons').value)||0; labor=parseFloat(document.getElementById('m-labor').value)||0;
-            } else { if(!mid || mid.includes("请勾选")) return; qCons=activeStyle.sizes[mid]||0; labor=activeStyle.baseLabor; }
-            
+            } else { if(!mid || mid.includes("请选择")) return; qCons=activeStyle.sizes[mid]||0; labor=activeStyle.baseLabor; }
             let fSum = selectedFabrics.reduce((acc, f) => acc + (priceMode === 'loose' ? f.price_loose : f.price_roll), 0);
             if (selectedFabrics.length === 0) fSum = parseFloat(document.getElementById('mf-price').value) || 0;
-
             let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
             let moq=Math.round(20/(finalCons*0.22))||0; document.getElementById('res-moq').innerText=moq;
-            
             let extra=0; let extraDetails = "";
             document.querySelectorAll('#proc-list input:checked').forEach(i=>{
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
@@ -272,28 +262,23 @@
             const usd=rmb/6.7;
             document.getElementById('res-usd').innerText=usd.toFixed(2);
             document.getElementById('res-rmb').innerText="¥ "+rmb.toFixed(2);
-            
             const tb=document.getElementById('tier-body'); tb.innerHTML="";
             const cur=moq<100?0:moq<300?1:moq<500?2:3; const bks=["0-99","100-299","300-499",">500"];
             bks.forEach((l,i)=>{
                 const p=usd+(cur-i)*(usd<3?0.1:0.15);
                 tb.innerHTML+='<tr><td class="tier-td ' + (i===cur?'active-tier-td':'') + ' text-[9px] uppercase tracking-widest">' + l + '</td><td class="text-right font-black text-2xl text-white font-mono">$' + p.toFixed(2) + '</td></tr>';
             });
-
-            // 审计过程汉化
             document.getElementById('audit-box').innerText = 
-                "核心公式: [(净用料*面料价*1.1损耗 + 工费 + 工艺 + 包装) / 0.7利润] / 6.7汇率\n\n" +
-                "1. 核算用料: " + qCons.toFixed(3) + " * " + fMod.toFixed(2) + " (版型修正) = " + finalCons.toFixed(3) + " ㎡\n" +
-                "2. 面料总价: ¥" + fSum.toFixed(2) + " (" + (priceMode === 'loose' ? '散剪' : '整卷') + "模式)\n" +
-                "3. 基础工费: ¥" + labor.toFixed(2) + "\n" +
+                "核算公式: [(用料*单价*1.1 + 工费 + 工艺 + 包装) / 0.7] / 6.7\n\n" +
+                "1. 核算用料: " + qCons.toFixed(3) + " * " + fMod.toFixed(2) + " (修正) = " + finalCons.toFixed(3) + " ㎡\n" +
+                "2. 面料总价: ¥" + fSum.toFixed(2) + " (" + (priceMode==='loose'?'散剪':'整卷') + ")\n" +
+                "3. 工费: ¥" + labor.toFixed(2) + "\n" +
                 "4. 特色工艺: ¥" + extra.toFixed(2) + " (" + (extraDetails || "无") + ")\n" +
-                "5. 包装费用: ¥" + pkgP.toFixed(2) + "\n" +
+                "5. 包装: ¥" + pkgP.toFixed(2) + "\n" +
                 "------------------\n" +
-                "人民币成本: ¥" + rmb.toFixed(2) + "\n" +
-                "美金建议价: $" + usd.toFixed(2);
+                "人民币: ¥" + rmb.toFixed(2) + " | 美金: $" + usd.toFixed(2);
         }
         window.addEventListener('DOMContentLoaded', init);
-        setTimeout(() => { const ldr = document.getElementById('loader'); if (ldr && ldr.style.display !== 'none' && !ldr.innerHTML.includes('错误')) ldr.style.display = 'none'; }, 5000);
     </script>
 </body>
 </html>
