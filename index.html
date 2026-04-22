@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V7.6 最终画质版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V7.7 兼容修复版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
@@ -15,17 +15,21 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center"><div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div><p class="text-xs font-bold text-slate-400">LOADING V7.6...</p></div>
+    <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        <div id="loader-content" class="flex flex-col items-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2"></div>
+            <p class="text-xs font-bold text-slate-400">LOADING V7.7...</p>
+        </div>
+    </div>
     
     <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         <!-- Left: Form -->
         <div class="flex-1 space-y-6">
-            <!-- Header with Vertical Stack -->
             <div class="flex items-start gap-8">
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-3">
                         <div class="bg-blue-600 text-white p-2 rounded-lg font-black italic text-xl">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">System <span class="text-blue-600 text-sm">V7.6</span></h1>
+                        <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">System <span class="text-blue-600 text-sm">V7.7</span></h1>
                     </div>
                     <div class="flex flex-col gap-2 w-64">
                         <div class="space-y-1">
@@ -42,8 +46,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Active Preview Box -->
                 <div class="flex-1 card p-4 flex gap-6 items-center bg-slate-50 border-dashed border-2">
                     <img id="style-img" src="" class="h-32 w-32 object-contain rounded-lg bg-white border shadow-sm" onerror="this.src='https://via.placeholder.com/300?text=IMG+ERROR'">
                     <div class="space-y-2">
@@ -53,9 +55,8 @@
                 </div>
             </div>
 
-            <!-- 01 Style Selection -->
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. Style Selection & Manual Base</h3>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. Style Selection</h3>
                 <div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
                 <div id="manual-area" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-xl grid grid-cols-2 gap-4">
                     <div><label class="text-[10px] font-bold text-blue-800 uppercase">Manual Labor (RMB)</label><input type="number" id="m-labor" value="25" oninput="calculate()" class="w-full p-2 border rounded-lg mt-1 font-bold"></div>
@@ -69,16 +70,16 @@
             </div>
 
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. Special Processes (Zipper Tiered)</h3>
+                <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. Special Processes</h3>
                 <div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
             </div>
 
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. Fabric Library & Manual</h3>
+                <h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. Fabric Library</h3>
                 <div class="p-4 bg-orange-50 border border-orange-200 rounded-xl grid grid-cols-3 gap-3">
                     <div><label class="text-[9px] font-bold text-orange-800 uppercase">Manual Price</label><input type="number" id="mf-price" value="0" oninput="selFabric=null;renderFabrics()" class="w-full p-2 border rounded-lg mt-1 text-xs font-bold"></div>
-                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">Manual GSM</label><input type="number" id="mf-gsm" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
-                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">Manual Width</label><input type="number" id="mf-width" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
+                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">GSM</label><input type="number" id="mf-gsm" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
+                    <div><label class="text-[9px] font-bold text-orange-800 uppercase">Width</label><input type="number" id="mf-width" value="0" class="w-full p-2 border rounded-lg mt-1 text-xs"></div>
                 </div>
                 <input type="text" id="f-search" oninput="renderFabrics()" placeholder="Search fabric..." class="w-full p-3 border rounded-xl text-sm font-bold bg-slate-50">
                 <div class="overflow-hidden border rounded-xl">
@@ -92,7 +93,7 @@
             </div>
 
             <div class="card p-6 space-y-4">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. Packaging Fee</h3>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. Packaging</h3>
                 <div id="pkg-btns" class="grid grid-cols-3 gap-2"></div>
                 <div class="p-4 bg-slate-50 border rounded-xl flex justify-between items-center">
                     <span class="text-[10px] font-bold text-slate-500 uppercase">Manual Packaging (RMB)</span>
@@ -110,56 +111,82 @@
                     <div><p class="text-emerald-500 text-[9px] uppercase font-bold">Base MOQ</p><p id="res-moq" class="text-2xl font-black text-emerald-400">0</p></div>
                 </div>
                 <div class="space-y-4"><h4 class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Spot Tiered Pricing</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
-                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all">Print PDF Report</button>
+                <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-black text-sm uppercase tracking-widest">Print PDF Report</button>
             </div>
         </div>
     </div>
 
-    <script src="./data.js"></script>
     <script>
-        let activeStyle=DB.styles[1], activeMods=[], activeSizes=[], selFabric=null, activePkg=DB.pkgs[0];
+        document.write('<script src="./data.js?v=' + new Date().getTime() + '"><\/script>');
+    </script>
+    <script>
+        let activeStyle=null, activeMods=[], activeSizes=[], selFabric=null, activePkg=null;
         
         function init() {
-            const ss=document.getElementById('sales-sel'); DB.sales.forEach(n=>ss.add(new Option(n,n)));
-            const cs=document.getElementById('country-sel'); DB.countries.forEach(n=>cs.add(new Option(n,n)));
-            
-            const st=document.getElementById('style-btns');
-            DB.styles.forEach((s,i)=>{
-                const b=document.createElement('button'); b.innerText=s.name;
-                b.className=`p-2 text-left rounded-xl text-[10px] border font-bold transition-all ${i===0?'btn-active':'bg-white text-slate-500 hover:border-slate-400'}`;
-                b.onclick=()=>{
-                    document.querySelectorAll('#style-btns button').forEach(x=>x.className="p-2 text-left rounded-xl text-[10px] border font-bold bg-white text-slate-500 hover:border-slate-400");
-                    b.className="p-2 text-left rounded-xl text-[10px] border font-bold btn-active";
-                    activeStyle=s; document.getElementById('manual-area').className=i===0?'p-4 bg-blue-50 border border-blue-200 rounded-xl grid grid-cols-2 gap-4':'hidden';
-                    renderUI();
-                };
-                st.appendChild(b);
-            });
+            try {
+                if (typeof DB === 'undefined') {
+                    showError("CRITICAL: data.js failed to load. Check file path.");
+                    return;
+                }
+                
+                activeStyle = DB.styles[0];
+                activePkg = DB.pkgs[0];
 
-            const sz=document.getElementById('size-btns');
-            Object.keys(DB.styles[1].sizes).forEach(k=>{
-                const b=document.createElement('button'); b.innerText=k;
-                b.className="p-1 rounded-lg text-[9px] border bg-white text-slate-400 font-bold hover:border-slate-400";
-                b.onclick=()=>{
-                    if(activeSizes.includes(k)) activeSizes=activeSizes.filter(x=>x!==k); else activeSizes.push(k);
-                    b.classList.toggle('btn-active'); updateSizes();
-                };
-                sz.appendChild(b);
-            });
+                const ss=document.getElementById('sales-sel'); DB.sales.forEach(n=>ss.add(new Option(n,n)));
+                const cs=document.getElementById('country-sel'); DB.countries.forEach(n=>cs.add(new Option(n,n)));
+                
+                const st=document.getElementById('style-btns');
+                DB.styles.forEach((s,i)=>{
+                    const b=document.createElement('button'); b.innerText=s.name;
+                    b.className="p-2 text-left rounded-xl text-[10px] border font-bold " + (i===0?'btn-active':'bg-white text-slate-500 hover:border-slate-400');
+                    b.onclick=()=>{
+                        document.querySelectorAll('#style-btns button').forEach(x=>x.className="p-2 text-left rounded-xl text-[10px] border font-bold bg-white text-slate-500 hover:border-slate-400");
+                        b.className="p-2 text-left rounded-xl text-[10px] border font-bold btn-active";
+                        activeStyle=s; document.getElementById('manual-area').className=i===0?'p-4 bg-blue-50 border border-blue-200 rounded-xl grid grid-cols-2 gap-4':'hidden';
+                        renderUI();
+                    };
+                    st.appendChild(b);
+                });
 
-            const pb=document.getElementById('pkg-btns');
-            DB.pkgs.forEach((p,i)=>{
-                const b=document.createElement('button'); b.innerText=p.name;
-                b.className=`p-2 rounded-lg text-[10px] border font-bold ${i===0?'btn-active':'bg-white text-slate-500'}`;
-                b.onclick=()=>{
-                    document.querySelectorAll('#pkg-btns button').forEach(x=>x.className="p-2 rounded-lg text-[10px] border font-bold bg-white text-slate-500");
-                    b.className="p-2 rounded-lg text-[10px] border font-bold btn-active";
-                    activePkg=p; calculate();
-                };
-                pb.appendChild(b);
-            });
+                const sz=document.getElementById('size-btns');
+                // Use the first real style for sizes if available
+                const targetStyle = DB.styles.length > 1 ? DB.styles[1] : DB.styles[0];
+                Object.keys(targetStyle.sizes).forEach(k=>{
+                    const b=document.createElement('button'); b.innerText=k;
+                    b.className="p-1 rounded-lg text-[9px] border bg-white text-slate-400 font-bold hover:border-slate-400";
+                    b.onclick=()=>{
+                        if(activeSizes.includes(k)) activeSizes=activeSizes.filter(x=>x!==k); else activeSizes.push(k);
+                        b.classList.toggle('btn-active'); updateSizes();
+                    };
+                    sz.appendChild(b);
+                });
 
-            renderUI(); setTimeout(() => document.getElementById('loader').style.display='none', 500);
+                const pb=document.getElementById('pkg-btns');
+                DB.pkgs.forEach((p,i)=>{
+                    const b=document.createElement('button'); b.innerText=p.name;
+                    b.className="p-2 rounded-lg text-[10px] border font-bold " + (i===0?'btn-active':'bg-white text-slate-500');
+                    b.onclick=()=>{
+                        document.querySelectorAll('#pkg-btns button').forEach(x=>x.className="p-2 rounded-lg text-[10px] border font-bold bg-white text-slate-500");
+                        b.className="p-2 rounded-lg text-[10px] border font-bold btn-active";
+                        activePkg=p; calculate();
+                    };
+                    pb.appendChild(b);
+                });
+
+                renderUI(); 
+            } catch (e) {
+                console.error(e);
+                showError("INIT ERROR: " + e.message);
+            } finally {
+                setTimeout(() => {
+                    const ldr = document.getElementById('loader');
+                    if (ldr && !ldr.innerHTML.includes('ERROR')) ldr.style.display='none';
+                }, 500);
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('loader-content').innerHTML = '<div class="text-red-500 font-bold p-6 bg-white rounded-2xl shadow-xl text-center">' + msg + '<br><button onclick="location.reload()" class="mt-4 text-xs text-blue-500">RELOAD</button></div>';
         }
 
         function renderUI() {
@@ -174,7 +201,7 @@
                 const tR=m.target.replace(/[0-9.\s]/g,'');
                 if(tR==="通用"||sR.includes(tR)||tR.includes(sR)) {
                     const b=document.createElement('button'); b.innerText=m.name; const act=activeMods.some(x=>x.name===m.name);
-                    b.className=`p-2 rounded-lg text-[10px] border font-bold ${act?'btn-active':'bg-white text-slate-500'}`;
+                    b.className="p-2 rounded-lg text-[10px] border font-bold " + (act?'btn-active':'bg-white text-slate-500');
                     b.onclick=()=>{ if(act) activeMods=activeMods.filter(x=>x.name!==m.name); else activeMods.push(m); renderMods(); calculate(); };
                     g.appendChild(b);
                 }
@@ -186,7 +213,7 @@
             DB.processes.forEach(p=>{
                 if(p.targets.some(t=>{ const tR=t.replace(/[0-9.\s]/g,''); return tR==="通用"||sR.includes(tR)||tR.includes(sR); })) {
                     const d=document.createElement('label'); d.className="p-3 bg-white border rounded-xl flex justify-between items-center cursor-pointer hover:border-emerald-400 transition-all";
-                    d.innerHTML=`<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="${p.name}" class="w-5 h-5 rounded"><span class="text-xs font-bold text-slate-700">${p.name}</span></div><span class="text-xs font-black text-emerald-600" id="price-${p.name}">¥${p.price.toFixed(2)}</span>`;
+                    d.innerHTML='<div class="flex items-center gap-2"><input type="checkbox" onchange="calculate()" data-name="' + p.name + '" class="w-5 h-5 rounded"><span class="text-xs font-bold text-slate-700">' + p.name + '</span></div><span class="text-xs font-black text-emerald-600" id="price-' + p.name + '">¥' + p.price.toFixed(2) + '</span>';
                     g.appendChild(d);
                 }
             });
@@ -196,9 +223,8 @@
             const s=document.getElementById('f-search').value.toLowerCase(); const g=document.getElementById('f-list'); g.innerHTML="";
             DB.fabrics.filter(f=>f.name.toLowerCase().includes(s)||f.id.includes(s)).forEach(f=>{
                 const act=selFabric?.id===f.id;
-                const tr=document.createElement('tr');
-                tr.className=`cursor-pointer hover:bg-slate-50 transition-all ${act?'bg-orange-50':''}`;
-                tr.innerHTML=`<td class="p-3 border-b"><p class="text-[9px] text-slate-400 uppercase">ID: ${f.id}</p><p>${f.name}</p></td><td class="p-3 border-b text-[9px] text-slate-500 uppercase">${f.gsm}G/${f.width}CM</td><td class="p-3 border-b text-orange-600">¥${f.price_loose.toFixed(2)}</td><td class="p-3 border-b text-slate-400">¥${f.price_roll.toFixed(2)}</td>`;
+                const tr=document.createElement('tr'); tr.className="cursor-pointer hover:bg-slate-50 " + (act?'bg-orange-50':'');
+                tr.innerHTML='<td class="p-3 border-b"><p class="text-[9px] text-slate-400">ID: ' + f.id + '</p><p>' + f.name + '</p></td><td class="p-3 border-b text-[9px] text-slate-500">' + f.gsm + 'G/' + f.width + 'CM</td><td class="p-3 border-b text-orange-600">¥' + f.price_loose.toFixed(2) + '</td><td class="p-3 border-b text-slate-400">¥' + f.price_roll.toFixed(2) + '</td>';
                 tr.onclick=()=>{ selFabric=f; document.getElementById('mf-price').value=0; renderFabrics(); };
                 g.appendChild(tr);
             });
@@ -216,48 +242,48 @@
         function calculate() {
             const mText=document.getElementById('size-info').innerText;
             const mid=mText.replace('ACTIVE SIZE: ','');
-            
             let qCons=0, labor=0;
             if(activeStyle.name.includes("手动")) {
                 qCons=parseFloat(document.getElementById('m-cons').value)||0; labor=parseFloat(document.getElementById('m-labor').value)||0;
             } else {
                 if(!mid) return; qCons=activeStyle.sizes[mid]||0; labor=activeStyle.baseLabor;
             }
-
             let fPrice=selFabric?selFabric.price_loose:parseFloat(document.getElementById('mf-price').value)||0;
             let f=1; activeMods.forEach(m=>f*=m.factor); qCons*=f;
             let moq=Math.round(20/(qCons*0.22))||0; document.getElementById('res-moq').innerText=moq;
-
             let extra=0;
             document.querySelectorAll('#proc-list input:checked').forEach(i=>{
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
                 if(p) {
                     let pp=p.price;
                     if(p.name.includes("定染拉链")) {
-                        // Zipper Tier Logic
                         if(moq<300) pp=2.8; else if(moq<1000) pp=2.2; else if(moq<3000) pp=1.6; else pp=1.2;
                         const el = document.getElementById('price-'+p.name); if(el) el.innerText = '¥'+pp.toFixed(2);
                     }
                     extra += pp;
                 }
             });
-
             const pkgP = parseFloat(document.getElementById('m-pkg').value) || (activePkg?activePkg.price:0);
             const rmb=(qCons*fPrice*1.1+labor+extra+pkgP)/0.7;
             const usd=rmb/6.7;
-            
             document.getElementById('res-usd').innerText=usd.toFixed(2);
             document.getElementById('res-rmb').innerText="¥ "+rmb.toFixed(2);
-            
             const tb=document.getElementById('tier-body'); tb.innerHTML="";
             const cur=moq<100?0:moq<300?1:moq<500?2:3;
             const bks=["0-99","100-299","300-499",">500"];
             bks.forEach((l,i)=>{
                 const p=usd+(cur-i)*(usd<3?0.1:0.15);
-                tb.innerHTML+=`<tr><td class="tier-td ${i===cur?'active-tier-td':''} text-[9px] uppercase tracking-widest">${l}</td><td class="text-right font-black text-2xl text-white font-mono">$${p.toFixed(2)}</td></tr>`;
+                tb.innerHTML+='<tr><td class="tier-td ' + (i===cur?'active-tier-td':'') + ' text-[9px] uppercase tracking-widest">' + l + '</td><td class="text-right font-black text-2xl text-white font-mono">$' + p.toFixed(2) + '</td></tr>';
             });
         }
-        init();
+        window.addEventListener('DOMContentLoaded', init);
+        // Fallback for slow loaders
+        setTimeout(() => {
+            const ldr = document.getElementById('loader');
+            if (ldr && ldr.style.display !== 'none' && !ldr.innerHTML.includes('ERROR')) {
+                ldr.style.display = 'none';
+            }
+        }, 5000);
     </script>
 </body>
 </html>
