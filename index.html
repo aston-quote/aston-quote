@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.11 逻辑精修版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.12 审计透明化版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,11 +15,11 @@
     </style>
 </head>
 <body class="p-4 md:p-10">
-    <div class="fixed top-2 right-2 z-50 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.11 Refined</div>
+    <div class="fixed top-2 right-2 z-50 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.12 Transparency</div>
 
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-        <p class="text-sm font-bold text-slate-400">同步面料库逻辑 V8.11...</p>
+        <p class="text-sm font-bold text-slate-400">正在同步审计模块 V8.12...</p>
     </div>
 
     <div id="report-modal" class="modal">
@@ -37,7 +37,7 @@
         <div class="flex-1 space-y-8">
             <div class="flex flex-col md:flex-row items-start gap-8">
                 <div class="flex flex-col gap-6 w-full md:w-72">
-                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.11</h1></div>
+                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.12</h1></div>
                     <div class="space-y-3">
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">目的国</label><select id="country-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
@@ -110,18 +110,19 @@
                     </div>
                 </div>
                 <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-blue-500 uppercase tracking-widest text-center">现货档差报价</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
-                <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">报价审计</h4><div id="audit-box" class="bg-slate-950 p-5 rounded-2xl text-[10px] font-mono text-slate-500 text-left border border-slate-800 italic"></div></div>
+                
+                <!-- 增强版审计面板 -->
+                <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">报价及起订量审计</h4><div id="audit-box" class="bg-slate-950 p-6 rounded-2xl text-[10px] font-mono text-slate-400 text-left border border-slate-800 leading-relaxed shadow-inner"></div></div>
+                
                 <button onclick="window.print()" class="w-full text-slate-500 hover:text-white py-4 font-black text-[10px] uppercase border border-slate-800 rounded-2xl transition-all">打印 PDF 存档</button>
             </div>
         </div>
     </div>
 
-    <script src="./data.js?v=1776935410"></script>
+    <script src="./data.js?v=1776936234"></script>
     <script>
-        function elSafeSet(id, val, attr='innerText') {
-            const el = document.getElementById(id);
-            if (el) el[attr] = val;
-        }
+        function elSafeSet(id, val, attr='innerText') { const el = document.getElementById(id); if (el) el[attr] = val; }
+        function elSafeHTML(id, val) { const el = document.getElementById(id); if (el) el.innerHTML = val; }
 
         let activeStyle=null, activeMods=[], selectedSize=null, selFabric=null, activePkg=null, priceMode='loose', currentID='';
         
@@ -185,10 +186,8 @@
             priceMode = m;
             const ml = document.getElementById('mode-loose'); if(ml) ml.className = m === 'loose' ? 'w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl' : 'w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50';
             const mr = document.getElementById('mode-roll'); if(mr) mr.className = m === 'roll' ? 'w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl' : 'w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50';
-            
             const mrl = document.getElementById('mf-radio-loose'); if(mrl) mrl.checked = (m === 'loose');
             const mrr = document.getElementById('mf-radio-roll'); if(mrr) mrr.checked = (m === 'roll');
-
             elSafeSet('th-price', m === 'loose' ? '散剪价格 (RMB)' : '整卷价格 (RMB)');
             renderFabrics();
         }
@@ -263,43 +262,65 @@
                 mGSM = selFabric.gsm; mRoll = selFabric.rollQty;
             }
 
+            // MOQ 审计计算过程
             const fabricUnitUsage = (mGSM / 1000) * finalCons; 
-            let moq = Math.round((mRoll / fabricUnitUsage) * 1.05) || 0;
-            elSafeSet('res-moq', moq);
+            let theoryMoq = (mRoll / fabricUnitUsage) || 0;
+            let finalMoq = Math.round(theoryMoq * 1.05);
+            elSafeSet('res-moq', finalMoq);
 
-            let extra=0; document.querySelectorAll('#proc-list input:checked').forEach(i=>{
+            let extra=0; let procNames = [];
+            document.querySelectorAll('#proc-list input:checked').forEach(i=>{
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
                 if(p) { 
                     let pp=p.price; 
                     if(p.name.includes("定染拉链")) { 
-                        if(moq<300) pp=2.8; else if(moq<1000) pp=2.2; else if(moq<3000) pp=1.6; else pp=1.2; 
+                        if(finalMoq<300) pp=2.8; else if(finalMoq<1000) pp=2.2; else if(finalMoq<3000) pp=1.6; else pp=1.2; 
                         elSafeSet('price-'+p.name, '¥'+pp.toFixed(2));
                     } 
-                    extra += pp; 
+                    extra += pp; procNames.push(p.name);
                 }
             });
             const pkgManual = parseFloat(document.getElementById('m-pkg').value) || 0;
             const pkgP = pkgManual > 0 ? pkgManual : (activePkg ? activePkg.price : 0);
-            const rmb=(finalCons * fSum * 1.1 + labor + extra + pkgP) / 0.7;
-            const usd=rmb/6.7;
-            elSafeSet('res-usd', usd.toFixed(2));
-            elSafeSet('res-rmb', "¥ "+rmb.toFixed(2));
+            
+            // 价格审计计算过程
+            const netFabricCost = finalCons * fSum * 1.1;
+            const totalRmb = (netFabricCost + labor + extra + pkgP) / 0.7;
+            const finalUsd = totalRmb / 6.7;
+            
+            elSafeSet('res-usd', finalUsd.toFixed(2));
+            elSafeSet('res-rmb', "¥ "+totalRmb.toFixed(2));
 
             const tb=document.getElementById('tier-body'); if(tb) {
                 tb.innerHTML="";
-                const curIdx=moq<100?0:moq<300?1:moq<500?2:3; 
+                const curIdx=finalMoq<100?0:finalMoq<300?1:finalMoq<500?2:3; 
                 const bks=["0-99","100-299","300-499",">500"];
-                let step = usd < 1.5 ? 0.05 : usd < 3 ? 0.1 : usd < 5 ? 0.15 : usd < 10 ? 0.2 : 0.25;
+                let step = finalUsd < 1.5 ? 0.05 : finalUsd < 3 ? 0.1 : finalUsd < 5 ? 0.15 : finalUsd < 10 ? 0.2 : 0.25;
                 bks.forEach((l,i)=>{
-                    const p = usd + (curIdx - i) * step;
+                    const p = finalUsd + (curIdx - i) * step;
                     tb.innerHTML+=`<tr><td class="tier-td ${i===curIdx?'active-tier-td':''} text-[9px] uppercase tracking-widest">${l}</td><td class="text-right font-black text-2xl text-white font-mono">$${p.toFixed(2)}</td></tr>`;
                 });
             }
 
+            const auditHTML = `
+                <div class="mb-4 text-emerald-500 font-black border-b border-slate-800 pb-2">■ 价格核算过程</div>
+                <div class="space-y-1 mb-4">
+                    <p>1. 面料净成: ${finalCons.toFixed(3)} ㎡ × ¥${fSum.toFixed(2)} × 1.1 = <span class="text-white">¥${netFabricCost.toFixed(2)}</span></p>
+                    <p>2. 总额 RMB: (面料费${netFabricCost.toFixed(2)} + 工费${labor.toFixed(1)} + 工艺${extra.toFixed(1)} + 包装${pkgP.toFixed(1)}) / 0.7 = <span class="text-white">¥${totalRmb.toFixed(2)}</span></p>
+                    <p>3. 美金报价: ¥${totalRmb.toFixed(2)} / 6.7 = <b class="text-emerald-400">$${finalUsd.toFixed(2)}</b></p>
+                </div>
+                <div class="mb-4 text-blue-500 font-black border-b border-slate-800 pb-2">■ 起订量核算过程</div>
+                <div class="space-y-1">
+                    <p>1. 单件克重: (${mGSM}G / 1000) × ${finalCons.toFixed(3)} ㎡ = <span class="text-white">${fabricUnitUsage.toFixed(4)} KG</span></p>
+                    <p>2. 理论起订: ${mRoll} KG / ${fabricUnitUsage.toFixed(4)} KG = <span class="text-white">${theoryMoq.toFixed(1)} 件</span></p>
+                    <p>3. 安全起订: ${theoryMoq.toFixed(1)} × 1.05 ≈ <b class="text-blue-400">${finalMoq} 件</b></p>
+                </div>
+            `;
+            elSafeHTML('audit-box', auditHTML);
+
             const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
             currentID = 'ASTON-' + date + '-' + Math.floor(Math.random()*900+100);
             elSafeSet('quote-id', 'ID: ' + currentID);
-            elSafeSet('audit-box', `1. 面料: ${fName}\n2. 模式: ${priceMode==='loose'?'散剪':'整卷'}\n3. 单价: ¥${fSum.toFixed(2)}\n4. 包装: ¥${pkgP.toFixed(2)}`);
         }
 
         function openReportModal() {
@@ -313,9 +334,7 @@
             elSafeSet('report-text', summary);
             const rm = document.getElementById('report-modal'); if(rm) rm.style.display = 'flex';
         }
-
         function closeModal() { const rm = document.getElementById('report-modal'); if(rm) rm.style.display = 'none'; }
-
         function copyToClipboard(type) {
             const sales = document.getElementById('sales-sel').value;
             const country = document.getElementById('country-sel').value;
