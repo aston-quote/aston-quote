@@ -1,33 +1,41 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.6 最终稳定版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.8 视觉优化版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif; background: #f1f5f9; color: #0f172a; }
         .card { background: white; border-radius: 1.25rem; border: 1px solid #e2e8f0; }
         .btn-active { background: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+        .tier-td { padding: 10px; background: #1e293b; color: white; font-weight: 700; border-radius: 8px; }
+        .active-tier-td { background: #2563eb !important; }
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; }
+        
+        /* 修复双箭头：移除自定义图标，使用系统原生样式并美化 */
+        select { 
+            appearance: auto !important; 
+            -webkit-appearance: listbox !important; 
+            background-image: none !important; 
+            padding-right: 1rem !important; 
+        }
     </style>
 </head>
 <body class="p-4 md:p-10">
-    <!-- 版本验证水印 -->
-    <div class="fixed top-2 right-2 z-50 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg uppercase">Official V8.6 Live</div>
+    <div class="fixed top-2 right-2 z-50 bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg uppercase">V8.8 Visual Optimization</div>
 
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-        <p class="text-sm font-bold text-slate-400">正在破除缓存加载 V8.6...</p>
+        <p class="text-sm font-bold text-slate-400">正在优化 UI 细节 V8.8...</p>
     </div>
 
     <div id="report-modal" class="modal">
         <div class="bg-white p-6 md:p-8 rounded-[2rem] max-w-lg w-[90%] shadow-2xl space-y-6">
             <div class="flex justify-between items-center"><h3 class="text-xl font-black text-slate-800">报价明细上报</h3><button onclick="closeModal()" class="text-slate-300 hover:text-slate-900 text-2xl">✕</button></div>
-            <div class="bg-slate-50 p-5 rounded-2xl text-[11px] font-mono text-slate-600 border border-slate-200 leading-relaxed overflow-x-auto" id="report-text"></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <button onclick="copyToClipboard('summary')" class="bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-xs transition-all shadow-lg shadow-blue-100">复制摘要 (发微信)</button>
-                <button onclick="copyToClipboard('excel')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-black text-xs transition-all shadow-lg shadow-emerald-100">复制 Excel 行 (交表格)</button>
+            <div class="bg-slate-50 p-5 rounded-2xl text-[11px] font-mono text-slate-600 border border-slate-200" id="report-text"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="copyToClipboard('summary')" class="bg-blue-600 text-white py-4 rounded-xl font-black text-xs">复制摘要</button>
+                <button onclick="copyToClipboard('excel')" class="bg-emerald-600 text-white py-4 rounded-xl font-black text-xs">复制 Excel 行</button>
             </div>
         </div>
     </div>
@@ -36,57 +44,51 @@
         <div class="flex-1 space-y-8">
             <div class="flex flex-col md:flex-row items-start gap-8">
                 <div class="flex flex-col gap-6 w-full md:w-72">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div>
-                        <h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 <span class="text-blue-600">V8.6</span></h1>
-                    </div>
+                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800">报价 V8.8</h1></div>
                     <div class="space-y-3">
-                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">业务员</label><select id="sales-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
-                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">目的国</label><select id="country-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
-                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">项目/客户</label><input type="text" id="client" oninput="calculate()" placeholder="输入项目名..." class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400">业务员</label><select id="sales-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400">目的国</label><select id="country-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
+                        <div class="space-y-1"><label class="text-[10px] font-black text-slate-400">项目/客户</label><input type="text" id="client" oninput="calculate()" placeholder="项目名称" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black w-full outline-none focus:border-blue-500"></div>
                     </div>
                 </div>
-                <div class="flex-1 card p-8 flex flex-col md:flex-row gap-8 items-center bg-white border-none shadow-sm relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4"><span id="quote-id" class="text-[10px] font-black bg-slate-100 text-slate-400 px-3 py-1 rounded-full">ID: --</span></div>
-                    <div class="flex flex-col items-center gap-4">
-                        <img id="style-img" src="" class="h-64 w-64 object-contain rounded-[2rem] bg-slate-50 border border-slate-100" onerror="this.src='https://via.placeholder.com/300?text=IMAGE+ERROR'">
-                        <p id="style-desc" class="text-[11px] font-bold text-slate-400 italic max-w-xs text-center"></p>
-                    </div>
-                    <div class="space-y-6 text-center md:text-left">
-                        <p id="style-name" class="text-3xl font-black text-slate-800 leading-tight"></p>
-                        <div class="flex flex-col gap-3 items-center md:items-start">
-                            <p id="size-info" class="text-xs font-black text-blue-600 bg-blue-50 px-5 py-2.5 rounded-full inline-block">请选择尺码</p>
-                            <p id="usage-info" class="text-xs font-black text-emerald-600 bg-emerald-50 px-5 py-2.5 rounded-full inline-block">单件用料: 0.000 ㎡</p>
+                <div class="flex-1 card p-8 flex flex-col md:flex-row gap-8 items-center relative">
+                    <div class="absolute top-4 right-4"><span id="quote-id" class="text-[10px] font-black bg-slate-100 text-slate-400 px-3 py-1 rounded-full">ID: --</span></div>
+                    <img id="style-img" src="" class="h-64 w-64 object-contain rounded-[2rem] bg-slate-50 border">
+                    <div class="space-y-4">
+                        <p id="style-name" class="text-3xl font-black text-slate-800"></p>
+                        <div class="flex flex-col gap-2 text-center md:text-left">
+                            <p id="size-info" class="text-[10px] font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-full inline-block">请选择尺码</p>
+                            <p id="usage-info" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-4 py-2 rounded-full inline-block">用料: 0.000 ㎡</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. 版型选择</h3><div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div><div id="manual-area" class="hidden p-6 bg-blue-50 rounded-2xl grid grid-cols-2 gap-6 border-2 border-blue-100"><div><label class="text-[10px] font-black text-blue-800 uppercase">手动工费</label><input type="number" id="m-labor" value="25" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div><div><label class="text-[10px] font-black text-blue-800 uppercase">手动用料</label><input type="number" id="m-cons" value="0.5" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div></div></div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">02. 版型修正</h3><div id="mod-btns" class="grid grid-cols-2 gap-2"></div></div><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">03. 尺码矩阵</h3><div id="size-btns" class="grid grid-cols-5 md:grid-cols-6 gap-2"></div></div></div>
-            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺</h3><div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
-            <div class="card p-8 space-y-6"><div class="flex flex-col gap-6"><h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (单选)</h3><div class="grid grid-cols-2 gap-3"><button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl">散剪 (Loose)</button><button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50">整卷 (Roll)</button></div></div><input type="text" id="f-search" oninput="renderFabrics()" placeholder="🔍 搜索面料..." class="w-full p-4 border-2 border-slate-100 rounded-2xl text-sm font-bold bg-slate-50 outline-none"><div class="overflow-hidden border-2 border-slate-100 rounded-2xl"><div class="overflow-y-auto" style="max-height: 400px;"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10 border-b"><tr><th class="p-4 w-12"></th><th class="p-4">面料信息</th><th class="p-4">规格</th><th class="p-4 text-right" id="th-price">单价 (RMB)</th></tr></thead><tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody></table></div></div></div>
-            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. 包装方式</h3><div id="pkg-btns" class="grid grid-cols-3 gap-3"></div></div>
+            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase">01. 版型选择</h3><div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div><div id="manual-area" class="hidden p-6 bg-blue-50 rounded-2xl grid grid-cols-2 gap-6 border-2 border-blue-100"><div><label class="text-[10px] font-black">手动工费</label><input type="number" id="m-labor" value="25" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div><div><label class="text-[10px] font-black">手动用料</label><input type="number" id="m-cons" value="0.5" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase">02. 版型修正</h3><div id="mod-btns" class="grid grid-cols-2 gap-2"></div></div><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase">03. 尺码矩阵 (单选)</h3><div id="size-btns" class="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2"></div></div></div>
+            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-emerald-600 uppercase">04. 特色工艺</h3><div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
+            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-orange-600 uppercase">05. 面料母库</h3><div class="grid grid-cols-2 gap-3"><button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl">散剪 (Loose)</button><button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50">整卷 (Roll)</button></div><input type="text" id="f-search" oninput="renderFabrics()" placeholder="搜索面料..." class="w-full p-4 border-2 border-slate-100 rounded-2xl text-sm font-bold bg-slate-50 outline-none focus:bg-white focus:border-blue-400"><div class="overflow-hidden border-2 border-slate-100 rounded-2xl"><div class="overflow-y-auto" style="max-height: 400px;"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10 border-b"><tr><th class="p-4 w-12"></th><th class="p-4">面料信息</th><th class="p-4">规格</th><th class="p-4 text-right" id="th-price">单价 (RMB)</th></tr></thead><tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody></table></div></div></div>
+            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase">06. 包装方式</h3><div id="pkg-btns" class="grid grid-cols-3 gap-3"></div><div class="p-4 bg-slate-50 border rounded-xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-500 uppercase">手动包装费</span><input type="number" id="m-pkg" value="0" oninput="calculate()" class="w-24 p-2 border rounded-lg text-sm font-black text-right"></div></div>
         </div>
 
         <div class="w-full lg:w-[400px]">
-            <div class="card bg-slate-900 text-white p-10 space-y-10 sticky top-10 shadow-3xl text-center border-none">
+            <div class="card bg-slate-900 text-white p-10 space-y-8 sticky top-10 shadow-3xl text-center">
                 <div><p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">建议美金报价</p><div class="text-[80px] leading-none font-black tracking-tighter mb-2">$<span id="res-usd">0.00</span></div></div>
                 <div class="grid grid-cols-1 gap-4 pt-4">
-                    <button id="mgr-btn" onclick="openReportModal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/40">🚀 发送记录给经理</button>
-                    <div class="grid grid-cols-2 gap-3 text-left bg-slate-800/50 p-6 rounded-2xl border border-slate-800">
+                    <button onclick="openReportModal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-5 rounded-[1.5rem] font-black text-sm uppercase shadow-xl shadow-emerald-900/40 transition-all active:scale-95">🚀 发送记录给经理</button>
+                    <div class="grid grid-cols-2 gap-3 text-left bg-slate-800 p-6 rounded-2xl border border-slate-700">
                         <div><p class="text-slate-500 text-[9px] uppercase font-black mb-1">总价 RMB</p><p id="res-rmb" class="text-xl font-black italic">¥ 0.00</p></div>
-                        <div class="border-l border-slate-700 pl-4"><p class="text-emerald-500 text-[9px] uppercase font-black mb-1">起订量 MOQ</p><p id="res-moq" class="text-xl font-black italic text-emerald-400">0</p></div>
+                        <div class="border-l border-slate-700 pl-4"><p class="text-emerald-500 text-[9px] uppercase font-black mb-1">MOQ</p><p id="res-moq" class="text-xl font-black italic text-emerald-400">0</p></div>
                     </div>
                 </div>
-                <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-blue-500 uppercase tracking-widest text-center">报价审计</h4><div id="audit-box" class="bg-slate-950 p-5 rounded-2xl text-[10px] font-mono text-slate-500 text-left border border-slate-800 italic"></div></div>
-                <button onclick="window.print()" class="w-full text-slate-500 hover:text-white py-4 font-black text-[10px] uppercase tracking-widest border border-slate-800 rounded-2xl transition-all">打印 PDF 存档</button>
+                <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-blue-500 uppercase tracking-widest text-center">现货档差报价</h4><table class="w-full border-separate border-spacing-y-2"><tbody id="tier-body"></tbody></table></div>
+                <div class="space-y-4 pt-6"><h4 class="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">报价审计</h4><div id="audit-box" class="bg-slate-950 p-5 rounded-2xl text-[10px] font-mono text-slate-500 text-left border border-slate-800 italic"></div></div>
+                <button onclick="window.print()" class="w-full text-slate-500 hover:text-white py-4 font-black text-[10px] uppercase border border-slate-800 rounded-2xl transition-all">打印 PDF 存档</button>
             </div>
         </div>
     </div>
 
-    <!-- 核心脚本加载增加缓存破坏参数 -->
-    <script src="./data.js?v=1776907522"></script>
+    <script src="./data.js?v=1776930113"></script>
     <script>
         let activeStyle=null, activeMods=[], selectedSize=null, selFabric=null, activePkg=null, priceMode='loose', currentID='';
         
@@ -112,10 +114,11 @@
                 const tS = DB.styles.length > 1 ? DB.styles[1] : DB.styles[0];
                 Object.keys(tS.sizes).forEach(k=>{
                     const b=document.createElement('button'); b.innerText=k;
-                    b.className="size-item p-2 rounded-xl text-[10px] border-2 bg-white text-slate-400 font-black hover:border-slate-300 transition-all";
+                    // 核心适配：缩小字号并减少内边距
+                    b.className="size-item p-1 px-1.5 rounded-xl text-[9px] border-2 bg-white text-slate-400 font-black hover:border-slate-300 transition-all whitespace-nowrap overflow-hidden";
                     b.onclick=()=>{
-                        document.querySelectorAll('.size-item').forEach(x=>x.className="size-item p-2 rounded-xl text-[10px] border-2 bg-white text-slate-400 font-black hover:border-slate-300");
-                        b.className="size-item p-2 rounded-xl text-[10px] border-2 btn-active font-black";
+                        document.querySelectorAll('.size-item').forEach(x=>x.className="size-item p-1 px-1.5 rounded-xl text-[9px] border-2 bg-white text-slate-400 font-black hover:border-slate-300 transition-all whitespace-nowrap overflow-hidden");
+                        b.className="size-item p-1 px-1.5 rounded-xl text-[9px] border-2 btn-active font-black whitespace-nowrap overflow-hidden";
                         selectedSize=k; updateSizeUI();
                     };
                     sz.appendChild(b);
@@ -210,16 +213,35 @@
                 let p=DB.processes.find(x=>x.name===i.dataset.name);
                 if(p) { let pp=p.price; if(p.name.includes("定染拉链")) { if(moq<300) pp=2.8; else if(moq<1000) pp=2.2; else if(moq<3000) pp=1.6; else pp=1.2; document.getElementById('price-'+p.name).innerText = '¥'+pp.toFixed(2); } extra += pp; }
             });
-            const pkgP = activePkg?activePkg.price:0;
+            
+            const pkgManual = parseFloat(document.getElementById('m-pkg').value) || 0;
+            const pkgDb = activePkg ? activePkg.price : 0;
+            const pkgP = pkgManual > 0 ? pkgManual : pkgDb;
+            
             const rmb=(finalCons * fSum * 1.1 + labor + extra + pkgP) / 0.7;
             const usd=rmb/6.7;
             document.getElementById('res-usd').innerText=usd.toFixed(2);
             document.getElementById('res-rmb').innerText="¥ "+rmb.toFixed(2);
 
+            const tb=document.getElementById('tier-body'); tb.innerHTML="";
+            const curIdx=moq<100?0:moq<300?1:moq<500?2:3; 
+            const bks=["0-99","100-299","300-499",">500"];
+            let step = 0.15;
+            if(usd < 1.5) step = 0.05;
+            else if(usd < 3) step = 0.1;
+            else if(usd < 5) step = 0.15;
+            else if(usd < 10) step = 0.2;
+            else step = 0.25;
+
+            bks.forEach((l,i)=>{
+                const p = usd + (curIdx - i) * step;
+                tb.innerHTML+=`<tr><td class="tier-td ${i===curIdx?'active-tier-td':''} text-[9px] uppercase tracking-widest">${l}</td><td class="text-right font-black text-2xl text-white font-mono">$${p.toFixed(2)}</td></tr>`;
+            });
+
             const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
             currentID = 'ASTON-' + date + '-' + Math.floor(Math.random()*900+100);
             document.getElementById('quote-id').innerText = 'ID: ' + currentID;
-            document.getElementById('audit-box').innerText = "1. 用料: " + finalCons.toFixed(3) + " ㎡\n2. 单价: ¥" + fSum.toFixed(2) + "\n3. MOQ: " + moq + " (1.05系数)";
+            document.getElementById('audit-box').innerText = "1. 用料: " + finalCons.toFixed(3) + " ㎡\n2. 单价: ¥" + fSum.toFixed(2) + "\n3. 包装: ¥" + pkgP.toFixed(2);
         }
 
         function openReportModal() {
@@ -229,7 +251,7 @@
             const usd = document.getElementById('res-usd').innerText;
             const moq = document.getElementById('res-moq').innerText;
             const fabric = selFabric ? selFabric.name : '未选面料';
-            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n面料: ${fabric}\n美金单价: $${usd}\n起订量: ${moq}件`;
+            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n美金单价: $${usd}\n起订量: ${moq}件`;
             document.getElementById('report-text').innerText = summary;
             document.getElementById('report-modal').style.display = 'flex';
         }
@@ -245,7 +267,7 @@
             const fabric = selFabric ? selFabric.name : 'NA';
             const date = new Date().toLocaleDateString();
             let t = type === 'summary' ? document.getElementById('report-text').innerText : `${date}\t${currentID}\t${sales}\t${country}\t${client}\t${activeStyle.name}\t${fabric}\t${usd}\t${moq}`;
-            navigator.clipboard.writeText(t.replace(/\\t/g, '\t')).then(() => { alert('已成功复制，请粘贴发送或保存！'); closeModal(); });
+            navigator.clipboard.writeText(t.replace(/\\t/g, '\t')).then(() => { alert('已成功复制！'); closeModal(); });
         }
         window.addEventListener('DOMContentLoaded', init);
     </script>
