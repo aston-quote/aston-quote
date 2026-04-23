@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.9 稳定性优化版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.10 手动增强版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -11,20 +11,18 @@
         .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .tier-td { padding: 10px; background: #1e293b; color: white; font-weight: 700; border-radius: 8px; }
         .active-tier-td { background: #2563eb !important; }
-        
-        /* 移除双箭头：使用标准样式 */
         select { appearance: auto !important; -webkit-appearance: listbox !important; background-image: none !important; padding-right: 1rem !important; }
+        .manual-fab-active { border-color: #f97316 !important; background: #fff7ed !important; }
     </style>
 </head>
 <body class="p-4 md:p-10">
-    <div class="fixed top-2 right-2 z-50 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.9 Stable</div>
+    <div class="fixed top-2 right-2 z-50 bg-orange-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.10 Manual+</div>
 
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-        <p class="text-sm font-bold text-slate-400">正在同步系统稳定性 V8.9...</p>
+        <p class="text-sm font-bold text-slate-400">正在同步手动报价模块 V8.10...</p>
     </div>
 
-    <!-- 弹窗 -->
     <div id="report-modal" class="modal">
         <div class="bg-white p-6 md:p-8 rounded-[2rem] max-w-lg w-[90%] shadow-2xl space-y-6">
             <div class="flex justify-between items-center"><h3 class="text-xl font-black">报价明细上报</h3><button onclick="closeModal()" class="text-slate-300 hover:text-slate-900 text-2xl">✕</button></div>
@@ -40,7 +38,7 @@
         <div class="flex-1 space-y-8">
             <div class="flex flex-col md:flex-row items-start gap-8">
                 <div class="flex flex-col gap-6 w-full md:w-72">
-                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.9</h1></div>
+                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.10</h1></div>
                     <div class="space-y-3">
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">目的国</label><select id="country-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
@@ -63,7 +61,30 @@
             <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">01. 版型选择</h3><div id="style-btns" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div><div id="manual-area" class="hidden p-6 bg-blue-50 rounded-2xl grid grid-cols-2 gap-6 border-2 border-blue-100"><div><label class="text-[10px] font-black text-blue-800 uppercase">手动工费</label><input type="number" id="m-labor" value="25" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div><div><label class="text-[10px] font-black text-blue-800 uppercase">手动用料</label><input type="number" id="m-cons" value="0.5" oninput="calculate()" class="w-full p-3 border-2 border-blue-200 rounded-xl mt-2 font-black"></div></div></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">02. 版型修正</h3><div id="mod-btns" class="grid grid-cols-2 gap-2"></div></div><div class="card p-8 space-y-4"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">03. 尺码矩阵 (单选)</h3><div id="size-btns" class="flex flex-wrap gap-2"></div></div></div>
             <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺</h3><div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
-            <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (单选)</h3><div class="grid grid-cols-2 gap-3"><button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl">散剪 (Loose)</button><button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50">整卷 (Roll)</button></div><input type="text" id="f-search" oninput="renderFabrics()" placeholder="搜索面料..." class="w-full p-4 border-2 border-slate-100 rounded-2xl text-sm font-bold bg-slate-50 outline-none"><div class="overflow-hidden border-2 border-slate-100 rounded-2xl"><div class="overflow-y-auto" style="max-height: 400px;"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10 border-b"><tr><th class="p-4 w-12"></th><th class="p-4">面料信息</th><th class="p-4">规格</th><th class="p-4 text-right" id="th-price">单价</th></tr></thead><tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody></table></div></div></div>
+            
+            <div class="card p-8 space-y-6 border-orange-100 bg-orange-50/20">
+                <div class="flex justify-between items-center"><h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (单选)</h3><label class="flex items-center gap-2 cursor-pointer bg-orange-600 text-white px-4 py-2 rounded-full text-[10px] font-black shadow-lg shadow-orange-900/20"><input type="checkbox" id="mf-toggle" onchange="toggleManualFab()" class="w-4 h-4">手动录入新面料</label></div>
+                
+                <div id="mf-area" class="hidden space-y-4 p-6 bg-white rounded-2xl border-2 border-orange-200 shadow-inner">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">面料名称</label><input type="text" id="mf-name" value="新面料" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">散剪价格(RMB)</label><input type="number" id="mf-loose" value="35" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">整卷价格(RMB)</label><input type="number" id="mf-roll" value="28" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">整卷重量(KG/M)</label><input type="number" id="mf-rollqty" value="20" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">面料克重(G)</label><input type="number" id="mf-gsm" value="200" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                        <div><label class="text-[9px] font-black text-slate-400 uppercase">面料幅宽(CM)</label><input type="number" id="mf-width" value="150" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                    </div>
+                </div>
+
+                <div id="fab-db-area" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3"><button id="mode-loose" onclick="setPriceMode('loose')" class="w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl">散剪 (Loose)</button><button id="mode-roll" onclick="setPriceMode('roll')" class="w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50">整卷 (Roll)</button></div>
+                    <input type="text" id="f-search" oninput="renderFabrics()" placeholder="搜索面料..." class="w-full p-4 border-2 border-slate-100 rounded-2xl text-sm font-bold bg-slate-50 outline-none">
+                    <div class="overflow-hidden border-2 border-slate-100 rounded-2xl"><div class="overflow-y-auto" style="max-height: 400px;"><table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 sticky top-0 z-10 border-b"><tr><th class="p-4 w-12"></th><th class="p-4">面料信息</th><th class="p-4">规格</th><th class="p-4 text-right" id="th-price">单价</th></tr></thead><tbody id="f-list" class="text-xs font-bold divide-y bg-white"></tbody></table></div></div>
+                </div>
+            </div>
+
             <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">06. 包装方式</h3><div id="pkg-btns" class="grid grid-cols-3 gap-3"></div><div class="p-4 bg-slate-50 border rounded-xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-500 uppercase">手动额外/覆盖包装费</span><input type="number" id="m-pkg" value="0" oninput="calculate()" class="w-24 p-2 border rounded-lg text-sm font-black text-right"></div></div>
         </div>
 
@@ -84,9 +105,8 @@
         </div>
     </div>
 
-    <script src="./data.js?v=1776931089"></script>
+    <script src="./data.js?v=1776934181"></script>
     <script>
-        // 助手函数：防止 ID 缺失导致的崩溃
         function elSafeSet(id, val, attr='innerText') {
             const el = document.getElementById(id);
             if (el) el[attr] = val;
@@ -96,7 +116,7 @@
         
         function init() {
             try {
-                if (typeof DB === 'undefined') { showError("数据库 data.js 加载失败，请 Cmd+Shift+R 刷新！"); return; }
+                if (typeof DB === 'undefined') { showError("数据库加载失败，请刷新！"); return; }
                 activeStyle = DB.styles[0] || {}; activePkg = DB.pkgs[0] || { price: 0 };
                 
                 const ss=document.getElementById('sales-sel'); if(ss) DB.sales.forEach(n=>ss.add(new Option(n,n)));
@@ -147,6 +167,13 @@
             } catch (e) { console.error(e); showError("系统错误: " + e.message); }
         }
 
+        function toggleManualFab() {
+            const isManual = document.getElementById('mf-toggle').checked;
+            document.getElementById('mf-area').className = isManual ? 'space-y-4 p-6 bg-white rounded-2xl border-2 border-orange-200 shadow-inner block' : 'hidden';
+            document.getElementById('fab-db-area').className = isManual ? 'opacity-30 pointer-events-none grayscale mt-4' : 'space-y-4';
+            calculate();
+        }
+
         function setPriceMode(m) {
             priceMode = m;
             const ml = document.getElementById('mode-loose'); if(ml) ml.className = m === 'loose' ? 'w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl' : 'w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50';
@@ -160,7 +187,6 @@
         function renderUI() {
             const img = document.getElementById('style-img'); if(img) img.src = activeStyle.img;
             elSafeSet('style-name', activeStyle.name);
-            elSafeSet('style-desc', activeStyle.desc);
             renderMods(); renderProc(); renderFabrics(); calculate();
         }
 
@@ -216,10 +242,23 @@
             
             let fMod=1; activeMods.forEach(m=>fMod*=m.factor); let finalCons = qCons * fMod;
             elSafeSet('usage-info', "核算用料: " + finalCons.toFixed(3) + " ㎡");
-            let fSum = selFabric ? (priceMode === 'loose' ? selFabric.price_loose : selFabric.price_roll) : 0;
-            const mainFabric = selFabric || { rollQty: 20, gsm: 200, width: 150 };
-            const fabricUnitUsage = (mainFabric.gsm / 1000) * finalCons; 
-            let moq = Math.round((mainFabric.rollQty / fabricUnitUsage) * 1.05) || 0;
+            
+            let isManualFab = document.getElementById('mf-toggle').checked;
+            let fSum=0, mGSM=200, mRoll=20, fName='未选面料';
+            
+            if(isManualFab) {
+                fName = document.getElementById('mf-name').value;
+                fSum = priceMode==='loose'?parseFloat(document.getElementById('mf-loose').value):parseFloat(document.getElementById('mf-roll').value);
+                mGSM = parseFloat(document.getElementById('mf-gsm').value);
+                mRoll = parseFloat(document.getElementById('mf-rollqty').value);
+            } else if(selFabric) {
+                fName = selFabric.name;
+                fSum = priceMode==='loose'?selFabric.price_loose:selFabric.price_roll;
+                mGSM = selFabric.gsm; mRoll = selFabric.rollQty;
+            }
+
+            const fabricUnitUsage = (mGSM / 1000) * finalCons; 
+            let moq = Math.round((mRoll / fabricUnitUsage) * 1.05) || 0;
             elSafeSet('res-moq', moq);
 
             let extra=0; document.querySelectorAll('#proc-list input:checked').forEach(i=>{
@@ -257,7 +296,7 @@
             const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
             currentID = 'ASTON-' + date + '-' + Math.floor(Math.random()*900+100);
             elSafeSet('quote-id', 'ID: ' + currentID);
-            elSafeSet('audit-box', `1. 用料: ${finalCons.toFixed(3)} ㎡\n2. 单价: ¥${fSum.toFixed(2)}\n3. 包装: ¥${pkgP.toFixed(2)}`);
+            elSafeSet('audit-box', `1. 面料: ${fName}\n2. 单价: ¥${fSum.toFixed(2)}\n3. 损耗: 1.10\n4. 包装: ¥${pkgP.toFixed(2)}`);
         }
 
         function openReportModal() {
@@ -266,8 +305,8 @@
             const client = document.getElementById('client').value || '未填项目';
             const usd = document.getElementById('res-usd').innerText;
             const moq = document.getElementById('res-moq').innerText;
-            const fabric = selFabric ? selFabric.name : '未选面料';
-            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n美金单价: $${usd}\n起订量: ${moq}件`;
+            const fName = document.getElementById('mf-toggle').checked ? document.getElementById('mf-name').value : (selFabric ? selFabric.name : '未选面料');
+            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n面料: ${fName}\n美金单价: $${usd}\n起订量: ${moq}件`;
             elSafeSet('report-text', summary);
             const rm = document.getElementById('report-modal'); if(rm) rm.style.display = 'flex';
         }
@@ -280,9 +319,9 @@
             const client = document.getElementById('client').value || 'NA';
             const usd = document.getElementById('res-usd').innerText;
             const moq = document.getElementById('res-moq').innerText;
-            const fabric = selFabric ? selFabric.name : 'NA';
+            const fName = document.getElementById('mf-toggle').checked ? document.getElementById('mf-name').value : (selFabric ? selFabric.name : 'NA');
             const date = new Date().toLocaleDateString();
-            let t = type === 'summary' ? document.getElementById('report-text').innerText : `${date}\t${currentID}\t${sales}\t${country}\t${client}\t${activeStyle.name}\t${fabric}\t${usd}\t${moq}`;
+            let t = type === 'summary' ? document.getElementById('report-text').innerText : `${date}\t${currentID}\t${sales}\t${country}\t${client}\t${activeStyle.name}\t${fName}\t${usd}\t${moq}`;
             navigator.clipboard.writeText(t.replace(/\\t/g, '\t')).then(() => { alert('已成功复制！'); closeModal(); });
         }
         window.addEventListener('DOMContentLoaded', init);
