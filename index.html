@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8"><title>ASTON 报价 V8.10 手动增强版</title>
+    <meta charset="UTF-8"><title>ASTON 报价 V8.11 逻辑精修版</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -12,15 +12,14 @@
         .tier-td { padding: 10px; background: #1e293b; color: white; font-weight: 700; border-radius: 8px; }
         .active-tier-td { background: #2563eb !important; }
         select { appearance: auto !important; -webkit-appearance: listbox !important; background-image: none !important; padding-right: 1rem !important; }
-        .manual-fab-active { border-color: #f97316 !important; background: #fff7ed !important; }
     </style>
 </head>
 <body class="p-4 md:p-10">
-    <div class="fixed top-2 right-2 z-50 bg-orange-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.10 Manual+</div>
+    <div class="fixed top-2 right-2 z-50 bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded shadow-lg">V8.11 Refined</div>
 
     <div id="loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-        <p class="text-sm font-bold text-slate-400">正在同步手动报价模块 V8.10...</p>
+        <p class="text-sm font-bold text-slate-400">同步面料库逻辑 V8.11...</p>
     </div>
 
     <div id="report-modal" class="modal">
@@ -38,7 +37,7 @@
         <div class="flex-1 space-y-8">
             <div class="flex flex-col md:flex-row items-start gap-8">
                 <div class="flex flex-col gap-6 w-full md:w-72">
-                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.10</h1></div>
+                    <div class="flex items-center gap-3"><div class="bg-blue-600 text-white p-2 rounded-xl font-black italic text-2xl px-3">ASTON</div><h1 class="text-2xl font-black text-slate-800 tracking-tighter">报价系统 V8.11</h1></div>
                     <div class="space-y-3">
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">业务员</label><select id="sales-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
                         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 uppercase">目的国</label><select id="country-sel" onchange="calculate()" class="p-3 border-2 border-slate-200 rounded-xl text-sm font-black bg-white w-full outline-none focus:border-blue-500"></select></div>
@@ -63,13 +62,25 @@
             <div class="card p-8 space-y-6"><h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest">04. 特色工艺</h3><div id="proc-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div></div>
             
             <div class="card p-8 space-y-6 border-orange-100 bg-orange-50/20">
-                <div class="flex justify-between items-center"><h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料母库 (单选)</h3><label class="flex items-center gap-2 cursor-pointer bg-orange-600 text-white px-4 py-2 rounded-full text-[10px] font-black shadow-lg shadow-orange-900/20"><input type="checkbox" id="mf-toggle" onchange="toggleManualFab()" class="w-4 h-4">手动录入新面料</label></div>
+                <div class="flex justify-between items-center"><h3 class="text-xs font-black text-orange-600 uppercase tracking-widest">05. 面料库 (单选)</h3><label class="flex items-center gap-2 cursor-pointer bg-orange-600 text-white px-4 py-2 rounded-full text-[10px] font-black shadow-lg shadow-orange-900/20"><input type="checkbox" id="mf-toggle" onchange="toggleManualFab()" class="w-4 h-4">手动录入新面料</label></div>
                 
                 <div id="mf-area" class="hidden space-y-4 p-6 bg-white rounded-2xl border-2 border-orange-200 shadow-inner">
                     <div class="grid grid-cols-3 gap-4">
                         <div><label class="text-[9px] font-black text-slate-400 uppercase">面料名称</label><input type="text" id="mf-name" value="新面料" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
-                        <div><label class="text-[9px] font-black text-slate-400 uppercase">散剪价格(RMB)</label><input type="number" id="mf-loose" value="35" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
-                        <div><label class="text-[9px] font-black text-slate-400 uppercase">整卷价格(RMB)</label><input type="number" id="mf-roll" value="28" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase">散剪价格(RMB)</label>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="radio" name="mf-price-mode" id="mf-radio-loose" checked onchange="setPriceMode('loose')" class="w-5 h-5 accent-orange-600">
+                                <input type="number" id="mf-loose" value="35" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase">整卷价格(RMB)</label>
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="radio" name="mf-price-mode" id="mf-radio-roll" onchange="setPriceMode('roll')" class="w-5 h-5 accent-orange-600">
+                                <input type="number" id="mf-roll" value="28" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black">
+                            </div>
+                        </div>
                     </div>
                     <div class="grid grid-cols-3 gap-4">
                         <div><label class="text-[9px] font-black text-slate-400 uppercase">整卷重量(KG/M)</label><input type="number" id="mf-rollqty" value="20" oninput="calculate()" class="w-full p-3 border-2 border-slate-100 rounded-xl text-xs font-black mt-1"></div>
@@ -105,7 +116,7 @@
         </div>
     </div>
 
-    <script src="./data.js?v=1776934181"></script>
+    <script src="./data.js?v=1776935410"></script>
     <script>
         function elSafeSet(id, val, attr='innerText') {
             const el = document.getElementById(id);
@@ -118,10 +129,8 @@
             try {
                 if (typeof DB === 'undefined') { showError("数据库加载失败，请刷新！"); return; }
                 activeStyle = DB.styles[0] || {}; activePkg = DB.pkgs[0] || { price: 0 };
-                
                 const ss=document.getElementById('sales-sel'); if(ss) DB.sales.forEach(n=>ss.add(new Option(n,n)));
                 const cs=document.getElementById('country-sel'); if(cs) DB.countries.forEach(n=>cs.add(new Option(n,n)));
-                
                 const st=document.getElementById('style-btns');
                 if(st) DB.styles.forEach((s,i)=>{
                     const b=document.createElement('button'); b.innerText=s.name;
@@ -136,7 +145,6 @@
                     };
                     st.appendChild(b);
                 });
-                
                 const sz=document.getElementById('size-btns');
                 const tS = DB.styles.length > 1 ? DB.styles[1] : DB.styles[0];
                 if(sz && tS && tS.sizes) Object.keys(tS.sizes).forEach(k=>{
@@ -149,7 +157,6 @@
                     };
                     sz.appendChild(b);
                 });
-                
                 const pb=document.getElementById('pkg-btns');
                 if(pb) DB.pkgs.forEach((p,i)=>{
                     const b=document.createElement('button'); b.innerText = p.name + " ¥" + p.price.toFixed(1);
@@ -178,17 +185,16 @@
             priceMode = m;
             const ml = document.getElementById('mode-loose'); if(ml) ml.className = m === 'loose' ? 'w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl' : 'w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50';
             const mr = document.getElementById('mode-roll'); if(mr) mr.className = m === 'roll' ? 'w-full py-4 text-xs font-black rounded-2xl bg-blue-600 text-white shadow-xl' : 'w-full py-4 text-xs font-black rounded-2xl text-slate-400 bg-slate-50';
+            
+            const mrl = document.getElementById('mf-radio-loose'); if(mrl) mrl.checked = (m === 'loose');
+            const mrr = document.getElementById('mf-radio-roll'); if(mrr) mrr.checked = (m === 'roll');
+
             elSafeSet('th-price', m === 'loose' ? '散剪价格 (RMB)' : '整卷价格 (RMB)');
             renderFabrics();
         }
 
         function showError(msg) { const ldr = document.getElementById('loader'); if(ldr) ldr.innerHTML = '<div class="text-red-500 font-black p-10 bg-white rounded-3xl shadow-2xl text-center">' + msg + '</div>'; }
-
-        function renderUI() {
-            const img = document.getElementById('style-img'); if(img) img.src = activeStyle.img;
-            elSafeSet('style-name', activeStyle.name);
-            renderMods(); renderProc(); renderFabrics(); calculate();
-        }
+        function renderUI() { const img = document.getElementById('style-img'); if(img) img.src = activeStyle.img; elSafeSet('style-name', activeStyle.name); renderMods(); renderProc(); renderFabrics(); calculate(); }
 
         function renderMods() {
             const g=document.getElementById('mod-btns'); if(!g) return; g.innerHTML=""; const sR=activeStyle.name.replace(/[0-9.\s]/g,'');
@@ -272,11 +278,8 @@
                     extra += pp; 
                 }
             });
-            
             const pkgManual = parseFloat(document.getElementById('m-pkg').value) || 0;
-            const pkgDb = activePkg ? activePkg.price : 0;
-            const pkgP = pkgManual > 0 ? pkgManual : pkgDb;
-            
+            const pkgP = pkgManual > 0 ? pkgManual : (activePkg ? activePkg.price : 0);
             const rmb=(finalCons * fSum * 1.1 + labor + extra + pkgP) / 0.7;
             const usd=rmb/6.7;
             elSafeSet('res-usd', usd.toFixed(2));
@@ -296,7 +299,7 @@
             const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
             currentID = 'ASTON-' + date + '-' + Math.floor(Math.random()*900+100);
             elSafeSet('quote-id', 'ID: ' + currentID);
-            elSafeSet('audit-box', `1. 面料: ${fName}\n2. 单价: ¥${fSum.toFixed(2)}\n3. 损耗: 1.10\n4. 包装: ¥${pkgP.toFixed(2)}`);
+            elSafeSet('audit-box', `1. 面料: ${fName}\n2. 模式: ${priceMode==='loose'?'散剪':'整卷'}\n3. 单价: ¥${fSum.toFixed(2)}\n4. 包装: ¥${pkgP.toFixed(2)}`);
         }
 
         function openReportModal() {
@@ -306,7 +309,7 @@
             const usd = document.getElementById('res-usd').innerText;
             const moq = document.getElementById('res-moq').innerText;
             const fName = document.getElementById('mf-toggle').checked ? document.getElementById('mf-name').value : (selFabric ? selFabric.name : '未选面料');
-            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n面料: ${fName}\n美金单价: $${usd}\n起订量: ${moq}件`;
+            const summary = `【ASTON 报价汇报】\n流水号: ${currentID}\n业务员: ${sales}\n目的国: ${country}\n项目名: ${client}\n版型: ${activeStyle.name}\n面料: ${fName}\n计价: ${priceMode==='loose'?'散剪':'整卷'}\n美金单价: $${usd}\n起订量: ${moq}件`;
             elSafeSet('report-text', summary);
             const rm = document.getElementById('report-modal'); if(rm) rm.style.display = 'flex';
         }
