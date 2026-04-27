@@ -333,9 +333,15 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4';
         let supabase = null;
 
-        if (SUPABASE_URL !== 'https://your-project-url.supabase.co') {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            setTimeout(updateSyncUI, 500);
+        try {
+            if (SUPABASE_URL && SUPABASE_URL.includes('supabase.co') && window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                setTimeout(updateSyncUI, 500);
+            } else {
+                console.log('Supabase library not loaded or URL not set. Running in Local Mode.');
+            }
+        } catch (e) {
+            console.error('Supabase Init Error:', e);
         }
 
         function updateSyncUI() {
@@ -466,10 +472,10 @@
             list.innerHTML = tasks.map(t => `
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 text-xs font-bold flex justify-between items-center">
                     <div>
-                        <p class="text-blue-600 underline">${t.order}</p>
-                        <p class="text-gray-400 mt-1">${t.factory} -> ${t.inspector.replace('Inspector_', '')}</p>
+                        <p class="text-blue-600 underline">${t.order || 'Unknown'}</p>
+                        <p class="text-gray-400 mt-1">${t.factory || '--'} -> ${(t.inspector || '').replace('Inspector_', '')}</p>
                     </div>
-                    <span class="px-2 py-1 ${t.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'} rounded uppercase tracking-tighter">${t.status}</span>
+                    <span class="px-2 py-1 ${t.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'} rounded uppercase tracking-tighter">${t.status || 'PENDING'}</span>
                 </div>
             `).join('');
         }
@@ -506,9 +512,9 @@
                 <div onclick='startInspection(${JSON.stringify(t)})' class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
                     <div class="flex justify-between items-start">
                         <div class="space-y-1">
-                            <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type} / ${t.stage}</span>
-                            <h4 class="text-xl font-black text-slate-800 tracking-tighter">${t.order}</h4>
-                            <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory}</p>
+                            <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type || '--'} / ${t.stage || '--'}</span>
+                            <h4 class="text-xl font-black text-slate-800 tracking-tighter">${t.order || 'Unknown'}</h4>
+                            <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory || '--'}</p>
                             <p class="text-[10px] text-blue-500 font-bold">检验日期: ${t.inspectionDate || '未定'}</p>
                         </div>
                         <span class="${t.status === 'COMPLETED' ? 'bg-gray-100 text-gray-400' : 'bg-emerald-100 text-emerald-600'} px-3 py-1 rounded-full text-[10px] font-black uppercase">
