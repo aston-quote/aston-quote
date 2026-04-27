@@ -6,6 +6,7 @@
     <title>ASTON 服装生产品质检验系统 V3.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -30,6 +31,10 @@
             <span class="en">ASTON Q.A. V3.0</span>
         </h1>
         <div class="flex items-center gap-2">
+            <div id="sync-status" class="flex items-center text-[8px] font-bold px-2 py-1 rounded bg-slate-800/50 text-slate-400">
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div>
+                LOCAL ONLY
+            </div>
             <button onclick="logout()" class="text-xs bg-red-500/20 px-2 py-1 rounded">退出</button>
             <button onclick="toggleLang()" class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold">CN/EN</button>
         </div>
@@ -323,6 +328,25 @@
     <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
 
     <script>
+        // --- 云端同步配置 (Supabase) ---
+        // 老板，等您有了自己的项目，把这两个值替换掉即可通电！
+        const SUPABASE_URL = 'https://your-project-url.supabase.co';
+        const SUPABASE_KEY = 'your-anon-key';
+        let supabase = null;
+
+        if (SUPABASE_URL !== 'https://your-project-url.supabase.co') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            setTimeout(updateSyncUI, 500);
+        }
+
+        function updateSyncUI() {
+            const el = document.getElementById('sync-status');
+            if (supabase) {
+                el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
+                el.classList.replace('text-slate-400', 'text-emerald-400');
+            }
+        }
+
         let currentRole = '';
         let currentUser = '';
         let currentStep = 1;
@@ -380,8 +404,8 @@
             refreshInspectorTasks();
         }
 
-        // 2. Task Assignment Logic (Simulated with localStorage)
-        function assignTask() {
+        // 2. Task Assignment Logic (Hybrid Cloud/Local)
+        async function assignTask() {
             const task = {
                 id: Date.now(),
                 type: document.getElementById('new-type').value,
@@ -395,16 +419,27 @@
                 notes: document.getElementById('new-notes').value,
                 inspector: document.getElementById('assign-user').value,
                 status: 'PENDING',
-                creator: currentUser
+                creator: currentUser,
+                created_at: new Date().toISOString()
             };
 
             if (!task.order || !task.factory) return alert('请至少填写订单号和工厂名称');
 
+            // --- 云端同步逻辑 ---
+            if (supabase) {
+                const { error } = await supabase.from('aston_tasks').insert([task]);
+                if (error) {
+                    console.error('Cloud sync failed:', error);
+                    alert('云端同步失败，将保存至本地。');
+                }
+            }
+
+            // 备份至本地 (双重保险)
             const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
             tasks.push(task);
             localStorage.setItem('aston_tasks', JSON.stringify(tasks));
 
-            alert('任务已成功下达！');
+            alert('任务已成功下达并同步至云端！');
             // Reset fields
             ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
                 document.getElementById(id).value = '';
@@ -412,22 +447,50 @@
             refreshAssignedTasks();
         }
 
-        function refreshAssignedTasks() {
-            const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser);
+        async function refreshAssignedTasks() {
+            let tasks = [];
+            
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('aston_tasks')
+                    .select('*')
+                    .eq('creator', currentUser)
+                    .order('created_at', { ascending: false });
+                if (!error) tasks = data;
+            } else {
+                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]')
+                    .filter(t => t.creator === currentUser)
+                    .reverse();
+            }
+
             const list = document.getElementById('assigned-task-list');
-            list.innerHTML = tasks.reverse().map(t => `
+            list.innerHTML = tasks.map(t => `
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 text-xs font-bold flex justify-between items-center">
                     <div>
                         <p class="text-blue-600 underline">${t.order}</p>
-                        <p class="text-gray-400 mt-1">${t.factory} -> ${t.inspector}</p>
+                        <p class="text-gray-400 mt-1">${t.factory} -> ${t.inspector.replace('Inspector_', '')}</p>
                     </div>
-                    <span class="px-2 py-1 bg-gray-100 text-gray-400 rounded uppercase tracking-tighter">${t.status}</span>
+                    <span class="px-2 py-1 ${t.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'} rounded uppercase tracking-tighter">${t.status}</span>
                 </div>
             `).join('');
         }
 
-        function refreshInspectorTasks() {
-            const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser);
+        async function refreshInspectorTasks() {
+            let tasks = [];
+            
+            if (supabase) {
+                const { data, error } = await supabase
+                    .from('aston_tasks')
+                    .select('*')
+                    .eq('inspector', currentUser)
+                    .order('created_at', { ascending: false });
+                if (!error) tasks = data;
+            } else {
+                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]')
+                    .filter(t => t.inspector === currentUser)
+                    .reverse();
+            }
+
             const list = document.getElementById('inspector-task-list');
             if (tasks.length === 0) {
                 list.innerHTML = `
@@ -440,8 +503,8 @@
                 return;
             }
             
-            list.innerHTML = tasks.reverse().map(t => `
-                <div onclick='startInspection(${JSON.stringify(t)})' class="bg-white p-6 rounded-3xl shadow-md border-l-8 border-emerald-500 active:scale-95 transition cursor-pointer">
+            list.innerHTML = tasks.map(t => `
+                <div onclick='startInspection(${JSON.stringify(t)})' class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
                     <div class="flex justify-between items-start">
                         <div class="space-y-1">
                             <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type} / ${t.stage}</span>
@@ -449,11 +512,24 @@
                             <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory}</p>
                             <p class="text-[10px] text-blue-500 font-bold">检验日期: ${t.inspectionDate || '未定'}</p>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">GO! 开始验货</span>
+                        <span class="${t.status === 'COMPLETED' ? 'bg-gray-100 text-gray-400' : 'bg-emerald-100 text-emerald-600'} px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                            ${t.status === 'COMPLETED' ? '已完成 Done' : 'GO! 开始验货'}
+                        </span>
                     </div>
                 </div>
             `).join('');
             lucide.createIcons();
+            
+            // --- 实时监听 (Realtime) ---
+            if (supabase) {
+                supabase
+                    .channel('any')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'aston_tasks', filter: `inspector=eq.${currentUser}` }, payload => {
+                        console.log('收到新任务!', payload);
+                        refreshInspectorTasks(); // 收到新任务自动刷新
+                    })
+                    .subscribe();
+            }
         }
 
         // 3. Inspection Flow Logic
