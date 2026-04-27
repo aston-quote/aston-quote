@@ -81,7 +81,7 @@
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                 <h3 class="font-black text-gray-800 flex items-center mb-4">
                     <i data-lucide="plus-circle" class="w-5 h-5 mr-2 text-blue-600"></i>
-                    下达检验任务 Assign Task
+                    下达检验任务 Assign Task (User: <span id="user-display-name">--</span>)
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="col-span-2 bg-gray-50 p-3 rounded-2xl">
@@ -411,14 +411,18 @@
         }
 
         function showMerchDashboard() {
-            document.getElementById('merch-view').classList.remove('hidden');
-            document.getElementById('user-display-name').innerText = currentUser;
+            const view = document.getElementById('merch-view');
+            if (view) view.classList.remove('hidden');
+            const display = document.getElementById('user-display-name');
+            if (display) display.innerText = currentUser;
             refreshAssignedTasks();
         }
 
         function showInspectorDashboard() {
-            document.getElementById('inspector-view').classList.remove('hidden');
-            document.getElementById('inspector-display-name').innerText = currentUser;
+            const view = document.getElementById('inspector-view');
+            if (view) view.classList.remove('hidden');
+            const display = document.getElementById('inspector-display-name');
+            if (display) display.innerText = currentUser;
             refreshInspectorTasks();
         }
 
