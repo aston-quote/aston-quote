@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASTON 验货系统 V1.5 (新地址测试)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', 'PingFang SC', sans-serif; background-color: #f8fafc; }
+        .step-active { color: #2563eb; border-bottom: 3px solid #2563eb; }
+        .watermark-canvas { display: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="pb-24">
+    <header class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center">
+        <h1 class="text-lg font-bold flex items-center">
+            <i data-lucide="shield-check" class="mr-2"></i> ASTON 验货系统 V1.5
+        </h1>
+    </header>
+
+    <nav class="bg-white border-b flex overflow-x-auto no-scrollbar whitespace-nowrap sticky top-[60px] z-40">
+        <button onclick="switchStep(1)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold step-active" id="nav-1">1. 准备/签到</button>
+        <button onclick="switchStep(2)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-2">2. 抽样/外观</button>
+        <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-3">3. 尺寸/品质</button>
+        <button onclick="switchStep(4)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-4">4. 测试/判定</button>
+        <button onclick="switchStep(5)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-5">5. 报告/签字</button>
+    </nav>
+
+    <main class="p-4 space-y-6" id="app-container">
+        <section id="step-1" class="step-content space-y-4">
+            <div class="bg-white rounded-2xl shadow-sm p-5 space-y-4 border border-gray-100">
+                <h3 class="font-bold text-gray-800 flex items-center">系统已更新 - 请正常测试</h3>
+                <p class="text-xs text-gray-500">如果看到这个页面，说明链接已同步成功。</p>
+            </div>
+        </section>
+        <!-- (Keeping it simple for the initial load check) -->
+    </main>
+
+    <script>
+        function switchStep(step) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
+            document.querySelectorAll('.nav-step').forEach(n => {
+                n.classList.remove('step-active');
+                n.classList.add('text-gray-400');
+            });
+            document.getElementById(`nav-${step}`).classList.add('step-active');
+            document.getElementById(`nav-${step}`).classList.remove('text-gray-400');
+        }
+        window.onload = () => { lucide.createIcons(); };
+    </script>
+</body>
+</html>
