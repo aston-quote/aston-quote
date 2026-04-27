@@ -49,7 +49,12 @@
             <div class="space-y-4 pt-4">
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">用户账号 User ID</label>
-                    <input type="text" id="login-id" class="w-full bg-slate-800 border-none p-4 text-white focus:ring-2 focus:ring-blue-500 transition-all shadow-inner" placeholder="输入账号...">
+                    <select id="login-id" class="w-full bg-slate-800 border-none p-4 text-white appearance-none">
+                        <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
+                        <option value="Inspector_Li">李检验员 (Li)</option>
+                        <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                        <option value="Inspector_Wang">王检验员 (Wang)</option>
+                    </select>
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">登录角色 Role</label>
@@ -171,7 +176,7 @@
         <nav class="bg-white border-b flex overflow-x-auto no-scrollbar whitespace-nowrap sticky top-[60px] z-40">
             <button onclick="switchStep(1)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold step-active" id="nav-1"><span class="zh">1. 签到</span><span class="en">1. Check-in</span></button>
             <button onclick="switchStep(2)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-2"><span class="zh">2. 车间</span><span class="en">2. Workshop</span></button>
-            <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-3"><span class="zh">3. 产品照</span><span class="en">3. Photos</span></button>
+            <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-3"><span class="zh">3. 产品实拍</span><span class="en">3. Photos</span></button>
             <button onclick="switchStep(4)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-4"><span class="zh">4. 尺寸缺陷</span><span class="en">4. Q.A.</span></button>
             <button onclick="switchStep(5)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-5"><span class="zh">5. 报告</span><span class="en">5. Report</span></button>
         </nav>
@@ -217,20 +222,26 @@
                 <!-- G1: Flat -->
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">G1: Flat View (Front/Back/Inside)</h4>
-                        <button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ ADD</button>
+                        <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">
+                            <span class="zh">G1: 样衣平铺照 (正/反/内里)</span>
+                            <span class="en">G1: Flat View (Front/Back/Inside)</span>
+                        </h4>
+                        <button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ <span class="zh">增加</span><span class="en">ADD</span></button>
                     </div>
                     <div class="grid grid-cols-3 gap-2" id="g1-container">
-                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden">FRONT</div>
-                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden">BACK</div>
-                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_3')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_3" class="hidden">INSIDE</div>
+                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden"><span class="zh">正面</span><span class="en">FRONT</span></div>
+                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden"><span class="zh">反面</span><span class="en">BACK</span></div>
+                        <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_3')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_3" class="hidden"><span class="zh">内里</span><span class="en">INSIDE</span></div>
                     </div>
                 </div>
                 <!-- G4: Labels -->
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
                     <div class="flex justify-between items-center">
-                        <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">G4: Labels & Branding</h4>
-                        <button onclick="addPhotoSlot('label-grid')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ ADD</button>
+                        <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">
+                            <span class="zh">G4: 标签与Logo</span>
+                            <span class="en">G4: Labels & Branding</span>
+                        </h4>
+                        <button onclick="addPhotoSlot('label-grid')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ <span class="zh">增加</span><span class="en">ADD</span></button>
                     </div>
                     <div class="grid grid-cols-4 gap-2" id="label-grid">
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'lb1')" class="absolute inset-0 opacity-0 z-10"><img id="img-lb1" class="hidden"><i data-lucide="plus" class="text-gray-200"></i></div>
@@ -244,7 +255,7 @@
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
                     <div class="flex justify-between items-center">
                         <h3 class="font-black text-gray-800"><span class="zh">尺寸测量表 (手写拍照)</span><span class="en">Measurements</span></h3>
-                        <button onclick="addPhotoSlot('measure-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-black uppercase">+ ADD</button>
+                        <button onclick="addPhotoSlot('measure-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-black uppercase">+ <span class="zh">增加照片</span><span class="en">ADD</span></button>
                     </div>
                     <div class="grid grid-cols-2 gap-4" id="measure-grid">
                         <div class="photo-slot aspect-[3/4]"><input type="file" capture="camera" onchange="processImage(this, 'ms1')" class="absolute inset-0 opacity-0 z-10"><img id="img-ms1" class="hidden">1</div>
@@ -254,7 +265,7 @@
                 <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
                     <h3 class="font-black text-gray-800"><span class="zh">缺陷疵点记录 (中英选择)</span><span class="en">Defect Log</span></h3>
                     <div id="defect-container" class="space-y-4"></div>
-                    <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-gray-100 text-blue-500 font-black rounded-2xl text-[10px] uppercase tracking-widest">+ Add Defect Item</button>
+                    <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-gray-100 text-blue-500 font-black rounded-2xl text-[10px] uppercase tracking-widest">+ <span class="zh">增加缺陷项</span><span class="en">Add Defect Item</span></button>
                 </div>
             </section>
 
@@ -299,8 +310,14 @@
 
     <!-- Navigation Bar -->
     <div id="nav-controls" class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t p-4 flex gap-4 z-50 view-hidden">
-        <button onclick="prevStep()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-500">BACK</button>
-        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">NEXT STEP</button>
+        <button onclick="prevStep()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-500">
+            <span class="zh">上一步</span>
+            <span class="en">BACK</span>
+        </button>
+        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">
+            <span class="zh">下一步</span>
+            <span class="en">NEXT STEP</span>
+        </button>
     </div>
 
     <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
