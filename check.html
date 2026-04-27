@@ -52,7 +52,7 @@
                         <option value="manager">管理者 (Manager)</option>
                     </select>
                 </div>
-                <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
+                <button onclick="console.log('Button clicked'); login();" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
                     进入系统 Login
                 </button>
             </div>
@@ -328,6 +328,9 @@
     <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
 
     <script>
+        // --- 强制调试 ---
+        console.log('Script loading...');
+        
         // --- 全局调试辅助 ---
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             alert('系统运行时发生错误，请截图反馈:\n' + msg + '\n行号: ' + lineNo);
@@ -691,7 +694,13 @@
         }
         function clearSignature() { sigCtx.clearRect(0, 0, sigPad.width, sigPad.height); }
 
-        window.onload = () => { lucide.createIcons(); initSig(); };
+        window.onload = () => { 
+            console.log('Window loaded');
+            if (window.lucide) {
+                lucide.createIcons(); 
+            }
+            initSig(); 
+        };
     </script>
 </body>
 </html>
