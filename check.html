@@ -504,6 +504,8 @@
             `).join('');
         }
 
+        let currentTasks = [];
+
         async function refreshInspectorTasks() {
             let tasks = [];
             if (supabase) {
@@ -512,6 +514,7 @@
             } else {
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
             }
+            currentTasks = tasks;
 
             const list = document.getElementById('inspector-task-list');
             if (tasks.length === 0) {
@@ -520,8 +523,8 @@
                 return;
             }
             
-            list.innerHTML = tasks.map(t => `
-                <div onclick='startInspection(${JSON.stringify(t)})' class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
+            list.innerHTML = tasks.map((t, index) => `
+                <div onclick="prepareInspection(${index})" class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
                     <div class="flex justify-between items-start">
                         <div class="space-y-1">
                             <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type || '--'} / ${t.stage || '--'}</span>
@@ -540,6 +543,10 @@
             if (supabase) {
                 supabase.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'aston_tasks', filter: `inspector=eq.${currentUser}` }, () => refreshInspectorTasks()).subscribe();
             }
+        }
+
+        function prepareInspection(index) {
+            startInspection(currentTasks[index]);
         }
 
         function startInspection(task) {
