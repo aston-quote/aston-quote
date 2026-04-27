@@ -92,7 +92,10 @@
             <!-- Step 2: Workshop 2-5 photos -->
             <section id="step-2" class="step-content hidden space-y-4">
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-800 mb-4"><span class="zh">车间实况 (2-5张)</span><span class="en">Workshop Photos (2-5)</span></h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800"><span class="zh">车间实况 (2-5张)</span><span class="en">Workshop Photos</span></h3>
+                        <button onclick="addPhotoSlot('workshop-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加照片</button>
+                    </div>
                     <div class="grid grid-cols-2 gap-3" id="workshop-grid">
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'ws1')" class="absolute inset-0 opacity-0 z-10"><img id="img-ws1" class="hidden"><i data-lucide="camera" class="text-gray-200"></i></div>
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'ws2')" class="absolute inset-0 opacity-0 z-10"><img id="img-ws2" class="hidden"><i data-lucide="camera" class="text-gray-200"></i></div>
@@ -106,8 +109,11 @@
             <section id="step-3" class="step-content hidden space-y-4">
                 <!-- Group 1 -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
-                    <h4 class="font-bold text-sm text-blue-600">G1: <span class="zh">衣服平铺 (正/背/里)</span><span class="en">Flat View (Front/Back/Inside)</span></h4>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-blue-600">G1: <span class="zh">衣服平铺 (正/背/里)</span><span class="en">Flat View</span></h4>
+                        <button onclick="addPhotoSlot('g1-extra')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加照片</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2" id="g1-container">
                         <div class="photo-slot text-[8px] text-gray-400"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden">正面</div>
                         <div class="photo-slot text-[8px] text-gray-400"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden">背面</div>
                         <div class="photo-slot text-[8px] text-gray-400"><input type="file" capture="camera" onchange="processImage(this, 'g1_3')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_3" class="hidden">内部</div>
@@ -115,7 +121,10 @@
                 </div>
                 <!-- Group 4: Labels -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
-                    <h4 class="font-bold text-sm text-blue-600">G4: <span class="zh">水洗标/Logo标 (所有)</span><span class="en">Care Labels/Logos (All)</span></h4>
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-blue-600">G4: <span class="zh">水洗标/Logo标 (所有)</span><span class="en">Care Labels/Logos</span></h4>
+                        <button onclick="addPhotoSlot('label-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加照片</button>
+                    </div>
                     <div class="grid grid-cols-4 gap-2" id="label-grid">
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'lb1')" class="absolute inset-0 opacity-0 z-10"><img id="img-lb1" class="hidden"><i data-lucide="plus" class="text-gray-200"></i></div>
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'lb2')" class="absolute inset-0 opacity-0 z-10"><img id="img-lb2" class="hidden"><i data-lucide="plus" class="text-gray-200"></i></div>
@@ -125,7 +134,10 @@
                 </div>
                 <!-- Group 6: Details -->
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
-                    <h4 class="font-bold text-sm text-blue-600">G6: <span class="zh">工艺细节 (印花/刺绣)</span><span class="en">Craft Details (Print/Embroidery)</span></h4>
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-sm text-blue-600">G6: <span class="zh">工艺细节 (印花/刺绣)</span><span class="en">Craft Details</span></h4>
+                        <button onclick="addPhotoSlot('detail-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加照片</button>
+                    </div>
                     <div class="grid grid-cols-3 gap-2" id="detail-grid">
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'dt1')" class="absolute inset-0 opacity-0 z-10"><img id="img-dt1" class="hidden"><i data-lucide="camera" class="text-gray-200"></i></div>
                         <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'dt2')" class="absolute inset-0 opacity-0 z-10"><img id="img-dt2" class="hidden"><i data-lucide="camera" class="text-gray-200"></i></div>
@@ -136,7 +148,10 @@
             <!-- Step 4: Measurements (Photos) & Defects (List) -->
             <section id="step-4" class="step-content hidden space-y-4">
                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
-                    <h3 class="font-bold text-gray-800"><span class="zh">尺寸测量表 (手写拍照)</span><span class="en">Measurement Sheets (Photos)</span></h3>
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800"><span class="zh">尺寸测量表 (手写拍照)</span><span class="en">Measurement Sheets</span></h3>
+                        <button onclick="addPhotoSlot('measure-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加照片</button>
+                    </div>
                     <div class="grid grid-cols-2 gap-3" id="measure-grid">
                         <div class="photo-slot aspect-[3/4]"><input type="file" capture="camera" onchange="processImage(this, 'ms1')" class="absolute inset-0 opacity-0 z-10"><img id="img-ms1" class="hidden">1</div>
                         <div class="photo-slot aspect-[3/4]"><input type="file" capture="camera" onchange="processImage(this, 'ms2')" class="absolute inset-0 opacity-0 z-10"><img id="img-ms2" class="hidden">2</div>
@@ -244,6 +259,16 @@
             }
         }
 
+        function addPhotoSlot(containerId) {
+            const container = document.getElementById(containerId) || document.getElementById('g1-container');
+            const id = 'extra_' + Date.now();
+            const div = document.createElement('div');
+            div.className = "photo-slot text-[8px] text-gray-400";
+            div.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden"><i data-lucide="plus"></i>`;
+            container.appendChild(div);
+            lucide.createIcons();
+        }
+
         function processImage(input, id) {
             const reader = new FileReader();
             reader.onload = e => {
@@ -251,11 +276,34 @@
                 img.onload = () => {
                     const cvs = document.getElementById('watermarkCanvas');
                     const ctx = cvs.getContext('2d');
-                    cvs.width = img.width; cvs.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, img.height - 150, img.width, 150);
-                    ctx.fillStyle = "white"; ctx.font = "bold 40px Arial";
-                    ctx.fillText(`ORDER: ${inspectionData.order} | ${new Date().toLocaleString()} | ${inspectionData.gps}`, 50, img.height - 60);
+                    
+                    // 强制横版逻辑：如果高度 > 宽度（竖拍），则通过裁剪或旋转转为横版
+                    // 或者更稳妥地：统一保持 4:3 比例
+                    let targetW = 1280;
+                    let targetH = 960;
+                    
+                    cvs.width = targetW;
+                    cvs.height = targetH;
+                    
+                    // 居中裁剪并绘制
+                    const imgRatio = img.width / img.height;
+                    const targetRatio = targetW / targetH;
+                    let sw, sh, sx, sy;
+                    if (imgRatio > targetRatio) {
+                        sh = img.height; sw = sh * targetRatio;
+                        sx = (img.width - sw) / 2; sy = 0;
+                    } else {
+                        sw = img.width; sh = sw / targetRatio;
+                        sx = 0; sy = (img.height - sh) / 2;
+                    }
+
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+                    
+                    // 水印
+                    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, targetH - 120, targetW, 120);
+                    ctx.fillStyle = "white"; ctx.font = "bold 32px Arial";
+                    ctx.fillText(`ORDER: ${inspectionData.order} | ${new Date().toLocaleString()} | ${inspectionData.gps}`, 40, targetH - 50);
+                    
                     const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
                     document.getElementById(`img-${id}`).src = dataUrl;
                     document.getElementById(`img-${id}`).classList.remove('hidden');
