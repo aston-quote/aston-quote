@@ -81,16 +81,52 @@
                 <i data-lucide="plus-circle" class="mr-2 text-blue-600"></i>
                 <span class="zh">下达新检验任务</span><span class="en">New Assignment</span>
             </h3>
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">检验类型 Product Type</label>
+                    <select id="new-type" class="w-full bg-gray-50 border-none p-4 font-bold">
+                        <option value="大货成品">1. 大货成品 (Bulk Product)</option>
+                        <option value="外购成品">2. 外购成品 (Outsourced Product)</option>
+                        <option value="外购面料">3. 外购面料 (Outsourced Fabric)</option>
+                        <option value="外购辅料">4. 外购辅料 (Outsourced Accessories)</option>
+                    </select>
+                </div>
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">订单编号 Order No.</label>
                     <input type="text" id="new-order-no" class="w-full bg-gray-50 border-none p-4 font-bold" placeholder="ASTON-2026-XXXX">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">款式描述 Style Description</label>
+                    <input type="text" id="new-style" class="w-full bg-gray-50 border-none p-4 font-bold" placeholder="例如: 男装圆领T恤">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">订单数量 Quantity</label>
+                    <input type="number" id="new-qty" class="w-full bg-gray-50 border-none p-4 font-bold" placeholder="输入总件数">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">检验阶段 Stage</label>
+                    <select id="new-stage" class="w-full bg-gray-50 border-none p-4 font-bold">
+                        <option value="中期">中期 (Middle)</option>
+                        <option value="尾期">尾期 (Final)</option>
+                    </select>
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">生产工厂 Factory</label>
                     <input type="text" id="new-factory" class="w-full bg-gray-50 border-none p-4 font-bold" placeholder="输入工厂名称">
                 </div>
                 <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">合同交期 Delivery Date</label>
+                    <input type="date" id="new-delivery-date" class="w-full bg-gray-50 border-none p-4 font-bold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">检验日期 Inspection Date</label>
+                    <input type="date" id="new-inspection-date" class="w-full bg-gray-50 border-none p-4 font-bold">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">特别注意事项 Special Notes</label>
+                    <textarea id="new-notes" rows="2" class="w-full bg-gray-50 border-none p-4 font-bold" placeholder="输入需要注意的质量要点..."></textarea>
+                </div>
+                <div class="md:col-span-2">
                     <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">指派检验员 Assign Inspector</label>
                     <select id="assign-user" class="w-full bg-gray-50 border-none p-4 font-bold">
                         <option value="Inspector_Zhang">张检验员 (Zhang)</option>
@@ -98,9 +134,11 @@
                         <option value="Inspector_Wang">王检验员 (Wang)</option>
                     </select>
                 </div>
-                <button onclick="assignTask()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-indigo-100 active:scale-95 transition">
-                    确认并发送任务 Send Task
-                </button>
+                <div class="md:col-span-2">
+                    <button onclick="assignTask()" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-indigo-100 active:scale-95 transition">
+                        确认并发送任务 Send Task
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -327,20 +365,33 @@
 
         // 2. Task Assignment Logic (Simulated with localStorage)
         function assignTask() {
-            const order = document.getElementById('new-order-no').value;
-            const factory = document.getElementById('new-factory').value;
-            const target = document.getElementById('assign-user').value;
+            const task = {
+                id: Date.now(),
+                type: document.getElementById('new-type').value,
+                order: document.getElementById('new-order-no').value,
+                style: document.getElementById('new-style').value,
+                qty: document.getElementById('new-qty').value,
+                stage: document.getElementById('new-stage').value,
+                factory: document.getElementById('new-factory').value,
+                deliveryDate: document.getElementById('new-delivery-date').value,
+                inspectionDate: document.getElementById('new-inspection-date').value,
+                notes: document.getElementById('new-notes').value,
+                inspector: document.getElementById('assign-user').value,
+                status: 'PENDING',
+                creator: currentUser
+            };
 
-            if (!order || !factory) return alert('请完整填写任务信息');
+            if (!task.order || !task.factory) return alert('请至少填写订单号和工厂名称');
 
-            const task = { id: Date.now(), order, factory, inspector: target, status: 'PENDING', creator: currentUser };
             const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
             tasks.push(task);
             localStorage.setItem('aston_tasks', JSON.stringify(tasks));
 
             alert('任务已成功下达！');
-            document.getElementById('new-order-no').value = '';
-            document.getElementById('new-factory').value = '';
+            // Reset fields
+            ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
             refreshAssignedTasks();
         }
 
@@ -361,29 +412,66 @@
         function refreshInspectorTasks() {
             const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser);
             const list = document.getElementById('inspector-task-list');
-            if (tasks.length === 0) return;
+            if (tasks.length === 0) {
+                list.innerHTML = `
+                    <div class="bg-white p-8 rounded-3xl text-center border-2 border-dashed border-gray-200">
+                        <i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-200 mb-2"></i>
+                        <p class="text-gray-400 text-sm font-bold">目前没有分配给您的任务</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
             
             list.innerHTML = tasks.reverse().map(t => `
-                <div onclick="startInspection('${t.order}', '${t.factory}', ${t.id})" class="bg-white p-6 rounded-3xl shadow-md border-l-8 border-emerald-500 active:scale-95 transition cursor-pointer">
+                <div onclick='startInspection(${JSON.stringify(t)})' class="bg-white p-6 rounded-3xl shadow-md border-l-8 border-emerald-500 active:scale-95 transition cursor-pointer">
                     <div class="flex justify-between items-start">
-                        <div>
+                        <div class="space-y-1">
+                            <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type} / ${t.stage}</span>
                             <h4 class="text-xl font-black text-slate-800 tracking-tighter">${t.order}</h4>
-                            <p class="text-xs text-slate-400 mt-1 font-bold">工厂: ${t.factory}</p>
+                            <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory}</p>
+                            <p class="text-[10px] text-blue-500 font-bold">检验日期: ${t.inspectionDate || '未定'}</p>
                         </div>
                         <span class="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase">GO! 开始验货</span>
                     </div>
                 </div>
             `).join('');
+            lucide.createIcons();
         }
 
         // 3. Inspection Flow Logic
-        function startInspection(order, factory, taskId) {
-            inspectionData.order = order; 
-            inspectionData.factory = factory;
-            inspectionData.taskId = taskId;
+        function startInspection(task) {
+            inspectionData.task = task;
+            inspectionData.order = task.order; 
+            inspectionData.factory = task.factory;
             
-            document.getElementById('info-order').innerText = order;
-            document.getElementById('info-factory').innerText = factory;
+            document.getElementById('info-order').innerText = task.order;
+            document.getElementById('info-factory').innerText = task.factory;
+            
+            // 填充更多详情到 Step 1
+            const detailsHtml = `
+                <div class="grid grid-cols-2 gap-4 text-[10px] font-bold border-t pt-4 mt-4">
+                    <p class="text-gray-400">产品类型: <span class="text-gray-800">${task.type}</span></p>
+                    <p class="text-gray-400">检验阶段: <span class="text-gray-800">${task.stage}</span></p>
+                    <p class="text-gray-400">款式描述: <span class="text-gray-800">${task.style || '--'}</span></p>
+                    <p class="text-gray-400">订单数量: <span class="text-gray-800">${task.qty || '--'}</span></p>
+                    <p class="text-gray-400">合同交期: <span class="text-gray-800">${task.deliveryDate || '--'}</span></p>
+                    <p class="text-gray-400">检验日期: <span class="text-gray-800">${task.inspectionDate || '--'}</span></p>
+                </div>
+                <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <p class="text-[10px] font-black text-amber-600 uppercase mb-1">特别注意事项 Special Notes:</p>
+                    <p class="text-xs text-amber-800 leading-tight">${task.notes || '无 (None)'}</p>
+                </div>
+            `;
+            const existingDetails = document.querySelector('#step-1 .bg-white .grid');
+            const parent = existingDetails.parentElement;
+            // 清除旧的详情（如果有）
+            const oldExtra = parent.querySelector('.mt-4.p-3');
+            if (oldExtra) oldExtra.remove();
+            const oldGrid2 = parent.querySelector('.grid.grid-cols-2.gap-4.border-t');
+            if (oldGrid2) oldGrid2.remove();
+            
+            parent.innerHTML += detailsHtml;
             
             document.getElementById('inspector-view').classList.add('view-hidden');
             document.getElementById('inspection-flow').classList.remove('view-hidden');
@@ -493,7 +581,25 @@
             document.getElementById('r-date').innerText = new Date().toLocaleDateString();
             document.getElementById('r-gps').innerText = inspectionData.gps;
             
-            const preview = document.getElementById('report-photo-preview');
+            // 报告中加入任务详情
+            const t = inspectionData.task || {};
+            const reportHeader = document.querySelector('#report-canvas .bg-slate-50');
+            reportHeader.innerHTML = `
+                <div class="grid grid-cols-2 gap-x-6 gap-y-2">
+                    <p class="font-bold">Order No: <span class="text-blue-700 underline">${t.order || '--'}</span></p>
+                    <p class="font-bold">Product Type: <span class="text-slate-800">${t.type || '--'}</span></p>
+                    <p class="font-bold">Style: <span class="text-slate-800">${t.style || '--'}</span></p>
+                    <p class="font-bold">Quantity: <span class="text-slate-800">${t.qty || '--'}</span></p>
+                    <p class="font-bold">Stage: <span class="text-slate-800">${t.stage || '--'}</span></p>
+                    <p class="font-bold">Factory: <span class="text-slate-800">${t.factory || '--'}</span></p>
+                    <p class="font-bold">Delivery: <span class="text-slate-800">${t.deliveryDate || '--'}</span></p>
+                    <p class="font-bold">Insp. Date: <span class="text-slate-800">${t.inspectionDate || '--'}</span></p>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-200">
+                    <p class="font-bold text-[8px] text-slate-400 uppercase">Special Notes:</p>
+                    <p class="text-slate-700 italic">${t.notes || 'N/A'}</p>
+                </div>
+            `;
             preview.innerHTML = '';
             Object.keys(inspectionData.images).forEach(id => {
                 const img = document.createElement('img');
