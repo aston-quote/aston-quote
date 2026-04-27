@@ -169,3 +169,13 @@ ConnectionResetError: [Errno 54] Connection reset by peer
 ::ffff:192.168.0.101 - - [27/Apr/2026 19:49:27] "GET /check.html HTTP/1.1" 200 -
 ::ffff:192.168.0.101 - - [27/Apr/2026 19:49:45] "GET /check.html HTTP/1.1" 200 -
 ::ffff:192.168.0.101 - - [27/Apr/2026 19:50:14] "GET /check.html HTTP/1.1" 200 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:58:37] "GET /check.html?spm=4e67c6a7.2429d199.0.0.310676cfQY3vGb HTTP/1.1" 200 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:58:38] code 404, message File not found
+::ffff:192.168.0.107 - - [27/Apr/2026 19:58:38] "GET /favicon.ico HTTP/1.1" 404 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:58:49] "GET /check.html HTTP/1.1" 200 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:02] "GET /check.html HTTP/1.1" 200 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:04] code 404, message File not found
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:04] "GET /favicon.ico HTTP/1.1" 404 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:04] "GET /check.html HTTP/1.1" 200 -
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:05] code 404, message File not found
+::ffff:192.168.0.107 - - [27/Apr/2026 19:59:05] "GET /favicon.ico HTTP/1.1" 404 -

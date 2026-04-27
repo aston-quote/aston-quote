@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.18 - 正式完整版</title>
-    <!-- 核心库异步化，防止卡死 -->
+    <title>ASTON Q.A. V4.26 - 正式完整版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -13,118 +12,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .photo-slot { aspect-ratio: 4/3; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 1.5rem; display: flex; items-center; justify-content: center; position: relative; overflow: hidden; }
+        .photo-slot { aspect-ratio: 4/3; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
         .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
         .step-active { background: #1d4ed8 !important; color: white !important; border-radius: 999px; }
-        .lang-zh .en { display: none; }
-        .lang-en .zh { display: none; }
-        .watermark-canvas { display: none; }
         input, select, textarea { outline: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
-    <script>
-        // --- 核心逻辑抢先执行 ---
-        var currentUser = '';
-        var currentRole = '';
-        var currentStep = 1;
-        var inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [] };
-        var supabase = null;
-
-        function login() {
-            console.log('Login trigger');
-            try {
-                var id = document.getElementById('login-id').value;
-                var role = document.getElementById('login-role').value;
-                if (!id) return alert('请选择账号');
-                
-                currentUser = id;
-                currentRole = role;
-                
-                document.getElementById('login-view').style.display = 'none';
-                document.getElementById('app-header').classList.remove('hidden');
-                
-                if (role === 'merchandiser' || role === 'manager') {
-                    showMerchDashboard();
-                } else {
-                    showInspectorDashboard();
-                }
-                
-                if (window.lucide) lucide.createIcons();
-            } catch (e) {
-                alert('登录脚本执行错误: ' + e.message);
-            }
-        }
-
-        function showMerchDashboard() {
-            document.getElementById('merch-view').classList.remove('hidden');
-            document.getElementById('user-display-name').innerText = currentUser;
-            refreshAssignedTasks();
-        }
-
-        function showInspectorDashboard() {
-            document.getElementById('inspector-view').classList.remove('hidden');
-            document.getElementById('inspector-display-name').innerText = currentUser;
-            refreshInspectorTasks();
-        }
-
-        function initApp() {
-            var debug = document.getElementById('debug-info');
-            if (debug) {
-                debug.innerText = 'System Ready (V4.18)';
-                debug.style.color = '#10b981';
-            }
-            // 尝试初始化 Supabase
-            if (window.supabase) {
-                supabase = supabase.createClient('https://xxx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-                document.getElementById('sync-status').innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD SYNC ACTIVE';
-            }
-            initSig();
-        }
-
-        function updateReport() {
-            const t = inspectionData.task || {};
-            
-            document.getElementById('report-header-info').innerHTML = `
-                <div class="col-span-2 border-b border-slate-200 pb-2 mb-2">
-                    <p class="text-[14px] font-black text-blue-600">ORDER: ${t.order || '--'}</p>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase">Date: ${new Date().toLocaleDateString()}</p>
-                </div>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1 w-full">
-                    <p><b>Type:</b> ${t.type || '--'}</p>
-                    <p><b>Style:</b> ${t.style || '--'}</p>
-                    <p><b>Qty:</b> ${t.qty || '--'}</p>
-                    <p><b>Stage:</b> ${t.stage || '--'}</p>
-                    <p><b>Factory:</b> ${t.factory || '--'}</p>
-                    <p><b>Delivery:</b> ${t.deliveryDate || '--'}</p>
-                    <p><b>Insp. Date:</b> ${t.inspectionDate || '--'}</p>
-                    <p><b>GPS:</b> ${inspectionData.gps || 'N/A'}</p>
-                </div>
-                <div class="col-span-2 mt-2 pt-2 border-t text-slate-500 italic">
-                    <b>Special Notes:</b> ${t.notes || 'No special requirements.'}
-                </div>
-            `;
-            const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
-            Object.values(inspectionData.images).forEach(src => {
-                const i = document.createElement('img'); i.src = src; i.className="w-full rounded border"; prev.appendChild(i);
-            });
-            document.getElementById('r-sig').src = sigPad.toDataURL();
-        }
-            // 尝试初始化 Supabase
-            if (window.supabase) {
-                try {
-                    supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
-                    var el = document.getElementById('sync-status');
-                    if (el) el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
-                } catch(e) {}
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', initApp);
-        window.onload = initApp;
-    </script>
 </head>
-<body id="main-body" class="bg-slate-50 text-slate-900 lang-zh">
+<body class="bg-slate-50 text-slate-900">
 
-    <!-- 1. Login View -->
     <div id="login-view" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100] p-6 overflow-y-auto">
         <div class="w-full max-w-md space-y-8 py-12">
             <div class="text-center text-white">
@@ -132,11 +28,10 @@
                     <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
                 </div>
                 <h2 class="text-3xl font-black tracking-tighter">ASTON Q.A.</h2>
-                <p class="text-slate-400 text-sm mt-2 font-medium uppercase tracking-widest">Quality Assurance System V4.0</p>
+                <p class="text-slate-400 text-sm mt-2 font-medium uppercase tracking-widest">Quality Assurance System V4.26</p>
             </div>
-
             <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl space-y-6">
-                <div id="debug-info" class="text-[8px] text-blue-400 font-mono text-center">System Initializing...</div>
+                <div id="debug-info" class="text-[10px] text-blue-400 font-mono text-center">System Initializing...</div>
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">用户账号 User ID</label>
                     <select id="login-id" class="w-full bg-slate-800 border-none p-4 text-white appearance-none rounded-2xl">
@@ -153,9 +48,7 @@
                         <option value="inspector">检验员 (Inspector)</option>
                     </select>
                 </div>
-                <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-                    进入系统 Login
-                </button>
+                <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">进入系统 Login</button>
             </div>
         </div>
     </div>
@@ -167,8 +60,7 @@
         </div>
         <div class="flex items-center gap-2">
             <div id="sync-status" class="flex items-center text-[8px] font-bold px-2 py-1 rounded bg-slate-800/50 text-slate-400">
-                <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div>
-                LOCAL ONLY
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div> LOCAL ONLY
             </div>
             <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded font-bold">退出 Logout</button>
         </div>
@@ -235,9 +127,7 @@
                         </select>
                     </div>
                 </div>
-                <button onclick="assignTask()" class="w-full mt-8 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
-                    确认并下达任务 SEND TASK
-                </button>
+                <button onclick="assignTask()" class="w-full mt-8 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">确认并下达任务 SEND TASK</button>
             </div>
             <div class="space-y-3 px-2">
                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">已指派列表 History</h4>
@@ -271,176 +161,106 @@
                                 <p id="info-stage" class="text-sm font-bold text-slate-800">--</p>
                             </div>
                         </div>
-                        
                         <div class="grid grid-cols-2 gap-4 text-xs">
-                            <div class="space-y-1">
-                                <p class="text-[10px] font-black text-slate-400 uppercase">Factory 工厂</p>
-                                <p id="info-factory" class="font-bold text-slate-800">--</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] font-black text-slate-400 uppercase">Style 款式</p>
-                                <p id="info-style" class="font-bold text-slate-800">--</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] font-black text-slate-400 uppercase">Quantity 数量</p>
-                                <p id="info-qty" class="font-bold text-slate-800">--</p>
-                            </div>
-                            <div class="space-y-1">
-                                <p class="text-[10px] font-black text-slate-400 uppercase">Delivery 交期</p>
-                                <p id="info-delivery" class="font-bold text-slate-800">--</p>
-                            </div>
+                            <div><p class="text-[10px] font-black text-slate-400 uppercase">Factory 工厂</p><p id="info-factory" class="font-bold text-slate-800">--</p></div>
+                            <div><p class="text-[10px] font-black text-slate-400 uppercase">Style 款式</p><p id="info-style" class="font-bold text-slate-800">--</p></div>
+                            <div><p class="text-[10px] font-black text-slate-400 uppercase">Quantity 数量</p><p id="info-qty" class="font-bold text-slate-800">--</p></div>
+                            <div><p class="text-[10px] font-black text-slate-400 uppercase">Delivery 交期</p><p id="info-delivery" class="font-bold text-slate-800">--</p></div>
                         </div>
-
                         <div id="info-notes-area" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 hidden">
                             <p class="text-[10px] font-black text-amber-600 uppercase mb-1">Special Notes 注意事项</p>
                             <p id="info-notes" class="text-xs text-amber-800 italic font-bold">--</p>
                         </div>
-
-                        <div class="pt-4 space-y-3">
-                            <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位 (Not Located)</p>
-                            <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2">
-                                <i data-lucide="map-pin" class="w-5 h-5"></i>
-                                获取 GPS 签到 CHECK-IN
-                            </button>
-                        </div>
+                        <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase shadow-xl flex items-center justify-center gap-2">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i> 获取 GPS 签到 CHECK-IN
+                        </button>
+                        <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位 (Not Located)</p>
                     </div>
                 </section>
                 <section id="step-2" class="step-content hidden">
                     <div class="bg-white rounded-[2rem] p-8 text-center space-y-6 border border-slate-100 shadow-sm">
-                        <div class="space-y-1">
-                            <h3 class="font-black text-slate-800 text-lg">AQL 2.5 抽样标准</h3>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Sampling Standard (Level II)</p>
-                        </div>
+                        <h3 class="font-black text-slate-800 text-lg">AQL 2.5 抽样标准</h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-                                <p class="text-[10px] font-black text-blue-400 uppercase">抽样数量<br>SAMPLE SIZE</p>
+                                <p class="text-[10px] font-black text-blue-400 uppercase">抽样数量 SAMPLE SIZE</p>
                                 <p class="text-4xl font-black text-blue-700 mt-2">80</p>
                             </div>
                             <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-                                <p class="text-[10px] font-black text-emerald-400 uppercase">允收/拒收<br>AC / RE</p>
-                                <p class="text-4xl font-black text-emerald-600 mt-2">5 <span class="text-slate-300 text-2xl">/</span> 6</p>
+                                <p class="text-[10px] font-black text-emerald-400 uppercase">AC / RE</p>
+                                <p class="text-4xl font-black text-emerald-600 mt-2">5/6</p>
                             </div>
                         </div>
-                        <div class="bg-slate-50 p-4 rounded-2xl text-[10px] text-slate-400 font-bold leading-relaxed">
-                            根据订单数量自动计算抽样样本。<br>
-                            Sample size is auto-calculated based on order quantity.
+                    </div>
+                </section>
+                <section id="step-3" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-6 space-y-6 border border-slate-100">
+                        <div class="space-y-3" id="g1-container">
+                            <div class="flex justify-between items-center"><h4 class="font-black text-[10px] uppercase">G1: 平铺/大身照 FLAT</h4><button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full">+ ADD</button></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden">正面</div>
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden">反面</div>
+                            </div>
                         </div>
                     </div>
                 </section>
                 <section id="step-4" class="step-content hidden space-y-4">
                     <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
-                        <div class="flex justify-between items-end border-b pb-4">
-                            <h4 class="font-black text-slate-800 text-lg uppercase tracking-tight">疵点记录 DEFECTS</h4>
-                            <span class="text-[10px] font-black text-slate-400 mb-1">Total: <span id="defect-count" class="text-blue-600">0</span></span>
-                        </div>
+                        <div class="flex justify-between items-end border-b pb-4"><h4 class="font-black text-slate-800 text-lg uppercase">疵点记录 DEFECTS</h4><span id="defect-count" class="text-blue-600 font-black">0</span></div>
                         <div id="defect-container" class="space-y-3"></div>
-                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-slate-200 text-blue-600 font-black rounded-3xl text-xs flex items-center justify-center gap-2 hover:bg-blue-50 transition-all">
-                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                            增加缺陷项 ADD DEFECT ITEM
-                        </button>
-                    </div>
-                </section>
-                <section id="step-3" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-[2rem] p-6 space-y-6 border border-slate-100">
-                        <!-- G1: Flat Layout -->
-                        <div class="space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G1: 平铺/大身照 FLAT & MAIN</h4>
-                                <button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3" id="g1-container">
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">正面 FRONT</div>
-                                    <img id="img-g1_1" class="hidden">
-                                </div>
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">反面 BACK</div>
-                                    <img id="img-g1_2" class="hidden">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- G2: Details -->
-                        <div class="space-y-3 pt-4 border-t border-slate-50">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G2: 细节照 DETAILS / LABELS</h4>
-                                <button onclick="addPhotoSlot('g2-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3" id="g2-container">
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g2_1')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">水洗标 CARE LABEL</div>
-                                    <img id="img-g2_1" class="hidden">
-                                </div>
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g2_2')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">辅料 DETAILS</div>
-                                    <img id="img-g2_2" class="hidden">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- G3: Packaging -->
-                        <div class="space-y-3 pt-4 border-t border-slate-50">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G3: 包装/装箱 PACKING / CTNS</h4>
-                                <button onclick="addPhotoSlot('g3-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3" id="g3-container">
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g3_1')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">内包装 POLYBAG</div>
-                                    <img id="img-g3_1" class="hidden">
-                                </div>
-                                <div class="photo-slot">
-                                    <input type="file" capture="camera" onchange="processImage(this, 'g3_2')" class="absolute inset-0 opacity-0 z-10">
-                                    <div class="text-[8px] font-black text-slate-300">外箱 SHIPPING MARK</div>
-                                    <img id="img-g3_2" class="hidden">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-                <section id="step-4" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-3xl p-6 space-y-4">
-                        <h4 class="font-black text-xs uppercase">疵点记录</h4>
-                        <div id="defect-container" class="space-y-2"></div>
-                        <button onclick="addDefectRow()" class="w-full py-4 border-2 border-dashed border-gray-100 text-blue-500 font-bold rounded-2xl text-xs">+ 增加缺陷项</button>
+                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-slate-200 text-blue-600 font-black rounded-3xl">+ ADD DEFECT ITEM</button>
                     </div>
                 </section>
                 <section id="step-5" class="step-content hidden space-y-4">
-                    <div id="report-canvas" class="bg-white p-6 shadow-xl text-[8px] space-y-4">
-                        <h2 class="text-xl font-black border-b-2 border-black pb-2">INSPECTION REPORT</h2>
-                        <div class="bg-slate-50 p-4 rounded-xl grid grid-cols-2 gap-2" id="report-header-info"></div>
-                        <div id="report-photo-preview" class="grid grid-cols-3 gap-1"></div>
-                        <img id="r-sig" class="h-16 mt-4 border-b">
-                    </div>
-                    <div class="bg-white p-6 rounded-3xl shadow-sm space-y-4">
-                        <h3 class="font-black text-xs">手写签名</h3>
-                        <canvas id="sig-pad" class="w-full h-32 bg-slate-50 border rounded-2xl"></canvas>
-                        <button onclick="exportPDF()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase">导出 PDF 报告</button>
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
+                        <h4 class="font-black text-slate-800 text-lg uppercase">核对报告 REVIEW</h4>
+                        <div id="report-canvas" class="bg-white p-4 border shadow-sm space-y-4 text-[10px]">
+                            <div id="report-header-info"></div>
+                            <div id="report-photo-preview" class="grid grid-cols-2 gap-1"></div>
+                            <div class="border-t pt-4">
+                                <p class="font-black uppercase mb-2">签名 Signature:</p>
+                                <canvas id="sig-pad" class="w-full h-32 bg-slate-50 border rounded-xl"></canvas>
+                            </div>
+                        </div>
+                        <button onclick="exportPDF()" class="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase shadow-xl">导出 PDF 报告 EXPORT REPORT</button>
                     </div>
                 </section>
             </div>
         </div>
     </main>
 
-    <div id="nav-controls" class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t p-4 flex gap-4 z-50 hidden">
-        <button onclick="prevStep()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-500 text-xs">上一步 BACK</button>
-        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-xl text-xs">下一步 NEXT</button>
-    </div>
-
-    <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
-
     <script>
-        // --- 业务逻辑脚本 ---
+        var currentUser = ''; var currentRole = ''; var currentStep = 1; var supabase = null;
+        var inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [] };
+
+        function login() {
+            try {
+                var id = document.getElementById('login-id').value;
+                var role = document.getElementById('login-role').value;
+                if (!id) return alert('Select User');
+                currentUser = id; currentRole = role;
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('app-header').classList.remove('hidden');
+                if (role === 'merchandiser') { showMerchDashboard(); } else { showInspectorDashboard(); }
+                if (window.lucide) lucide.createIcons();
+            } catch (e) { alert(e.message); }
+        }
+
+        function showMerchDashboard() {
+            document.getElementById('merch-view').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = currentUser;
+            refreshAssignedTasks();
+        }
+
+        function showInspectorDashboard() {
+            document.getElementById('inspector-view').classList.remove('hidden');
+            document.getElementById('inspector-display-name').innerText = currentUser;
+            refreshInspectorTasks();
+        }
+
         async function assignTask() {
             const task = {
-                id: Date.now(),
-                type: document.getElementById('new-type').value,
                 order: document.getElementById('new-order-no').value,
+                type: document.getElementById('new-type').value,
                 style: document.getElementById('new-style').value,
                 qty: document.getElementById('new-qty').value,
                 stage: document.getElementById('new-stage').value,
@@ -453,17 +273,11 @@
                 creator: currentUser,
                 created_at: new Date().toISOString()
             };
-            if (!task.order || !task.factory) return alert('请至少填写订单号和工厂');
+            if (!task.order || !task.factory) return alert('Fill Order & Factory');
             if (supabase) await supabase.from('aston_tasks').insert([task]);
-            const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
-            tasks.push(task);
-            localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-            alert('任务已派发！'); refreshAssignedTasks();
-            // 清空
-            ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
+            let tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            tasks.push(task); localStorage.setItem('aston_tasks', JSON.stringify(tasks));
+            alert('Success!'); refreshAssignedTasks();
         }
 
         async function refreshAssignedTasks() {
@@ -475,9 +289,9 @@
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse();
             }
             document.getElementById('assigned-task-list').innerHTML = tasks.map(t => `
-                <div class="bg-white p-3 rounded-xl border text-[10px] flex justify-between">
-                    <div><b>${t.order}</b><br>${t.factory}</div>
-                    <span class="text-blue-600">${t.status}</span>
+                <div class="bg-white p-4 rounded-2xl border flex justify-between">
+                    <div><b>${t.order}</b><br><span class="text-[8px]">${t.factory}</span></div>
+                    <span class="text-blue-600 text-[10px] font-black">${t.status}</span>
                 </div>
             `).join('');
         }
@@ -493,92 +307,50 @@
             }
             currentTasks = tasks;
             document.getElementById('inspector-task-list').innerHTML = tasks.map((t, index) => `
-                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-blue-600 active:scale-[0.98] transition-all space-y-3">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase">${t.type || 'Bulk'}</span>
-                            <h4 class="text-xl font-black text-slate-800 mt-1">${t.order}</h4>
-                        </div>
-                        <span class="text-[10px] font-black ${t.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}">${t.status}</span>
+                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-blue-600">
+                    <div class="flex justify-between">
+                        <h4 class="text-xl font-black">${t.order}</h4>
+                        <span class="text-[10px] text-amber-500 font-black">${t.status}</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
-                        <div class="flex items-center gap-1"><i data-lucide="factory" class="w-3 h-3"></i> ${t.factory}</div>
-                        <div class="flex items-center gap-1"><i data-lucide="package" class="w-3 h-3"></i> ${t.qty || '--'}</div>
-                        <div class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> Insp: ${t.inspectionDate || '--'}</div>
-                        <div class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3"></i> ${t.style || '--'}</div>
-                    </div>
-                    ${t.notes ? `<div class="bg-amber-50 p-3 rounded-xl text-[10px] text-amber-700 italic border border-amber-100">Note: ${t.notes}</div>` : ''}
-                    <div class="pt-2">
-                        <button class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest">开始检验 START INSPECTION</button>
-                    </div>
+                    <p class="text-[10px] text-slate-400 font-bold">${t.factory} - ${t.style || '--'}</p>
                 </div>
             `).join('');
-            if (window.lucide) lucide.createIcons();
         }
 
         function startInspectionByIndex(idx) {
-            const task = currentTasks[idx];
-            inspectionData.task = task;
-            inspectionData.order = task.order;
-            
-            // Populate Step 1 UI
-            document.getElementById('info-order').innerText = task.order;
-            document.getElementById('info-type').innerText = task.type || 'Bulk';
-            document.getElementById('info-factory').innerText = task.factory;
-            document.getElementById('info-style').innerText = task.style || '--';
-            document.getElementById('info-qty').innerText = task.qty || '--';
-            document.getElementById('info-stage').innerText = task.stage || '--';
-            document.getElementById('info-delivery').innerText = task.deliveryDate || '--';
-            
-            if (task.notes) {
-                document.getElementById('info-notes').innerText = task.notes;
-                document.getElementById('info-notes-area').classList.remove('hidden');
-            } else {
-                document.getElementById('info-notes-area').classList.add('hidden');
-            }
-            
-            document.getElementById('inspector-view').style.display = 'none';
+            const t = currentTasks[idx];
+            inspectionData.task = t;
+            document.getElementById('info-order').innerText = t.order;
+            document.getElementById('info-factory').innerText = t.factory;
+            document.getElementById('info-style').innerText = t.style || '--';
+            document.getElementById('info-qty').innerText = t.qty || '--';
+            document.getElementById('info-delivery').innerText = t.deliveryDate || '--';
+            document.getElementById('inspector-view').classList.add('hidden');
             document.getElementById('inspection-flow').classList.remove('hidden');
-            document.getElementById('nav-controls').classList.remove('hidden');
             switchStep(1);
         }
 
         function switchStep(step) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
             document.getElementById('step-'+step).classList.remove('hidden');
-            document.querySelectorAll('.nav-step').forEach(n => { n.classList.remove('step-active'); n.classList.add('text-gray-400'); });
+            document.querySelectorAll('.nav-step').forEach(n => n.classList.remove('step-active'));
             document.getElementById('nav-'+step).classList.add('step-active');
-            currentStep = step;
             if (step === 5) updateReport();
         }
 
-        function nextStep() { if (currentStep < 5) switchStep(currentStep + 1); }
-        function prevStep() { if (currentStep > 1) switchStep(currentStep - 1); }
-
         function getGPS() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                inspectionData.gps = pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
-                document.getElementById('gps-display').innerText = "GPS: " + inspectionData.gps;
-            });
+            navigator.geolocation.getCurrentPosition(p => {
+                inspectionData.gps = p.coords.latitude.toFixed(4) + ',' + p.coords.longitude.toFixed(4);
+                document.getElementById('gps-display').innerText = 'GPS: ' + inspectionData.gps;
+            }, e => alert(e.message));
         }
 
         function processImage(input, id) {
             const reader = new FileReader();
             reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const cvs = document.getElementById('watermarkCanvas');
-                    const ctx = cvs.getContext('2d');
-                    cvs.width = 800; cvs.height = 600;
-                    ctx.drawImage(img, 0, 0, 800, 600);
-                    ctx.fillStyle = "white"; ctx.font = "16px Arial";
-                    ctx.fillText(inspectionData.order + " | " + inspectionData.gps, 20, 580);
-                    const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
-                    document.getElementById('img-'+id).src = dataUrl;
-                    document.getElementById('img-'+id).classList.remove('hidden');
-                    inspectionData.images[id] = dataUrl;
-                };
-                img.src = e.target.result;
+                inspectionData.images[id] = e.target.result;
+                const img = document.getElementById('img-'+id);
+                img.src = e.target.result; img.classList.remove('hidden');
             };
             reader.readAsDataURL(input.files[0]);
         }
@@ -591,57 +363,19 @@
         }
 
         function addDefectRow() {
-            const row = document.createElement('div'); row.className="p-4 bg-slate-50 rounded-2xl flex gap-3 border border-slate-100 items-center";
-            row.innerHTML = `
-                <select class="flex-1 text-xs border-none bg-white p-3 rounded-xl font-bold outline-none">
-                    <option>色差 Shade Variation</option>
-                    <option>跳针 Skip Stitch</option>
-                    <option>污渍 Stain/Dirt</option>
-                    <option>线头 Thread Ends</option>
-                    <option>尺寸超标 Size Out of Tol</option>
-                    <option>破损 Hole/Damage</option>
-                    <option>印刷缺陷 Print Defect</option>
-                    <option>其他 Other</option>
-                </select>
-                <input type="number" class="w-20 p-3 rounded-xl border-none font-black text-center" placeholder="Qty">
-                <button onclick="this.parentElement.remove(); updateDefectCount();" class="text-red-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            `;
+            const row = document.createElement('div'); row.className="p-4 bg-slate-50 rounded-2xl flex gap-3 items-center";
+            row.innerHTML = `<select class="flex-1 text-xs font-bold bg-white p-3 rounded-xl outline-none"><option>色差 Shade</option><option>跳针 Skip</option><option>污渍 Stain</option></select><input type="number" class="w-20 p-3 rounded-xl text-center font-black" placeholder="Qty">`;
             document.getElementById('defect-container').appendChild(row);
-            if (window.lucide) lucide.createIcons();
-            updateDefectCount();
-        }
-
-        function updateDefectCount() {
-            const count = document.getElementById('defect-container').children.length;
-            const el = document.getElementById('defect-count');
-            if (el) el.innerText = count;
+            document.getElementById('defect-count').innerText = document.getElementById('defect-container').children.length;
         }
 
         function updateReport() {
             const t = inspectionData.task || {};
-            document.getElementById('r-order').innerText = inspectionData.order;
-            document.getElementById('r-date').innerText = new Date().toLocaleDateString();
-            
-            document.getElementById('report-header-info').innerHTML = `
-                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-                    <p>Order: ${t.order || '--'}</p>
-                    <p>Type: ${t.type || '--'}</p>
-                    <p>Style: ${t.style || '--'}</p>
-                    <p>Qty: ${t.qty || '--'}</p>
-                    <p>Stage: ${t.stage || '--'}</p>
-                    <p>Factory: ${t.factory || '--'}</p>
-                    <p>Delivery: ${t.deliveryDate || '--'}</p>
-                    <p>Insp. Date: ${t.inspectionDate || '--'}</p>
-                </div>
-                <div class="mt-2 pt-2 border-t text-gray-500 italic">
-                    Notes: ${t.notes || 'N/A'}
-                </div>
-            `;
+            document.getElementById('report-header-info').innerHTML = `<p><b>ORDER:</b> ${t.order}</p><p><b>Factory:</b> ${t.factory}</p>`;
             const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
             Object.values(inspectionData.images).forEach(src => {
-                const i = document.createElement('img'); i.src = src; i.className="w-full rounded border"; prev.appendChild(i);
+                const i = document.createElement('img'); i.src = src; i.className="w-full rounded mb-1"; prev.appendChild(i);
             });
-            document.getElementById('r-sig').src = sigPad.toDataURL();
         }
 
         function exportPDF() {
@@ -664,6 +398,19 @@
             sigPad.addEventListener('touchmove', e => { if(drawing) { var r = sigPad.getBoundingClientRect(); sigCtx.lineTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); sigCtx.stroke(); e.preventDefault(); } });
             sigPad.addEventListener('touchend', () => drawing = false);
         }
+
+        function initApp() {
+            const debug = document.getElementById('debug-info');
+            try {
+                if (debug) { debug.innerText = 'Ready V4.26'; debug.style.color = '#10b981'; }
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
+                    document.getElementById('sync-status').innerText = 'CLOUD LIVE';
+                }
+                initSig();
+            } catch (e) { console.error(e); }
+        }
+        window.onload = function() { setTimeout(initApp, 500); };
     </script>
 </body>
 </html>
