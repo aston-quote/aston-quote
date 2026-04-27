@@ -124,10 +124,9 @@
         </div>
     </div>
 
-    <!-- App Header -->
     <header id="app-header" class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center hidden">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black">A</div>
+            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black italic">A</div>
             <h1 class="font-black tracking-tighter text-lg">ASTON Q.A.</h1>
         </div>
         <div class="flex items-center gap-2">
@@ -135,48 +134,79 @@
                 <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div>
                 LOCAL ONLY
             </div>
-            <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded">退出</button>
+            <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded font-bold">退出 Logout</button>
         </div>
     </header>
 
     <main id="app-content">
-        <!-- Dashboard Views (Hidden by default) -->
         <div id="merch-view" class="p-4 space-y-4 hidden">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                <h3 class="font-black text-gray-800 flex items-center mb-4">
-                    指派任务 Assign Task (User: <span id="user-display-name">--</span>)
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
+                <h3 class="font-black text-gray-800 flex items-center mb-6 text-lg">
+                    <i data-lucide="send" class="w-5 h-5 mr-2 text-blue-600"></i>
+                    下达检验任务 Assign Task (User: <span id="user-display-name">--</span>)
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2 bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">产品类型</label>
-                        <select id="new-type" class="w-full bg-transparent border-none font-bold text-sm">
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">产品类型 Product Type</label>
+                        <select id="new-type" class="w-full bg-transparent border-none font-black text-sm outline-none">
                             <option>大货成品 Bulk</option>
                             <option>外购成品 Outsourced</option>
+                            <option>外购面料 Fabric</option>
+                            <option>外购辅料 Accessories</option>
                         </select>
                     </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">订单号</label>
-                        <input type="text" id="new-order-no" class="w-full bg-transparent border-none font-bold text-sm" placeholder="PO#">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">订单号 Order No</label>
+                        <input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="例如: PO#8888">
                     </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">工厂</label>
-                        <input type="text" id="new-factory" class="w-full bg-transparent border-none font-bold text-sm" placeholder="工厂">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">款式 Style</label>
+                        <input type="text" id="new-style" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="款式描述">
                     </div>
-                    <div class="col-span-2 bg-amber-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-amber-600 uppercase">注意事项</label>
-                        <textarea id="new-notes" class="w-full bg-transparent border-none font-medium text-xs h-12"></textarea>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">数量 Qty</label>
+                        <input type="text" id="new-qty" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="1000pcs">
                     </div>
-                    <div class="col-span-2 bg-blue-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-blue-600 uppercase">指派给</label>
-                        <select id="assign-user" class="w-full bg-transparent border-none font-bold text-sm">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">阶段 Stage</label>
+                        <select id="new-stage" class="w-full bg-transparent border-none font-black text-sm outline-none">
+                            <option>尾期检验 Final</option>
+                            <option>中期检验 Mid-term</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">工厂 Factory</label>
+                        <input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="工厂名称">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">合同交期 Delivery</label>
+                        <input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-black text-sm outline-none">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">检验日期 Insp. Date</label>
+                        <input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm outline-none">
+                    </div>
+                    <div class="col-span-2 bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                        <label class="text-[10px] font-black text-amber-600 uppercase tracking-widest">特别注意事项 Special Notes</label>
+                        <textarea id="new-notes" class="w-full bg-transparent border-none font-bold text-xs h-16 outline-none" placeholder="例如：重点检查色差、内里线头等"></textarea>
+                    </div>
+                    <div class="col-span-2 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest">指派检验员 Inspector</label>
+                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm outline-none">
                             <option value="Inspector_Li">李检验员 (Li)</option>
                             <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                            <option value="Inspector_Wang">王检验员 (Wang)</option>
                         </select>
                     </div>
                 </div>
-                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase shadow-lg">发送任务</button>
+                <button onclick="assignTask()" class="w-full mt-8 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
+                    确认并下达任务 SEND TASK
+                </button>
             </div>
-            <div id="assigned-task-list" class="space-y-2"></div>
+            <div class="space-y-3 px-2">
+                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">已指派列表 History</h4>
+                <div id="assigned-task-list" class="space-y-3"></div>
+            </div>
         </div>
 
         <div id="inspector-view" class="p-4 space-y-4 hidden">
@@ -184,39 +214,156 @@
             <div id="inspector-task-list" class="space-y-4"></div>
         </div>
 
-        <!-- Inspection Flow -->
         <div id="inspection-flow" class="hidden">
-            <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto">
-                <button onclick="switchStep(1)" class="nav-step flex-1 py-3 px-4 text-xs font-black step-active" id="nav-1">签到</button>
-                <button onclick="switchStep(2)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-2">抽样</button>
-                <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-3">拍照</button>
-                <button onclick="switchStep(4)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-4">检验</button>
-                <button onclick="switchStep(5)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-5">报告</button>
+            <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto no-scrollbar">
+                <button onclick="switchStep(1)" class="nav-step flex-1 py-4 px-2 text-[10px] font-black step-active transition-all" id="nav-1">1. 签到<br>SIGN-IN</button>
+                <button onclick="switchStep(2)" class="nav-step flex-1 py-4 px-2 text-[10px] font-black text-slate-400 transition-all" id="nav-2">2. 抽样<br>SAMPLE</button>
+                <button onclick="switchStep(3)" class="nav-step flex-1 py-4 px-2 text-[10px] font-black text-slate-400 transition-all" id="nav-3">3. 拍照<br>PHOTO</button>
+                <button onclick="switchStep(4)" class="nav-step flex-1 py-4 px-2 text-[10px] font-black text-slate-400 transition-all" id="nav-4">4. 检验<br>DEFECTS</button>
+                <button onclick="switchStep(5)" class="nav-step flex-1 py-4 px-2 text-[10px] font-black text-slate-400 transition-all" id="nav-5">5. 报告<br>REPORT</button>
             </nav>
             <div class="p-4 pb-32">
                 <section id="step-1" class="step-content">
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <h3 id="info-order" class="text-2xl font-black">--</h3>
-                        <p id="info-factory" class="text-blue-600 font-bold">--</p>
-                        <p id="gps-display" class="text-[10px] font-mono text-gray-400">GPS: 未定位</p>
-                        <button onclick="getGPS()" class="w-full py-4 bg-slate-100 rounded-2xl font-bold">获取 GPS 定位</button>
-                    </div>
-                </section>
-                <section id="step-2" class="step-content hidden">
-                    <div class="bg-white rounded-3xl p-6 text-center space-y-4">
-                        <h3 class="font-black">AQL 2.5 二级抽样</h3>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-slate-50 p-4 rounded-2xl"><p class="text-[8px] text-gray-400">抽样</p><p class="text-2xl font-black">80</p></div>
-                            <div class="bg-slate-50 p-4 rounded-2xl"><p class="text-[8px] text-gray-400">允收</p><p class="text-2xl font-black text-emerald-500">5</p></div>
+                    <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 space-y-6">
+                        <div class="flex justify-between items-start border-b pb-4">
+                            <div>
+                                <span id="info-type" class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase">Bulk</span>
+                                <h3 id="info-order" class="text-3xl font-black mt-2">--</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Stage</p>
+                                <p id="info-stage" class="text-sm font-bold text-slate-800">--</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Factory 工厂</p>
+                                <p id="info-factory" class="font-bold text-slate-800">--</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Style 款式</p>
+                                <p id="info-style" class="font-bold text-slate-800">--</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Quantity 数量</p>
+                                <p id="info-qty" class="font-bold text-slate-800">--</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Delivery 交期</p>
+                                <p id="info-delivery" class="font-bold text-slate-800">--</p>
+                            </div>
+                        </div>
+
+                        <div id="info-notes-area" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 hidden">
+                            <p class="text-[10px] font-black text-amber-600 uppercase mb-1">Special Notes 注意事项</p>
+                            <p id="info-notes" class="text-xs text-amber-800 italic font-bold">--</p>
+                        </div>
+
+                        <div class="pt-4 space-y-3">
+                            <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位 (Not Located)</p>
+                            <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-2">
+                                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                                获取 GPS 签到 CHECK-IN
+                            </button>
                         </div>
                     </div>
                 </section>
+                <section id="step-2" class="step-content hidden">
+                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6 border border-slate-100 shadow-sm">
+                        <div class="space-y-1">
+                            <h3 class="font-black text-slate-800 text-lg">AQL 2.5 抽样标准</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Sampling Standard (Level II)</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
+                                <p class="text-[10px] font-black text-blue-400 uppercase">抽样数量<br>SAMPLE SIZE</p>
+                                <p class="text-4xl font-black text-blue-700 mt-2">80</p>
+                            </div>
+                            <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
+                                <p class="text-[10px] font-black text-emerald-400 uppercase">允收/拒收<br>AC / RE</p>
+                                <p class="text-4xl font-black text-emerald-600 mt-2">5 <span class="text-slate-300 text-2xl">/</span> 6</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl text-[10px] text-slate-400 font-bold leading-relaxed">
+                            根据订单数量自动计算抽样样本。<br>
+                            Sample size is auto-calculated based on order quantity.
+                        </div>
+                    </div>
+                </section>
+                <section id="step-4" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
+                        <div class="flex justify-between items-end border-b pb-4">
+                            <h4 class="font-black text-slate-800 text-lg uppercase tracking-tight">疵点记录 DEFECTS</h4>
+                            <span class="text-[10px] font-black text-slate-400 mb-1">Total: <span id="defect-count" class="text-blue-600">0</span></span>
+                        </div>
+                        <div id="defect-container" class="space-y-3"></div>
+                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-slate-200 text-blue-600 font-black rounded-3xl text-xs flex items-center justify-center gap-2 hover:bg-blue-50 transition-all">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                            增加缺陷项 ADD DEFECT ITEM
+                        </button>
+                    </div>
+                </section>
                 <section id="step-3" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-3xl p-6 space-y-4">
-                        <div class="flex justify-between items-center"><h4 class="font-black text-xs uppercase">G1: 平铺照</h4><button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加</button></div>
-                        <div class="grid grid-cols-3 gap-2" id="g1-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden">正面</div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden">反面</div>
+                    <div class="bg-white rounded-[2rem] p-6 space-y-6 border border-slate-100">
+                        <!-- G1: Flat Layout -->
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G1: 平铺/大身照 FLAT & MAIN</h4>
+                                <button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3" id="g1-container">
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">正面 FRONT</div>
+                                    <img id="img-g1_1" class="hidden">
+                                </div>
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">反面 BACK</div>
+                                    <img id="img-g1_2" class="hidden">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- G2: Details -->
+                        <div class="space-y-3 pt-4 border-t border-slate-50">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G2: 细节照 DETAILS / LABELS</h4>
+                                <button onclick="addPhotoSlot('g2-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3" id="g2-container">
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g2_1')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">水洗标 CARE LABEL</div>
+                                    <img id="img-g2_1" class="hidden">
+                                </div>
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g2_2')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">辅料 DETAILS</div>
+                                    <img id="img-g2_2" class="hidden">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- G3: Packaging -->
+                        <div class="space-y-3 pt-4 border-t border-slate-50">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-black text-[10px] text-slate-800 uppercase tracking-widest">G3: 包装/装箱 PACKING / CTNS</h4>
+                                <button onclick="addPhotoSlot('g3-container')" class="text-[8px] bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-black uppercase">+ ADD PHOTO</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3" id="g3-container">
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g3_1')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">内包装 POLYBAG</div>
+                                    <img id="img-g3_1" class="hidden">
+                                </div>
+                                <div class="photo-slot">
+                                    <input type="file" capture="camera" onchange="processImage(this, 'g3_2')" class="absolute inset-0 opacity-0 z-10">
+                                    <div class="text-[8px] font-black text-slate-300">外箱 SHIPPING MARK</div>
+                                    <img id="img-g3_2" class="hidden">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -258,19 +405,29 @@
                 id: Date.now(),
                 type: document.getElementById('new-type').value,
                 order: document.getElementById('new-order-no').value,
+                style: document.getElementById('new-style').value,
+                qty: document.getElementById('new-qty').value,
+                stage: document.getElementById('new-stage').value,
                 factory: document.getElementById('new-factory').value,
+                deliveryDate: document.getElementById('new-delivery-date').value,
+                inspectionDate: document.getElementById('new-inspection-date').value,
                 notes: document.getElementById('new-notes').value,
                 inspector: document.getElementById('assign-user').value,
                 status: 'PENDING',
                 creator: currentUser,
                 created_at: new Date().toISOString()
             };
-            if (!task.order || !task.factory) return alert('必填项缺失');
+            if (!task.order || !task.factory) return alert('请至少填写订单号和工厂');
             if (supabase) await supabase.from('aston_tasks').insert([task]);
             const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
             tasks.push(task);
             localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-            alert('已派发'); refreshAssignedTasks();
+            alert('任务已派发！'); refreshAssignedTasks();
+            // 清空
+            ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
         }
 
         async function refreshAssignedTasks() {
@@ -300,21 +457,51 @@
             }
             currentTasks = tasks;
             document.getElementById('inspector-task-list').innerHTML = tasks.map((t, index) => `
-                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-emerald-500 active:scale-95">
-                    <h4 class="font-black">${t.order}</h4>
-                    <p class="text-xs text-gray-400">${t.factory}</p>
+                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-blue-600 active:scale-[0.98] transition-all space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase">${t.type || 'Bulk'}</span>
+                            <h4 class="text-xl font-black text-slate-800 mt-1">${t.order}</h4>
+                        </div>
+                        <span class="text-[10px] font-black ${t.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}">${t.status}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
+                        <div class="flex items-center gap-1"><i data-lucide="factory" class="w-3 h-3"></i> ${t.factory}</div>
+                        <div class="flex items-center gap-1"><i data-lucide="package" class="w-3 h-3"></i> ${t.qty || '--'}</div>
+                        <div class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> Insp: ${t.inspectionDate || '--'}</div>
+                        <div class="flex items-center gap-1"><i data-lucide="tag" class="w-3 h-3"></i> ${t.style || '--'}</div>
+                    </div>
+                    ${t.notes ? `<div class="bg-amber-50 p-3 rounded-xl text-[10px] text-amber-700 italic border border-amber-100">Note: ${t.notes}</div>` : ''}
+                    <div class="pt-2">
+                        <button class="w-full bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest">开始检验 START INSPECTION</button>
+                    </div>
                 </div>
             `).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
         function startInspectionByIndex(idx) {
             const task = currentTasks[idx];
             inspectionData.task = task;
             inspectionData.order = task.order;
-            inspectionData.factory = task.factory;
+            
+            // Populate Step 1 UI
             document.getElementById('info-order').innerText = task.order;
+            document.getElementById('info-type').innerText = task.type || 'Bulk';
             document.getElementById('info-factory').innerText = task.factory;
-            document.getElementById('inspector-view').classList.add('hidden');
+            document.getElementById('info-style').innerText = task.style || '--';
+            document.getElementById('info-qty').innerText = task.qty || '--';
+            document.getElementById('info-stage').innerText = task.stage || '--';
+            document.getElementById('info-delivery').innerText = task.deliveryDate || '--';
+            
+            if (task.notes) {
+                document.getElementById('info-notes').innerText = task.notes;
+                document.getElementById('info-notes-area').classList.remove('hidden');
+            } else {
+                document.getElementById('info-notes-area').classList.add('hidden');
+            }
+            
+            document.getElementById('inspector-view').style.display = 'none';
             document.getElementById('inspection-flow').classList.remove('hidden');
             document.getElementById('nav-controls').classList.remove('hidden');
             switchStep(1);
@@ -375,7 +562,24 @@
 
         function updateReport() {
             const t = inspectionData.task || {};
-            document.getElementById('report-header-info').innerHTML = `<p>Order: ${t.order}</p><p>Factory: ${t.factory}</p><p>GPS: ${inspectionData.gps}</p>`;
+            document.getElementById('r-order').innerText = inspectionData.order;
+            document.getElementById('r-date').innerText = new Date().toLocaleDateString();
+            
+            document.getElementById('report-header-info').innerHTML = `
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                    <p>Order: ${t.order || '--'}</p>
+                    <p>Type: ${t.type || '--'}</p>
+                    <p>Style: ${t.style || '--'}</p>
+                    <p>Qty: ${t.qty || '--'}</p>
+                    <p>Stage: ${t.stage || '--'}</p>
+                    <p>Factory: ${t.factory || '--'}</p>
+                    <p>Delivery: ${t.deliveryDate || '--'}</p>
+                    <p>Insp. Date: ${t.inspectionDate || '--'}</p>
+                </div>
+                <div class="mt-2 pt-2 border-t text-gray-500 italic">
+                    Notes: ${t.notes || 'N/A'}
+                </div>
+            `;
             const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
             Object.values(inspectionData.images).forEach(src => {
                 const i = document.createElement('img'); i.src = src; i.className="w-full rounded border"; prev.appendChild(i);
