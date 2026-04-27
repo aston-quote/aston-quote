@@ -328,17 +328,50 @@
     <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
 
     <script>
+        // --- 全局调试辅助 ---
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            alert('系统错误: ' + msg + '\n行号: ' + lineNo);
+            return false;
+        };
+
         // --- 云端同步配置 (Supabase) ---
         const SUPABASE_URL = 'https://mrrtjetiincpovhedeql.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4';
         let supabase = null;
 
+        // 1. Multi-user Auth & Dashboard Logic
+        function login() {
+            try {
+                console.log('Login attempt...');
+                const id = document.getElementById('login-id').value;
+                const role = document.getElementById('login-role').value;
+                if (!id) return alert('请输入账号 ID');
+
+                currentUser = id;
+                currentRole = role;
+                
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-header').classList.remove('hidden');
+                
+                if (role === 'merchandiser' || role === 'manager') {
+                    showMerchDashboard();
+                } else {
+                    showInspectorDashboard();
+                }
+                
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            } catch (err) {
+                console.error('Login Error:', err);
+                alert('登录函数内部崩溃: ' + err.message);
+            }
+        }
+
         try {
             if (SUPABASE_URL && SUPABASE_URL.includes('supabase.co') && window.supabase) {
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 setTimeout(updateSyncUI, 500);
-            } else {
-                console.log('Supabase library not loaded or URL not set. Running in Local Mode.');
             }
         } catch (e) {
             console.error('Supabase Init Error:', e);
@@ -346,7 +379,7 @@
 
         function updateSyncUI() {
             const el = document.getElementById('sync-status');
-            if (supabase) {
+            if (supabase && el) {
                 el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
                 el.classList.replace('text-slate-400', 'text-emerald-400');
             }
@@ -579,9 +612,9 @@
             
             parent.innerHTML += detailsHtml;
             
-            document.getElementById('inspector-view').classList.add('view-hidden');
-            document.getElementById('inspection-flow').classList.remove('view-hidden');
-            document.getElementById('nav-controls').classList.remove('view-hidden');
+            document.getElementById('inspector-view').classList.add('hidden');
+            document.getElementById('inspection-flow').classList.remove('hidden');
+            document.getElementById('nav-controls').classList.remove('hidden');
             switchStep(1);
         }
 
@@ -706,6 +739,7 @@
                     <p class="text-slate-700 italic">${t.notes || 'N/A'}</p>
                 </div>
             `;
+            const preview = document.getElementById('report-photo-preview');
             preview.innerHTML = '';
             Object.keys(inspectionData.images).forEach(id => {
                 const img = document.createElement('img');
