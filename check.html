@@ -374,17 +374,33 @@
 
         // 1. Multi-user Auth & Dashboard Logic
         function login() {
+            console.log('Login function triggered');
             try {
-                console.log('Login attempt...');
-                const id = document.getElementById('login-id').value;
-                const role = document.getElementById('login-role').value;
-                if (!id) return alert('请输入账号 ID');
+                const idEl = document.getElementById('login-id');
+                const roleEl = document.getElementById('login-role');
+                
+                if (!idEl || !roleEl) {
+                    alert('错误: 找不到登录输入框组件');
+                    return;
+                }
 
+                const id = idEl.value;
+                const role = roleEl.value;
+                
+                if (!id) {
+                    alert('请输入账号 ID');
+                    return;
+                }
+
+                console.log('Attempting login for:', id, role);
                 currentUser = id;
                 currentRole = role;
                 
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('app-header').classList.remove('hidden');
+                const loginView = document.getElementById('login-view');
+                const appHeader = document.getElementById('app-header');
+                
+                if (loginView) loginView.classList.add('hidden');
+                if (appHeader) appHeader.classList.remove('hidden');
                 
                 if (role === 'merchandiser' || role === 'manager') {
                     showMerchDashboard();
@@ -395,9 +411,10 @@
                 if (window.lucide) {
                     lucide.createIcons();
                 }
+                console.log('Login successful');
             } catch (err) {
                 console.error('Login Error:', err);
-                alert('登录失败，错误原因: ' + err.message);
+                alert('登录失败，详细错误: ' + err.message + '\n' + err.stack);
             }
         }
 
