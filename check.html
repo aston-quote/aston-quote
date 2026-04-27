@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.0 - 云端同步版</title>
+    <title>ASTON Q.A. V4.16 - 极速版</title>
+    <!-- 核心库异步化，防止卡死 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -20,6 +21,70 @@
         .watermark-canvas { display: none; }
         input, select, textarea { outline: none; }
     </style>
+    <script>
+        // --- 核心逻辑抢先执行 ---
+        var currentUser = '';
+        var currentRole = '';
+        var currentStep = 1;
+        var inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [] };
+        var supabase = null;
+
+        function login() {
+            console.log('Login trigger');
+            try {
+                var id = document.getElementById('login-id').value;
+                var role = document.getElementById('login-role').value;
+                if (!id) return alert('请选择账号');
+                
+                currentUser = id;
+                currentRole = role;
+                
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('app-header').classList.remove('hidden');
+                
+                if (role === 'merchandiser' || role === 'manager') {
+                    showMerchDashboard();
+                } else {
+                    showInspectorDashboard();
+                }
+                
+                if (window.lucide) lucide.createIcons();
+            } catch (e) {
+                alert('登录脚本执行错误: ' + e.message);
+            }
+        }
+
+        function showMerchDashboard() {
+            document.getElementById('merch-view').classList.remove('hidden');
+            document.getElementById('user-display-name').innerText = currentUser;
+            refreshAssignedTasks();
+        }
+
+        function showInspectorDashboard() {
+            document.getElementById('inspector-view').classList.remove('hidden');
+            document.getElementById('inspector-display-name').innerText = currentUser;
+            refreshInspectorTasks();
+        }
+
+        function initApp() {
+            var debug = document.getElementById('debug-info');
+            if (debug) {
+                debug.innerText = 'System Ready (V4.16)';
+                debug.style.color = '#10b981';
+            }
+            // 尝试初始化 Supabase
+            if (window.supabase) {
+                try {
+                    supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
+                    var el = document.getElementById('sync-status');
+                    if (el) el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
+                } catch(e) {}
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+        window.onload = initApp;
+    </script>
 </head>
 <body id="main-body" class="bg-slate-50 text-slate-900 lang-zh">
 
@@ -50,10 +115,9 @@
                     <select id="login-role" class="w-full bg-slate-800 border-none p-4 text-white appearance-none rounded-2xl">
                         <option value="merchandiser">跟单员 (Merchandiser)</option>
                         <option value="inspector">检验员 (Inspector)</option>
-                        <option value="manager">管理者 (Manager)</option>
                     </select>
                 </div>
-                <button onclick="console.log('Button clicked'); login();" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
+                <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">
                     进入系统 Login
                 </button>
             </div>
@@ -71,416 +135,142 @@
                 <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div>
                 LOCAL ONLY
             </div>
-            <button onclick="logout()" class="text-xs bg-red-500/20 px-2 py-1 rounded">退出</button>
-            <button onclick="toggleLang()" class="text-xs bg-white/20 px-2 py-1 rounded">CN/EN</button>
+            <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded">退出</button>
         </div>
     </header>
 
     <main id="app-content">
-        <!-- 2. Merchandiser Dashboard (Task Assignment) -->
+        <!-- Dashboard Views (Hidden by default) -->
         <div id="merch-view" class="p-4 space-y-4 hidden">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                 <h3 class="font-black text-gray-800 flex items-center mb-4">
-                    <i data-lucide="plus-circle" class="w-5 h-5 mr-2 text-blue-600"></i>
-                    下达检验任务 Assign Task (User: <span id="user-display-name">--</span>)
+                    指派任务 Assign Task (User: <span id="user-display-name">--</span>)
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="col-span-2 bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">产品类型 Product Type</label>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">产品类型</label>
                         <select id="new-type" class="w-full bg-transparent border-none font-bold text-sm">
                             <option>大货成品 Bulk</option>
                             <option>外购成品 Outsourced</option>
-                            <option>外购面料 Fabric</option>
-                            <option>外购辅料 Accessories</option>
                         </select>
                     </div>
                     <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">订单号 Order No</label>
-                        <input type="text" id="new-order-no" class="w-full bg-transparent border-none font-bold text-sm" placeholder="PO#12345">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">订单号</label>
+                        <input type="text" id="new-order-no" class="w-full bg-transparent border-none font-bold text-sm" placeholder="PO#">
                     </div>
                     <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">款式 Style</label>
-                        <input type="text" id="new-style" class="w-full bg-transparent border-none font-bold text-sm" placeholder="款式描述">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase">工厂</label>
+                        <input type="text" id="new-factory" class="w-full bg-transparent border-none font-bold text-sm" placeholder="工厂">
                     </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">数量 Qty</label>
-                        <input type="text" id="new-qty" class="w-full bg-transparent border-none font-bold text-sm" placeholder="1000pcs">
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">阶段 Stage</label>
-                        <select id="new-stage" class="w-full bg-transparent border-none font-bold text-sm">
-                            <option>尾期检验 Final</option>
-                            <option>中期检验 Mid-term</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">工厂 Factory</label>
-                        <input type="text" id="new-factory" class="w-full bg-transparent border-none font-bold text-sm" placeholder="工厂名称">
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">合同交期 Delivery</label>
-                        <input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-bold text-sm">
-                    </div>
-                    <div class="bg-gray-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">检验日期 Insp. Date</label>
-                        <input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-bold text-sm">
-                    </div>
-                    <div class="col-span-2 bg-amber-50 p-3 rounded-2xl border border-amber-100">
-                        <label class="text-[10px] font-bold text-amber-600 uppercase">特别注意事项 Special Notes</label>
-                        <textarea id="new-notes" class="w-full bg-transparent border-none font-medium text-xs h-16" placeholder="例如：重点检查色差、内里线头等"></textarea>
+                    <div class="col-span-2 bg-amber-50 p-3 rounded-2xl">
+                        <label class="text-[10px] font-bold text-amber-600 uppercase">注意事项</label>
+                        <textarea id="new-notes" class="w-full bg-transparent border-none font-medium text-xs h-12"></textarea>
                     </div>
                     <div class="col-span-2 bg-blue-50 p-3 rounded-2xl">
-                        <label class="text-[10px] font-bold text-blue-600 uppercase">指派检验员 Inspector</label>
+                        <label class="text-[10px] font-bold text-blue-600 uppercase">指派给</label>
                         <select id="assign-user" class="w-full bg-transparent border-none font-bold text-sm">
                             <option value="Inspector_Li">李检验员 (Li)</option>
                             <option value="Inspector_Zhang">张检验员 (Zhang)</option>
-                            <option value="Inspector_Wang">王检验员 (Wang)</option>
                         </select>
                     </div>
                 </div>
-                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg active:scale-95 transition">
-                    确认并发送任务 Send Task
-                </button>
+                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase shadow-lg">发送任务</button>
             </div>
-
-            <div class="space-y-3">
-                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">已派发任务 Assigned Tasks</h4>
-                <div id="assigned-task-list" class="space-y-2">
-                    <!-- Tasks load here -->
-                </div>
-            </div>
+            <div id="assigned-task-list" class="space-y-2"></div>
         </div>
 
-        <!-- 3. Inspector Dashboard (Task List) -->
         <div id="inspector-view" class="p-4 space-y-4 hidden">
-            <div class="flex items-center justify-between px-2">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tighter">待办任务</h2>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">My Tasks - <span id="inspector-display-name">--</span></p>
-                </div>
-                <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-                    <i data-lucide="clipboard-list"></i>
-                </div>
-            </div>
-            
-            <div id="inspector-task-list" class="space-y-4 pt-2">
-                <!-- Task cards load here -->
-            </div>
+            <h2 class="text-2xl font-black text-slate-800 px-2">我的任务 My Tasks - <span id="inspector-display-name">--</span></h2>
+            <div id="inspector-task-list" class="space-y-4"></div>
         </div>
 
-        <!-- 4. Main Inspection Flow (Existing) -->
+        <!-- Inspection Flow -->
         <div id="inspection-flow" class="hidden">
-            <!-- Global Nav for Steps -->
-            <nav class="flex bg-white border-b px-2 overflow-x-auto no-scrollbar">
-                <button onclick="switchStep(1)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold step-active" id="nav-1"><span class="zh">1. 签到</span><span class="en">1. Check-in</span></button>
-                <button onclick="switchStep(2)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-2"><span class="zh">2. 抽样</span><span class="en">2. Sampling</span></button>
-                <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-3"><span class="zh">3. 产品实拍</span><span class="en">3. Photos</span></button>
-                <button onclick="switchStep(4)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-4"><span class="zh">4. 检验</span><span class="en">4. Q.A.</span></button>
-                <button onclick="switchStep(5)" class="nav-step flex-1 py-3 px-6 text-sm font-semibold text-gray-400" id="nav-5"><span class="zh">5. 报告</span><span class="en">5. Report</span></button>
+            <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto">
+                <button onclick="switchStep(1)" class="nav-step flex-1 py-3 px-4 text-xs font-black step-active" id="nav-1">签到</button>
+                <button onclick="switchStep(2)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-2">抽样</button>
+                <button onclick="switchStep(3)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-3">拍照</button>
+                <button onclick="switchStep(4)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-4">检验</button>
+                <button onclick="switchStep(5)" class="nav-step flex-1 py-3 px-4 text-xs font-black text-gray-400" id="nav-5">报告</button>
             </nav>
-
-            <div class="p-6 pb-32">
-                <!-- Step 1: Info -->
-                <section id="step-1" class="step-content space-y-6">
-                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-6">
-                        <div class="space-y-1">
-                            <h3 class="text-3xl font-black text-slate-800 tracking-tighter" id="info-order">PO#--</h3>
-                            <p class="text-sm font-bold text-blue-600" id="info-factory">-- Factory</p>
-                        </div>
-                        <div class="grid grid-cols-1 gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">GPS 位置信息</p>
-                            <p id="gps-display" class="text-xs font-black text-slate-800">未锁定定位</p>
-                            <button onclick="getGPS()" class="bg-blue-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2">
-                                <i data-lucide="map-pin" class="w-4 h-4"></i> 获取当前位置 GPS
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Step 2: Sampling -->
-                <section id="step-2" class="step-content hidden space-y-6">
-                    <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-6 text-center">
-                        <h3 class="text-xl font-black text-slate-800">AQL 2.5 (Level II) 抽样标准</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-slate-50 p-6 rounded-2xl">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">抽样数量</p>
-                                <p class="text-3xl font-black text-blue-600">80</p>
-                            </div>
-                            <div class="bg-slate-50 p-6 rounded-2xl">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">允收 / 拒收</p>
-                                <p class="text-3xl font-black text-emerald-500">5 / 6</p>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-400 leading-relaxed px-4 italic">注：基于 AQL 2.5 二级单次抽样方案。如果发现 6 个或以上主要疵点，整批货将被拒收。</p>
-                    </div>
-                </section>
-
-                <!-- Step 3: Product Groups -->
-                <section id="step-3" class="step-content hidden space-y-6">
-                    <!-- G1: Flat -->
+            <div class="p-4 pb-32">
+                <section id="step-1" class="step-content">
                     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">
-                                <span class="zh">G1: 样衣平铺照 (正/反/内里)</span>
-                                <span class="en">G1: Flat View (Front/Back/Inside)</span>
-                            </h4>
-                            <button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ <span class="zh">增加</span><span class="en">ADD</span></button>
+                        <h3 id="info-order" class="text-2xl font-black">--</h3>
+                        <p id="info-factory" class="text-blue-600 font-bold">--</p>
+                        <p id="gps-display" class="text-[10px] font-mono text-gray-400">GPS: 未定位</p>
+                        <button onclick="getGPS()" class="w-full py-4 bg-slate-100 rounded-2xl font-bold">获取 GPS 定位</button>
+                    </div>
+                </section>
+                <section id="step-2" class="step-content hidden">
+                    <div class="bg-white rounded-3xl p-6 text-center space-y-4">
+                        <h3 class="font-black">AQL 2.5 二级抽样</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-slate-50 p-4 rounded-2xl"><p class="text-[8px] text-gray-400">抽样</p><p class="text-2xl font-black">80</p></div>
+                            <div class="bg-slate-50 p-4 rounded-2xl"><p class="text-[8px] text-gray-400">允收</p><p class="text-2xl font-black text-emerald-500">5</p></div>
                         </div>
+                    </div>
+                </section>
+                <section id="step-3" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-3xl p-6 space-y-4">
+                        <div class="flex justify-between items-center"><h4 class="font-black text-xs uppercase">G1: 平铺照</h4><button onclick="addPhotoSlot('g1-container')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ 增加</button></div>
                         <div class="grid grid-cols-3 gap-2" id="g1-container">
-                            <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden"><span class="zh">正面</span><span class="en">FRONT</span></div>
-                            <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden"><span class="zh">反面</span><span class="en">BACK</span></div>
-                            <div class="photo-slot text-[8px] text-gray-300"><input type="file" capture="camera" onchange="processImage(this, 'g1_3')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_3" class="hidden"><span class="zh">内里</span><span class="en">INSIDE</span></div>
-                        </div>
-                    </div>
-                    <!-- G4: Labels -->
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h4 class="font-black text-xs text-blue-600 uppercase tracking-widest">
-                                <span class="zh">G4: 标签与Logo</span>
-                                <span class="en">G4: Labels & Branding</span>
-                            </h4>
-                            <button onclick="addPhotoSlot('label-grid')" class="text-[8px] bg-blue-50 text-blue-600 px-2 py-1 rounded-full font-bold">+ <span class="zh">增加</span><span class="en">ADD</span></button>
-                        </div>
-                        <div class="grid grid-cols-4 gap-2" id="label-grid">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'lb1')" class="absolute inset-0 opacity-0 z-10"><img id="img-lb1" class="hidden"><i data-lucide="plus" class="text-gray-200"></i></div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'lb2')" class="absolute inset-0 opacity-0 z-10"><img id="img-lb2" class="hidden"><i data-lucide="plus" class="text-gray-200"></i></div>
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_1" class="hidden">正面</div>
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_2" class="hidden">反面</div>
                         </div>
                     </div>
                 </section>
-
-                <!-- Step 4: Q.A. -->
-                <section id="step-4" class="step-content hidden space-y-6">
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-black text-gray-800"><span class="zh">尺寸测量表 (手写拍照)</span><span class="en">Measurements</span></h3>
-                            <button onclick="addPhotoSlot('measure-grid')" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-black uppercase">+ <span class="zh">增加照片</span><span class="en">ADD</span></button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4" id="measure-grid">
-                            <div class="photo-slot aspect-[3/4]"><input type="file" capture="camera" onchange="processImage(this, 'ms1')" class="absolute inset-0 opacity-0 z-10"><img id="img-ms1" class="hidden">1</div>
-                            <div class="photo-slot aspect-[3/4]"><input type="file" capture="camera" onchange="processImage(this, 'ms2')" class="absolute inset-0 opacity-0 z-10"><img id="img-ms2" class="hidden">2</div>
-                        </div>
-                    </div>
-                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 space-y-4">
-                        <h3 class="font-black text-gray-800"><span class="zh">缺陷疵点记录 (中英选择)</span><span class="en">Defect Log</span></h3>
-                        <div id="defect-container" class="space-y-4"></div>
-                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-gray-100 text-blue-500 font-black rounded-2xl text-[10px] uppercase tracking-widest">+ <span class="zh">增加缺陷项</span><span class="en">Add Defect Item</span></button>
+                <section id="step-4" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-3xl p-6 space-y-4">
+                        <h4 class="font-black text-xs uppercase">疵点记录</h4>
+                        <div id="defect-container" class="space-y-2"></div>
+                        <button onclick="addDefectRow()" class="w-full py-4 border-2 border-dashed border-gray-100 text-blue-500 font-bold rounded-2xl text-xs">+ 增加缺陷项</button>
                     </div>
                 </section>
-
-                <!-- Step 5: Report Preview -->
-                <section id="step-5" class="step-content hidden space-y-6">
-                    <div id="report-canvas" class="bg-white p-10 shadow-2xl border border-gray-100 max-w-4xl mx-auto space-y-8 text-[10px]">
-                        <div class="flex justify-between items-end border-b-4 border-slate-900 pb-4">
-                            <div>
-                                <h2 class="text-4xl font-black tracking-tighter text-slate-900">INSPECTION REPORT</h2>
-                                <p class="text-blue-600 font-bold tracking-widest uppercase">ASTON GARMENT QUALITY ASSURANCE</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-black">DATE: <span id="r-date">--</span></p>
-                                <p class="font-black">REF: <span id="r-order">--</span></p>
-                            </div>
-                        </div>
-                        <div class="bg-slate-50 p-6 rounded-2xl grid grid-cols-2 gap-6">
-                            <!-- Header Info -->
-                        </div>
-                        <div class="grid grid-cols-1 gap-4">
-                            <h3 class="bg-slate-900 text-white px-4 py-2 font-black uppercase italic">01. Visual Presentation</h3>
-                            <div id="report-photo-preview" class="grid grid-cols-3 gap-3 pt-2"></div>
-                        </div>
-                        <div class="flex justify-between items-center pt-8 border-t">
-                            <div class="space-y-1">
-                                <p class="text-[8px] font-black uppercase text-slate-400">Inspector Signature</p>
-                                <img id="r-sig" class="h-20 border-b border-slate-200">
-                            </div>
-                            <div class="text-right space-y-1">
-                                <p class="text-[8px] font-black uppercase text-slate-400">GPS & Integrity Token</p>
-                                <p id="r-gps" class="text-[8px] font-mono text-slate-400">--</p>
-                            </div>
-                        </div>
+                <section id="step-5" class="step-content hidden space-y-4">
+                    <div id="report-canvas" class="bg-white p-6 shadow-xl text-[8px] space-y-4">
+                        <h2 class="text-xl font-black border-b-2 border-black pb-2">INSPECTION REPORT</h2>
+                        <div class="bg-slate-50 p-4 rounded-xl grid grid-cols-2 gap-2" id="report-header-info"></div>
+                        <div id="report-photo-preview" class="grid grid-cols-3 gap-1"></div>
+                        <img id="r-sig" class="h-16 mt-4 border-b">
                     </div>
-
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-                        <h3 class="font-black text-gray-800">最后确认 Final Signature</h3>
-                        <canvas id="sig-pad" class="w-full h-40 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl"></canvas>
-                        <div class="flex gap-2">
-                            <button onclick="clearSignature()" class="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-500">清除 Clear</button>
-                            <button onclick="exportPDF()" class="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest flex items-center justify-center">
-                                <i data-lucide="download" class="mr-2"></i> 导出 PDF 报告
-                            </button>
-                        </div>
+                    <div class="bg-white p-6 rounded-3xl shadow-sm space-y-4">
+                        <h3 class="font-black text-xs">手写签名</h3>
+                        <canvas id="sig-pad" class="w-full h-32 bg-slate-50 border rounded-2xl"></canvas>
+                        <button onclick="exportPDF()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase">导出 PDF 报告</button>
                     </div>
                 </section>
             </div>
         </div>
     </main>
 
-    <!-- Navigation Bar -->
     <div id="nav-controls" class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t p-4 flex gap-4 z-50 hidden">
-        <button onclick="prevStep()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-500">
-            <span class="zh">上一步</span>
-            <span class="en">BACK</span>
-        </button>
-        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">
-            <span class="zh">下一步</span>
-            <span class="en">NEXT STEP</span>
-        </button>
+        <button onclick="prevStep()" class="flex-1 py-4 bg-gray-100 rounded-2xl font-bold text-gray-500 text-xs">上一步 BACK</button>
+        <button onclick="nextStep()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-xl text-xs">下一步 NEXT</button>
     </div>
 
     <canvas id="watermarkCanvas" class="watermark-canvas"></canvas>
 
     <script>
-        // --- 全局调试辅助 ---
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            alert('系统运行时发生错误，请截图反馈:\n' + msg + '\n行号: ' + lineNo);
-            return false;
-        };
-
-        // --- 核心初始化 (DOMContentLoaded 比 onload 更快更稳) ---
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM Content Loaded');
-            const debug = document.getElementById('debug-info');
-            if (debug) {
-                debug.innerText = 'System Ready (V4.15)';
-                debug.classList.replace('text-blue-400', 'text-emerald-400');
-            }
-            
-            // 初始化图标
-            try {
-                if (window.lucide) lucide.createIcons();
-            } catch (e) { console.warn('Lucide icons failed to load'); }
-            
-            // 初始化签名版
-            try {
-                initSig();
-            } catch (e) { console.warn('Signature pad init failed'); }
-        });
-
-        // --- 云端同步配置 (Supabase) ---
-        const SUPABASE_URL = 'https://mrrtjetiincpovhedeql.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4';
-        let supabase = null;
-
-        try {
-            if (typeof window.supabase !== 'undefined' && SUPABASE_URL.includes('supabase.co')) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                setTimeout(updateSyncUI, 500);
-            }
-        } catch (e) { console.error('Supabase Init Error:', e); }
-
-        function updateSyncUI() {
-            const el = document.getElementById('sync-status');
-            if (supabase && el) {
-                el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
-                el.classList.replace('text-slate-400', 'text-emerald-400');
-            }
-        }
-
-        let currentRole = '';
-        let currentUser = '';
-        let currentStep = 1;
-        let inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [] };
-        
-        const defectTerms = [
-            { zh: '色差', en: 'Shade Variation' },
-            { zh: '破洞', en: 'Fabric Hole' },
-            { zh: '跳针', en: 'Skip Stitch' },
-            { zh: '断线', en: 'Broken Stitch' },
-            { zh: '歪斜', en: 'Twisted / Slanted' },
-            { zh: '扣子松动', en: 'Loose Button' },
-            { zh: '拉链不畅', en: 'Malfunctional Zipper' },
-            { zh: '线头', en: 'Untrimmed Thread' }
-        ];
-
-        // 1. Multi-user Auth & Dashboard Logic
-        function login() {
-            console.log('Login function triggered');
-            try {
-                const idEl = document.getElementById('login-id');
-                const roleEl = document.getElementById('login-role');
-                if (!idEl || !roleEl) throw new Error('找不到登录表单组件');
-
-                const id = idEl.value;
-                const role = roleEl.value;
-                if (!id) return alert('请选择账号 ID');
-
-                currentUser = id;
-                currentRole = role;
-                
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('app-header').classList.remove('hidden');
-                
-                if (role === 'merchandiser' || role === 'manager') {
-                    showMerchDashboard();
-                } else {
-                    showInspectorDashboard();
-                }
-                
-                if (window.lucide) lucide.createIcons();
-                console.log('Login success');
-            } catch (err) {
-                alert('登录系统崩溃: ' + err.message);
-            }
-        }
-
-        function logout() { location.reload(); }
-
-        function toggleLang() {
-            document.getElementById('main-body').classList.toggle('lang-zh');
-            document.getElementById('main-body').classList.toggle('lang-en');
-        }
-
-        function showMerchDashboard() {
-            const view = document.getElementById('merch-view');
-            if (view) view.classList.remove('hidden');
-            const display = document.getElementById('user-display-name');
-            if (display) display.innerText = currentUser;
-            refreshAssignedTasks();
-        }
-
-        function showInspectorDashboard() {
-            const view = document.getElementById('inspector-view');
-            if (view) view.classList.remove('hidden');
-            const display = document.getElementById('inspector-display-name');
-            if (display) display.innerText = currentUser;
-            refreshInspectorTasks();
-        }
-
-        // 2. Task Assignment Logic
+        // --- 业务逻辑脚本 ---
         async function assignTask() {
-            try {
-                const task = {
-                    id: Date.now(),
-                    type: document.getElementById('new-type').value,
-                    order: document.getElementById('new-order-no').value,
-                    style: document.getElementById('new-style').value,
-                    qty: document.getElementById('new-qty').value,
-                    stage: document.getElementById('new-stage').value,
-                    factory: document.getElementById('new-factory').value,
-                    deliveryDate: document.getElementById('new-delivery-date').value,
-                    inspectionDate: document.getElementById('new-inspection-date').value,
-                    notes: document.getElementById('new-notes').value,
-                    inspector: document.getElementById('assign-user').value,
-                    status: 'PENDING',
-                    creator: currentUser,
-                    created_at: new Date().toISOString()
-                };
-
-                if (!task.order || !task.factory) return alert('请至少填写订单号和工厂名称');
-
-                if (supabase) {
-                    await supabase.from('aston_tasks').insert([task]);
-                }
-
-                const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
-                tasks.push(task);
-                localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-
-                alert('任务已派发！');
-                ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
-                    document.getElementById(id).value = '';
-                });
-                refreshAssignedTasks();
-            } catch (e) { alert('派发失败: ' + e.message); }
+            const task = {
+                id: Date.now(),
+                type: document.getElementById('new-type').value,
+                order: document.getElementById('new-order-no').value,
+                factory: document.getElementById('new-factory').value,
+                notes: document.getElementById('new-notes').value,
+                inspector: document.getElementById('assign-user').value,
+                status: 'PENDING',
+                creator: currentUser,
+                created_at: new Date().toISOString()
+            };
+            if (!task.order || !task.factory) return alert('必填项缺失');
+            if (supabase) await supabase.from('aston_tasks').insert([task]);
+            const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            tasks.push(task);
+            localStorage.setItem('aston_tasks', JSON.stringify(tasks));
+            alert('已派发'); refreshAssignedTasks();
         }
 
         async function refreshAssignedTasks() {
@@ -491,18 +281,15 @@
             } else {
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse();
             }
-
-            const list = document.getElementById('assigned-task-list');
-            if (!list) return;
-            list.innerHTML = tasks.map(t => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 text-xs font-bold flex justify-between items-center">
-                    <div><p class="text-blue-600 underline">${t.order || '?'}</p><p class="text-gray-400 mt-1">${t.factory || '--'} -> ${(t.inspector || '').split('_')[1] || ''}</p></div>
-                    <span class="px-2 py-1 ${t.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'} rounded uppercase tracking-tighter">${t.status || 'PENDING'}</span>
+            document.getElementById('assigned-task-list').innerHTML = tasks.map(t => `
+                <div class="bg-white p-3 rounded-xl border text-[10px] flex justify-between">
+                    <div><b>${t.order}</b><br>${t.factory}</div>
+                    <span class="text-blue-600">${t.status}</span>
                 </div>
             `).join('');
         }
 
-        let currentTasks = [];
+        var currentTasks = [];
         async function refreshInspectorTasks() {
             let tasks = [];
             if (supabase) {
@@ -512,58 +299,21 @@
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
             }
             currentTasks = tasks;
-
-            const list = document.getElementById('inspector-task-list');
-            if (!list) return;
-            if (tasks.length === 0) {
-                list.innerHTML = `<div class="bg-white p-8 rounded-3xl text-center border-2 border-dashed border-gray-200"><i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-200 mb-2"></i><p class="text-gray-400 text-sm font-bold">目前没有待办任务</p></div>`;
-                if (window.lucide) lucide.createIcons();
-                return;
-            }
-            
-            list.innerHTML = tasks.map((t, index) => `
-                <div onclick="prepareInspection(${index})" class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
-                    <div class="flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type || '--'} / ${t.stage || '--'}</span>
-                            <h4 class="text-xl font-black text-slate-800 tracking-tighter">${t.order || 'Unknown'}</h4>
-                            <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory || '--'}</p>
-                        </div>
-                        <span class="${t.status === 'COMPLETED' ? 'bg-gray-100 text-gray-400' : 'bg-emerald-100 text-emerald-600'} px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                            ${t.status === 'COMPLETED' ? 'DONE' : 'GO'}
-                        </span>
-                    </div>
+            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, index) => `
+                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-emerald-500 active:scale-95">
+                    <h4 class="font-black">${t.order}</h4>
+                    <p class="text-xs text-gray-400">${t.factory}</p>
                 </div>
             `).join('');
-            if (window.lucide) lucide.createIcons();
         }
 
-        function prepareInspection(index) { startInspection(currentTasks[index]); }
-
-        function startInspection(task) {
+        function startInspectionByIndex(idx) {
+            const task = currentTasks[idx];
             inspectionData.task = task;
-            inspectionData.order = task.order; 
+            inspectionData.order = task.order;
             inspectionData.factory = task.factory;
             document.getElementById('info-order').innerText = task.order;
             document.getElementById('info-factory').innerText = task.factory;
-            
-            const detailsHtml = `
-                <div class="grid grid-cols-2 gap-4 text-[10px] font-bold border-t pt-4 mt-4">
-                    <p class="text-gray-400">类型: <span class="text-gray-800">${task.type}</span></p>
-                    <p class="text-gray-400">阶段: <span class="text-gray-800">${task.stage}</span></p>
-                    <p class="text-gray-400">款式: <span class="text-gray-800">${task.style || '--'}</span></p>
-                    <p class="text-gray-400">数量: <span class="text-gray-800">${task.qty || '--'}</span></p>
-                </div>
-                <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <p class="text-[10px] font-black text-amber-600 uppercase mb-1">NOTES:</p>
-                    <p class="text-xs text-amber-800 leading-tight">${task.notes || '无'}</p>
-                </div>
-            `;
-            const parent = document.querySelector('#step-1 .bg-white');
-            const oldExtra = parent.querySelector('.mt-4.p-3'); if (oldExtra) oldExtra.remove();
-            const oldGrid = parent.querySelector('.grid.grid-cols-2'); if (oldGrid) oldGrid.remove();
-            parent.innerHTML += detailsHtml;
-            
             document.getElementById('inspector-view').classList.add('hidden');
             document.getElementById('inspection-flow').classList.remove('hidden');
             document.getElementById('nav-controls').classList.remove('hidden');
@@ -572,11 +322,10 @@
 
         function switchStep(step) {
             document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
+            document.getElementById('step-'+step).classList.remove('hidden');
             document.querySelectorAll('.nav-step').forEach(n => { n.classList.remove('step-active'); n.classList.add('text-gray-400'); });
-            document.getElementById(`nav-${step}`).classList.add('step-active');
+            document.getElementById('nav-'+step).classList.add('step-active');
             currentStep = step;
-            window.scrollTo(0, 0);
             if (step === 5) updateReport();
         }
 
@@ -584,15 +333,10 @@
         function prevStep() { if (currentStep > 1) switchStep(currentStep - 1); }
 
         function getGPS() {
-            const display = document.getElementById('gps-display');
-            display.innerText = "📡 定位中...";
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const gps = `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
-                    inspectionData.gps = gps;
-                    display.innerText = gps + " (LOCKED)";
-                }, () => { display.innerText = "❌ 定位失败"; });
-            }
+            navigator.geolocation.getCurrentPosition(pos => {
+                inspectionData.gps = pos.coords.latitude.toFixed(4) + ", " + pos.coords.longitude.toFixed(4);
+                document.getElementById('gps-display').innerText = "GPS: " + inspectionData.gps;
+            });
         }
 
         function processImage(input, id) {
@@ -602,14 +346,13 @@
                 img.onload = () => {
                     const cvs = document.getElementById('watermarkCanvas');
                     const ctx = cvs.getContext('2d');
-                    cvs.width = 1000; cvs.height = 750;
-                    ctx.drawImage(img, 0, 0, 1000, 750);
-                    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 680, 1000, 70);
-                    ctx.fillStyle = "white"; ctx.font = "24px Arial";
-                    ctx.fillText(`${inspectionData.order} | ${new Date().toLocaleString()} | ${inspectionData.gps}`, 30, 725);
+                    cvs.width = 800; cvs.height = 600;
+                    ctx.drawImage(img, 0, 0, 800, 600);
+                    ctx.fillStyle = "white"; ctx.font = "16px Arial";
+                    ctx.fillText(inspectionData.order + " | " + inspectionData.gps, 20, 580);
                     const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
-                    const el = document.getElementById(`img-${id}`);
-                    if (el) { el.src = dataUrl; el.classList.remove('hidden'); }
+                    document.getElementById('img-'+id).src = dataUrl;
+                    document.getElementById('img-'+id).classList.remove('hidden');
                     inspectionData.images[id] = dataUrl;
                 };
                 img.src = e.target.result;
@@ -617,434 +360,49 @@
             reader.readAsDataURL(input.files[0]);
         }
 
-        function addPhotoSlot(containerId) {
-            const container = document.getElementById(containerId);
-            const id = 'extra_' + Date.now();
-            const div = document.createElement('div');
-            div.className = "photo-slot text-[8px] text-gray-300";
-            div.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden"><i data-lucide="camera"></i>`;
-            container.appendChild(div);
-            if (window.lucide) lucide.createIcons();
+        function addPhotoSlot(cId) {
+            const id = 'ex_'+Date.now();
+            const div = document.createElement('div'); div.className="photo-slot";
+            div.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden">`;
+            document.getElementById(cId).appendChild(div);
         }
 
         function addDefectRow() {
-            const container = document.getElementById('defect-container');
-            const row = document.createElement('div');
-            row.className = "bg-slate-50 p-5 rounded-3xl flex gap-4 border border-slate-100 shadow-sm";
-            row.innerHTML = `<div class="flex-1 space-y-3"><select class="w-full bg-white p-3 text-xs font-black border-none shadow-sm uppercase tracking-tighter">${defectTerms.map(t => `<option>${t.zh} / ${t.en}</option>`).join('')}</select><div class="flex gap-2"><select class="flex-1 bg-white p-2 text-[10px] font-black border-none shadow-sm uppercase tracking-widest text-blue-600"><option>Major</option><option>Minor</option></select><input type="number" class="w-20 bg-white p-2 text-[10px] font-black border-none shadow-sm text-center" placeholder="QTY"></div></div><div class="w-20 h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group"><input type="file" capture="camera" onchange="processImage(this, 'def_${Date.now()}')" class="absolute inset-0 opacity-0 z-10"><i data-lucide="plus" class="text-slate-200 group-hover:text-blue-500 transition"></i></div>`;
-            container.appendChild(row);
-            if (window.lucide) lucide.createIcons();
+            const row = document.createElement('div'); row.className="p-3 bg-slate-50 rounded-xl flex gap-2";
+            row.innerHTML = `<select class="flex-1 text-xs border-none bg-white p-2 rounded-lg"><option>色差 Shade</option><option>跳针 Skip</option></select><input type="number" class="w-16 p-2 rounded-lg border-none" placeholder="数量">`;
+            document.getElementById('defect-container').appendChild(row);
         }
 
         function updateReport() {
-            document.getElementById('r-order').innerText = inspectionData.order;
-            document.getElementById('r-factory').innerText = inspectionData.factory;
-            document.getElementById('r-date').innerText = new Date().toLocaleDateString();
-            document.getElementById('r-gps').innerText = inspectionData.gps;
             const t = inspectionData.task || {};
-            const reportHeader = document.querySelector('#report-canvas .bg-slate-50');
-            reportHeader.innerHTML = `<div class="grid grid-cols-2 gap-x-6 gap-y-2 font-bold"><p>Order: ${t.order || '--'}</p><p>Type: ${t.type || '--'}</p><p>Stage: ${t.stage || '--'}</p><p>Factory: ${t.factory || '--'}</p></div><div class="mt-3 pt-3 border-t border-slate-200"><p class="text-[8px] text-slate-400 uppercase">Notes:</p><p class="text-slate-700">${t.notes || 'N/A'}</p></div>`;
-            const preview = document.getElementById('report-photo-preview'); preview.innerHTML = '';
-            Object.keys(inspectionData.images).forEach(id => {
-                const img = document.createElement('img'); img.src = inspectionData.images[id];
-                img.className = "w-full aspect-square object-cover rounded-xl border border-slate-100"; preview.appendChild(img);
+            document.getElementById('report-header-info').innerHTML = `<p>Order: ${t.order}</p><p>Factory: ${t.factory}</p><p>GPS: ${inspectionData.gps}</p>`;
+            const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
+            Object.values(inspectionData.images).forEach(src => {
+                const i = document.createElement('img'); i.src = src; i.className="w-full rounded border"; prev.appendChild(i);
             });
             document.getElementById('r-sig').src = sigPad.toDataURL();
         }
 
         function exportPDF() {
-            html2canvas(document.getElementById('report-canvas'), { scale: 2 }).then(cvs => {
-                const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
-                pdf.addImage(cvs.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, (cvs.height * 210) / cvs.width);
-                pdf.save(`REPORT_${inspectionData.order}.pdf`);
+            html2canvas(document.getElementById('report-canvas')).then(cvs => {
+                const pdf = new jspdf.jsPDF();
+                pdf.addImage(cvs.toDataURL('image/jpeg'), 'JPEG', 0, 0, 210, 297);
+                pdf.save('Report.pdf');
             });
         }
 
-        let sigPad, sigCtx, drawing = false;
+        var sigPad, sigCtx, drawing = false;
         function initSig() {
-            sigPad = document.getElementById('sig-pad'); if (!sigPad) return;
+            sigPad = document.getElementById('sig-pad'); if(!sigPad) return;
             sigCtx = sigPad.getContext('2d');
-            sigPad.width = sigPad.offsetWidth || 300; sigPad.height = sigPad.offsetHeight || 150;
-            sigCtx.lineWidth = 3; sigCtx.strokeStyle = "#000"; sigCtx.lineCap = "round";
-            const getXY = e => { const r = sigPad.getBoundingClientRect(); return [(e.clientX || (e.touches && e.touches[0].clientX)) - r.left, (e.clientY || (e.touches && e.touches[0].clientY)) - r.top]; };
-            const start = e => { drawing = true; sigCtx.beginPath(); sigCtx.moveTo(...getXY(e)); };
-            const move = e => { if (drawing) { e.preventDefault(); sigCtx.lineTo(...getXY(e)); sigCtx.stroke(); } };
-            sigPad.addEventListener('touchstart', start); sigPad.addEventListener('touchmove', move); sigPad.addEventListener('touchend', () => drawing = false);
-            sigPad.addEventListener('mousedown', start); sigPad.addEventListener('mousemove', move); sigPad.addEventListener('mouseup', () => drawing = false);
-        }
-        function clearSignature() { sigCtx.clearRect(0, 0, sigPad.width, sigPad.height); }
-    </script>
-</body>
-</html>
-
-
-        // --- 云端同步配置 (Supabase) ---
-        const SUPABASE_URL = 'https://mrrtjetiincpovhedeql.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4';
-        let supabase = null;
-
-        try {
-            if (SUPABASE_URL && SUPABASE_URL.includes('supabase.co') && window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                setTimeout(updateSyncUI, 500);
-            }
-        } catch (e) {
-            console.error('Supabase Init Error:', e);
-        }
-
-        function updateSyncUI() {
-            const el = document.getElementById('sync-status');
-            if (supabase && el) {
-                el.innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD LIVE';
-                el.classList.replace('text-slate-400', 'text-emerald-400');
-            }
-        }
-
-        let currentRole = '';
-        let currentUser = '';
-        let currentStep = 1;
-        let inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [] };
-        
-        const defectTerms = [
-            { zh: '色差', en: 'Shade Variation' },
-            { zh: '破洞', en: 'Fabric Hole' },
-            { zh: '跳针', en: 'Skip Stitch' },
-            { zh: '断线', en: 'Broken Stitch' },
-            { zh: '歪斜', en: 'Twisted / Slanted' },
-            { zh: '扣子松动', en: 'Loose Button' },
-            { zh: '拉链不畅', en: 'Malfunctional Zipper' },
-            { zh: '线头', en: 'Untrimmed Thread' }
-        ];
-
-        // 1. Multi-user Auth & Dashboard Logic
-        function login() {
-            console.log('Login function triggered');
-            try {
-                const idEl = document.getElementById('login-id');
-                const roleEl = document.getElementById('login-role');
-                
-                if (!idEl || !roleEl) {
-                    alert('错误: 找不到登录输入框组件');
-                    return;
-                }
-
-                const id = idEl.value;
-                const role = roleEl.value;
-                
-                if (!id) {
-                    alert('请输入账号 ID');
-                    return;
-                }
-
-                console.log('Attempting login for:', id, role);
-                currentUser = id;
-                currentRole = role;
-                
-                const loginView = document.getElementById('login-view');
-                const appHeader = document.getElementById('app-header');
-                
-                if (loginView) loginView.classList.add('hidden');
-                if (appHeader) appHeader.classList.remove('hidden');
-                
-                if (role === 'merchandiser' || role === 'manager') {
-                    showMerchDashboard();
-                } else {
-                    showInspectorDashboard();
-                }
-                
-                if (window.lucide) {
-                    lucide.createIcons();
-                }
-                console.log('Login successful');
-            } catch (err) {
-                console.error('Login Error:', err);
-                alert('登录失败，详细错误: ' + err.message + '\n' + err.stack);
-            }
-        }
-
-        function logout() {
-            location.reload();
-        }
-
-        function toggleLang() {
-            document.getElementById('main-body').classList.toggle('lang-zh');
-            document.getElementById('main-body').classList.toggle('lang-en');
-        }
-
-        function showMerchDashboard() {
-            const view = document.getElementById('merch-view');
-            if (view) view.classList.remove('hidden');
-            const display = document.getElementById('user-display-name');
-            if (display) display.innerText = currentUser;
-            refreshAssignedTasks();
-        }
-
-        function showInspectorDashboard() {
-            const view = document.getElementById('inspector-view');
-            if (view) view.classList.remove('hidden');
-            const display = document.getElementById('inspector-display-name');
-            if (display) display.innerText = currentUser;
-            refreshInspectorTasks();
-        }
-
-        // 2. Task Assignment Logic (Hybrid Cloud/Local)
-        async function assignTask() {
-            const task = {
-                id: Date.now(),
-                type: document.getElementById('new-type').value,
-                order: document.getElementById('new-order-no').value,
-                style: document.getElementById('new-style').value,
-                qty: document.getElementById('new-qty').value,
-                stage: document.getElementById('new-stage').value,
-                factory: document.getElementById('new-factory').value,
-                deliveryDate: document.getElementById('new-delivery-date').value,
-                inspectionDate: document.getElementById('new-inspection-date').value,
-                notes: document.getElementById('new-notes').value,
-                inspector: document.getElementById('assign-user').value,
-                status: 'PENDING',
-                creator: currentUser,
-                created_at: new Date().toISOString()
-            };
-
-            if (!task.order || !task.factory) return alert('请至少填写订单号和工厂名称');
-
-            if (supabase) {
-                const { error } = await supabase.from('aston_tasks').insert([task]);
-                if (error) {
-                    console.error('Cloud sync failed:', error);
-                    alert('云端同步失败，将保存至本地。');
-                }
-            }
-
-            const tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
-            tasks.push(task);
-            localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-
-            alert('任务已成功下达！');
-            ['new-order-no', 'new-style', 'new-qty', 'new-factory', 'new-notes'].forEach(id => {
-                document.getElementById(id).value = '';
-            });
-            refreshAssignedTasks();
-        }
-
-        async function refreshAssignedTasks() {
-            let tasks = [];
-            if (supabase) {
-                const { data, error } = await supabase.from('aston_tasks').select('*').eq('creator', currentUser).order('created_at', { ascending: false });
-                if (!error) tasks = data;
-            } else {
-                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse();
-            }
-
-            const list = document.getElementById('assigned-task-list');
-            list.innerHTML = tasks.map(t => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-50 text-xs font-bold flex justify-between items-center">
-                    <div>
-                        <p class="text-blue-600 underline">${t.order || 'Unknown'}</p>
-                        <p class="text-gray-400 mt-1">${t.factory || '--'} -> ${(t.inspector || '').replace('Inspector_', '')}</p>
-                    </div>
-                    <span class="px-2 py-1 ${t.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'} rounded uppercase tracking-tighter">${t.status || 'PENDING'}</span>
-                </div>
-            `).join('');
-        }
-
-        let currentTasks = [];
-
-        async function refreshInspectorTasks() {
-            let tasks = [];
-            if (supabase) {
-                const { data, error } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false });
-                if (!error) tasks = data;
-            } else {
-                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
-            }
-            currentTasks = tasks;
-
-            const list = document.getElementById('inspector-task-list');
-            if (tasks.length === 0) {
-                list.innerHTML = `<div class="bg-white p-8 rounded-3xl text-center border-2 border-dashed border-gray-200"><i data-lucide="inbox" class="w-12 h-12 mx-auto text-gray-200 mb-2"></i><p class="text-gray-400 text-sm font-bold">目前没有分配给您的任务</p></div>`;
-                lucide.createIcons();
-                return;
-            }
-            
-            list.innerHTML = tasks.map((t, index) => `
-                <div onclick="prepareInspection(${index})" class="bg-white p-6 rounded-3xl shadow-md border-l-8 ${t.status === 'COMPLETED' ? 'border-gray-300 opacity-60' : 'border-emerald-500'} active:scale-95 transition cursor-pointer">
-                    <div class="flex justify-between items-start">
-                        <div class="space-y-1">
-                            <span class="text-[8px] bg-slate-100 px-2 py-0.5 rounded font-black text-slate-400 uppercase tracking-tighter">${t.type || '--'} / ${t.stage || '--'}</span>
-                            <h4 class="text-xl font-black text-slate-800 tracking-tighter">${t.order || 'Unknown'}</h4>
-                            <p class="text-xs text-slate-400 font-bold">工厂: ${t.factory || '--'}</p>
-                            <p class="text-[10px] text-blue-500 font-bold">检验日期: ${t.inspectionDate || '未定'}</p>
-                        </div>
-                        <span class="${t.status === 'COMPLETED' ? 'bg-gray-100 text-gray-400' : 'bg-emerald-100 text-emerald-600'} px-3 py-1 rounded-full text-[10px] font-black uppercase">
-                            ${t.status === 'COMPLETED' ? '已完成 Done' : 'GO! 开始验货'}
-                        </span>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-            
-            if (supabase) {
-                supabase.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'aston_tasks', filter: `inspector=eq.${currentUser}` }, () => refreshInspectorTasks()).subscribe();
-            }
-        }
-
-        function prepareInspection(index) {
-            startInspection(currentTasks[index]);
-        }
-
-        function startInspection(task) {
-            inspectionData.task = task;
-            inspectionData.order = task.order; 
-            inspectionData.factory = task.factory;
-            document.getElementById('info-order').innerText = task.order;
-            document.getElementById('info-factory').innerText = task.factory;
-            
-            const detailsHtml = `
-                <div class="grid grid-cols-2 gap-4 text-[10px] font-bold border-t pt-4 mt-4">
-                    <p class="text-gray-400">产品类型: <span class="text-gray-800">${task.type}</span></p>
-                    <p class="text-gray-400">检验阶段: <span class="text-gray-800">${task.stage}</span></p>
-                    <p class="text-gray-400">款式描述: <span class="text-gray-800">${task.style || '--'}</span></p>
-                    <p class="text-gray-400">订单数量: <span class="text-gray-800">${task.qty || '--'}</span></p>
-                    <p class="text-gray-400">合同交期: <span class="text-gray-800">${task.deliveryDate || '--'}</span></p>
-                    <p class="text-gray-400">检验日期: <span class="text-gray-800">${task.inspectionDate || '--'}</span></p>
-                </div>
-                <div class="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <p class="text-[10px] font-black text-amber-600 uppercase mb-1">特别注意事项 Special Notes:</p>
-                    <p class="text-xs text-amber-800 leading-tight">${task.notes || '无 (None)'}</p>
-                </div>
-            `;
-            const parent = document.querySelector('#step-1 .bg-white');
-            const oldExtra = parent.querySelector('.mt-4.p-3'); if (oldExtra) oldExtra.remove();
-            const oldGrid = parent.querySelector('.grid.grid-cols-2'); if (oldGrid) oldGrid.remove();
-            parent.innerHTML += detailsHtml;
-            
-            document.getElementById('inspector-view').classList.add('hidden');
-            document.getElementById('inspection-flow').classList.remove('hidden');
-            document.getElementById('nav-controls').classList.remove('hidden');
-            switchStep(1);
-        }
-
-        function switchStep(step) {
-            document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-step').forEach(n => { n.classList.remove('step-active'); n.classList.add('text-gray-400'); });
-            document.getElementById(`nav-${step}`).classList.add('step-active');
-            currentStep = step;
-            window.scrollTo(0, 0);
-            if (step === 5) updateReport();
-        }
-
-        function nextStep() { if (currentStep < 5) switchStep(currentStep + 1); }
-        function prevStep() { if (currentStep > 1) switchStep(currentStep - 1); }
-
-        function getGPS() {
-            const display = document.getElementById('gps-display');
-            display.innerText = "📡 正在请求高精度位置服务...";
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const gps = `LAT: ${pos.coords.latitude.toFixed(5)} | LON: ${pos.coords.longitude.toFixed(5)}`;
-                    inspectionData.gps = gps;
-                    display.innerText = gps + " (GPS LOCKED)";
-                }, () => { display.innerText = "❌ 定位失败，请开启位置权限"; });
-            }
-        }
-
-        function processImage(input, id) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = new Image();
-                img.onload = () => {
-                    const cvs = document.getElementById('watermarkCanvas');
-                    const ctx = cvs.getContext('2d');
-                    cvs.width = 1280; cvs.height = 960;
-                    const imgRatio = img.width / img.height;
-                    const targetRatio = 1280 / 960;
-                    let sw, sh, sx, sy;
-                    if (imgRatio > targetRatio) { sh = img.height; sw = sh * targetRatio; sx = (img.width - sw) / 2; sy = 0; }
-                    else { sw = img.width; sh = sw / targetRatio; sx = 0; sy = (img.height - sh) / 2; }
-                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 1280, 960);
-                    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 840, 1280, 120);
-                    ctx.fillStyle = "white"; ctx.font = "bold 32px Arial";
-                    ctx.fillText(`ORDER: ${inspectionData.order} | ${new Date().toLocaleString()} | ${inspectionData.gps}`, 50, 910);
-                    const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
-                    document.getElementById(`img-${id}`).src = dataUrl;
-                    document.getElementById(`img-${id}`).classList.remove('hidden');
-                    inspectionData.images[id] = dataUrl;
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-
-        function addPhotoSlot(containerId) {
-            const container = document.getElementById(containerId);
-            const id = 'extra_' + Date.now();
-            const div = document.createElement('div');
-            div.className = "photo-slot text-[8px] text-gray-300";
-            div.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden"><i data-lucide="camera"></i>`;
-            container.appendChild(div);
-            lucide.createIcons();
-        }
-
-        function addDefectRow() {
-            const container = document.getElementById('defect-container');
-            const row = document.createElement('div');
-            row.className = "bg-slate-50 p-5 rounded-3xl flex gap-4 border border-slate-100 shadow-sm";
-            row.innerHTML = `<div class="flex-1 space-y-3"><select class="w-full bg-white p-3 text-xs font-black border-none shadow-sm uppercase tracking-tighter">${defectTerms.map(t => `<option>${t.zh} / ${t.en}</option>`).join('')}</select><div class="flex gap-2"><select class="flex-1 bg-white p-2 text-[10px] font-black border-none shadow-sm uppercase tracking-widest text-blue-600"><option>Major</option><option>Minor</option><option>Critical</option></select><input type="number" class="w-20 bg-white p-2 text-[10px] font-black border-none shadow-sm text-center" placeholder="QTY"></div></div><div class="w-20 h-20 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden group"><input type="file" capture="camera" onchange="processImage(this, 'def_${Date.now()}')" class="absolute inset-0 opacity-0 z-10"><i data-lucide="plus" class="text-slate-200 group-hover:text-blue-500 transition"></i></div>`;
-            container.appendChild(row);
-            lucide.createIcons();
-        }
-
-        function updateReport() {
-            document.getElementById('r-order').innerText = inspectionData.order;
-            document.getElementById('r-factory').innerText = inspectionData.factory;
-            document.getElementById('r-date').innerText = new Date().toLocaleDateString();
-            document.getElementById('r-gps').innerText = inspectionData.gps;
-            const t = inspectionData.task || {};
-            const reportHeader = document.querySelector('#report-canvas .bg-slate-50');
-            reportHeader.innerHTML = `<div class="grid grid-cols-2 gap-x-6 gap-y-2"><p class="font-bold">Order No: <span class="text-blue-700 underline">${t.order || '--'}</span></p><p class="font-bold">Product Type: <span class="text-slate-800">${t.type || '--'}</span></p><p class="font-bold">Style: <span class="text-slate-800">${t.style || '--'}</span></p><p class="font-bold">Quantity: <span class="text-slate-800">${t.qty || '--'}</span></p><p class="font-bold">Stage: <span class="text-slate-800">${t.stage || '--'}</span></p><p class="font-bold">Factory: <span class="text-slate-800">${t.factory || '--'}</span></p><p class="font-bold">Delivery: <span class="text-slate-800">${t.deliveryDate || '--'}</span></p><p class="font-bold">Insp. Date: <span class="text-slate-800">${t.inspectionDate || '--'}</span></p></div><div class="mt-3 pt-3 border-t border-slate-200"><p class="font-bold text-[8px] text-slate-400 uppercase">Special Notes:</p><p class="text-slate-700 italic">${t.notes || 'N/A'}</p></div>`;
-            const preview = document.getElementById('report-photo-preview'); preview.innerHTML = '';
-            Object.keys(inspectionData.images).forEach(id => {
-                const img = document.createElement('img'); img.src = inspectionData.images[id];
-                img.className = "w-full aspect-square object-cover rounded-xl border border-slate-100"; preview.appendChild(img);
-            });
-            document.getElementById('r-sig').src = sigPad.toDataURL();
-        }
-
-        function exportPDF() {
-            const btn = event.currentTarget; btn.innerHTML = '<i class="animate-spin mr-2" data-lucide="loader-2"></i> 正在生成 PDF...'; lucide.createIcons();
-            html2canvas(document.getElementById('report-canvas'), { scale: 3 }).then(cvs => {
-                const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
-                pdf.addImage(cvs.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, (cvs.height * 210) / cvs.width);
-                pdf.save(`ASTON_REPORT_${inspectionData.order}.pdf`);
-                btn.innerHTML = '<i data-lucide="check" class="mr-2"></i> 报告已导出'; lucide.createIcons();
-            });
-        }
-
-        let sigPad, sigCtx, drawing = false;
-        function initSig() {
-            sigPad = document.getElementById('sig-pad'); sigCtx = sigPad.getContext('2d');
             sigPad.width = sigPad.offsetWidth; sigPad.height = sigPad.offsetHeight;
-            sigCtx.lineWidth = 4; sigCtx.strokeStyle = "#1e293b"; sigCtx.lineCap = "round";
-            const getXY = e => { const r = sigPad.getBoundingClientRect(); return [(e.clientX || (e.touches && e.touches[0].clientX)) - r.left, (e.clientY || (e.touches && e.touches[0].clientY)) - r.top]; };
-            const start = e => { drawing = true; sigCtx.beginPath(); sigCtx.moveTo(...getXY(e)); };
-            const move = e => { if (drawing) { e.preventDefault(); sigCtx.lineTo(...getXY(e)); sigCtx.stroke(); } };
-            sigPad.addEventListener('touchstart', start); sigPad.addEventListener('touchmove', move); sigPad.addEventListener('touchend', () => drawing = false);
-            sigPad.addEventListener('mousedown', start); sigPad.addEventListener('mousemove', move); sigPad.addEventListener('mouseup', () => drawing = false);
+            sigPad.addEventListener('mousedown', () => drawing = true);
+            sigPad.addEventListener('mousemove', e => { if(drawing) sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); });
+            sigPad.addEventListener('mouseup', () => drawing = false);
+            sigPad.addEventListener('touchstart', e => { drawing = true; sigCtx.beginPath(); });
+            sigPad.addEventListener('touchmove', e => { if(drawing) { var r = sigPad.getBoundingClientRect(); sigCtx.lineTo(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); sigCtx.stroke(); e.preventDefault(); } });
+            sigPad.addEventListener('touchend', () => drawing = false);
         }
-        function clearSignature() { sigCtx.clearRect(0, 0, sigPad.width, sigPad.height); }
-
-        window.onload = () => { 
-            console.log('Window loaded');
-            const debug = document.getElementById('debug-info');
-            if (debug) debug.innerText = 'System Ready (V4.12)';
-            
-            if (window.lucide) {
-                lucide.createIcons(); 
-            }
-            initSig(); 
-        };
     </script>
 </body>
 </html>
