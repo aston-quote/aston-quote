@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.16 - 极速版</title>
+    <title>ASTON Q.A. V4.18 - 正式完整版</title>
     <!-- 核心库异步化，防止卡死 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
@@ -69,9 +69,45 @@
         function initApp() {
             var debug = document.getElementById('debug-info');
             if (debug) {
-                debug.innerText = 'System Ready (V4.16)';
+                debug.innerText = 'System Ready (V4.18)';
                 debug.style.color = '#10b981';
             }
+            // 尝试初始化 Supabase
+            if (window.supabase) {
+                supabase = supabase.createClient('https://xxx.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
+                document.getElementById('sync-status').innerHTML = '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></div> CLOUD SYNC ACTIVE';
+            }
+            initSig();
+        }
+
+        function updateReport() {
+            const t = inspectionData.task || {};
+            
+            document.getElementById('report-header-info').innerHTML = `
+                <div class="col-span-2 border-b border-slate-200 pb-2 mb-2">
+                    <p class="text-[14px] font-black text-blue-600">ORDER: ${t.order || '--'}</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 w-full">
+                    <p><b>Type:</b> ${t.type || '--'}</p>
+                    <p><b>Style:</b> ${t.style || '--'}</p>
+                    <p><b>Qty:</b> ${t.qty || '--'}</p>
+                    <p><b>Stage:</b> ${t.stage || '--'}</p>
+                    <p><b>Factory:</b> ${t.factory || '--'}</p>
+                    <p><b>Delivery:</b> ${t.deliveryDate || '--'}</p>
+                    <p><b>Insp. Date:</b> ${t.inspectionDate || '--'}</p>
+                    <p><b>GPS:</b> ${inspectionData.gps || 'N/A'}</p>
+                </div>
+                <div class="col-span-2 mt-2 pt-2 border-t text-slate-500 italic">
+                    <b>Special Notes:</b> ${t.notes || 'No special requirements.'}
+                </div>
+            `;
+            const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
+            Object.values(inspectionData.images).forEach(src => {
+                const i = document.createElement('img'); i.src = src; i.className="w-full rounded border"; prev.appendChild(i);
+            });
+            document.getElementById('r-sig').src = sigPad.toDataURL();
+        }
             // 尝试初始化 Supabase
             if (window.supabase) {
                 try {
@@ -555,9 +591,30 @@
         }
 
         function addDefectRow() {
-            const row = document.createElement('div'); row.className="p-3 bg-slate-50 rounded-xl flex gap-2";
-            row.innerHTML = `<select class="flex-1 text-xs border-none bg-white p-2 rounded-lg"><option>色差 Shade</option><option>跳针 Skip</option></select><input type="number" class="w-16 p-2 rounded-lg border-none" placeholder="数量">`;
+            const row = document.createElement('div'); row.className="p-4 bg-slate-50 rounded-2xl flex gap-3 border border-slate-100 items-center";
+            row.innerHTML = `
+                <select class="flex-1 text-xs border-none bg-white p-3 rounded-xl font-bold outline-none">
+                    <option>色差 Shade Variation</option>
+                    <option>跳针 Skip Stitch</option>
+                    <option>污渍 Stain/Dirt</option>
+                    <option>线头 Thread Ends</option>
+                    <option>尺寸超标 Size Out of Tol</option>
+                    <option>破损 Hole/Damage</option>
+                    <option>印刷缺陷 Print Defect</option>
+                    <option>其他 Other</option>
+                </select>
+                <input type="number" class="w-20 p-3 rounded-xl border-none font-black text-center" placeholder="Qty">
+                <button onclick="this.parentElement.remove(); updateDefectCount();" class="text-red-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            `;
             document.getElementById('defect-container').appendChild(row);
+            if (window.lucide) lucide.createIcons();
+            updateDefectCount();
+        }
+
+        function updateDefectCount() {
+            const count = document.getElementById('defect-container').children.length;
+            const el = document.getElementById('defect-count');
+            if (el) el.innerText = count;
         }
 
         function updateReport() {
