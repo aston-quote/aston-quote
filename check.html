@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.26 - 正式完整版</title>
+    <title>ASTON Q.A. V4.28 - 云端同步增强版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -130,13 +130,23 @@
                 <button onclick="assignTask()" class="w-full mt-8 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">确认并下达任务 SEND TASK</button>
             </div>
             <div class="space-y-3 px-2">
-                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">已指派列表 History</h4>
+                <div class="flex justify-between items-center">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">已指派列表 History</h4>
+                    <button onclick="refreshAssignedTasks()" class="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> 刷新 REFRESH
+                    </button>
+                </div>
                 <div id="assigned-task-list" class="space-y-3"></div>
             </div>
         </div>
 
         <div id="inspector-view" class="p-4 space-y-4 hidden">
-            <h2 class="text-2xl font-black text-slate-800 px-2">我的任务 My Tasks - <span id="inspector-display-name">--</span></h2>
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-2xl font-black text-slate-800">我的任务 My Tasks - <span id="inspector-display-name">--</span></h2>
+                <button onclick="refreshInspectorTasks()" class="p-2 bg-blue-600 text-white rounded-full shadow-lg active:rotate-180 transition-all">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
+            </div>
             <div id="inspector-task-list" class="space-y-4"></div>
         </div>
 
@@ -273,48 +283,107 @@
                 creator: currentUser,
                 created_at: new Date().toISOString()
             };
-            if (!task.order || !task.factory) return alert('Fill Order & Factory');
-            if (supabase) await supabase.from('aston_tasks').insert([task]);
-            let tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
-            tasks.push(task); localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-            alert('Success!'); refreshAssignedTasks();
+            if (!task.order || !task.factory) return alert('请填写订单号和工厂');
+            
+            let syncSuccess = false;
+            if (supabase) {
+                try { 
+                    const { error } = await supabase.from('aston_tasks').insert([task]);
+                    if (error) throw error;
+                    syncSuccess = true;
+                } catch(e) { 
+                    console.error('Supabase Insert Error:', e);
+                    alert('云端同步失败，已保存至本地: ' + e.message);
+                }
+            }
+            
+            let localTasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            localTasks.push({...task, _isLocal: !syncSuccess});
+            localStorage.setItem('aston_tasks', JSON.stringify(localTasks));
+            
+            alert(syncSuccess ? '任务已下达并同步！ Task Synced!' : '任务已保存至本地 Local Saved!');
+            refreshAssignedTasks();
         }
 
         async function refreshAssignedTasks() {
             let tasks = [];
             if (supabase) {
-                const { data } = await supabase.from('aston_tasks').select('*').eq('creator', currentUser).order('created_at', { ascending: false });
-                if (data) tasks = data;
-            } else {
+                try {
+                    const { data, error } = await supabase.from('aston_tasks').select('*').eq('creator', currentUser).order('created_at', { ascending: false });
+                    if (!error && data) tasks = data;
+                } catch(e) { console.error(e); }
+            }
+            // If cloud empty/failed, use local as fallback
+            if (tasks.length === 0) {
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse();
             }
+            
             document.getElementById('assigned-task-list').innerHTML = tasks.map(t => `
-                <div class="bg-white p-4 rounded-2xl border flex justify-between">
-                    <div><b>${t.order}</b><br><span class="text-[8px]">${t.factory}</span></div>
-                    <span class="text-blue-600 text-[10px] font-black">${t.status}</span>
+                <div class="bg-white p-4 rounded-2xl border flex justify-between items-center shadow-sm">
+                    <div>
+                        <div class="text-[10px] font-black text-blue-600 uppercase">${t.type}</div>
+                        <div class="font-black text-sm">${t.order}</div>
+                        <div class="text-[8px] text-slate-400 font-bold">${t.factory} | 指派给: ${t.inspector.replace('Inspector_', '')}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-black px-2 py-1 rounded bg-blue-50 text-blue-600">${t.status}</span>
+                        <div class="text-[8px] text-slate-300 mt-1 font-mono">${t.id ? '☁️ 云端' : '🏠 本地'}</div>
+                    </div>
                 </div>
             `).join('');
         }
 
-        var currentTasks = [];
         async function refreshInspectorTasks() {
+            console.log('Refreshing tasks for:', currentUser);
             let tasks = [];
+            const debug = document.getElementById('debug-info');
+            
             if (supabase) {
-                const { data } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false });
-                if (data) tasks = data;
-            } else {
+                try {
+                    const { data, error } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false });
+                    if (error) throw error;
+                    if (data) tasks = data;
+                    if (debug) debug.innerText = 'Cloud Synced: ' + tasks.length + ' tasks';
+                } catch(e) {
+                    console.error('Supabase Fetch Error:', e);
+                    if (debug) debug.innerText = 'Sync Error: ' + e.message;
+                }
+            }
+            
+            // Fallback to local
+            if (tasks.length === 0) {
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
             }
+            
             currentTasks = tasks;
-            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, index) => `
-                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 border-blue-600">
-                    <div class="flex justify-between">
-                        <h4 class="text-xl font-black">${t.order}</h4>
-                        <span class="text-[10px] text-amber-500 font-black">${t.status}</span>
+            const container = document.getElementById('inspector-task-list');
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="p-12 text-center text-slate-400 text-xs font-bold bg-white rounded-[2rem] border-2 border-dashed">暂无指派任务<br>NO ASSIGNED TASKS</div>`;
+                return;
+            }
+            
+            container.innerHTML = tasks.map((t, index) => `
+                <div onclick="startInspectionByIndex(${index})" class="bg-white p-6 rounded-[2rem] shadow-sm border-l-8 ${t.status === 'COMPLETED' ? 'border-emerald-500' : 'border-blue-600'} active:scale-[0.98] transition-all space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase">${t.type || 'Bulk'}</span>
+                            <h4 class="text-xl font-black text-slate-800 mt-1">${t.order}</h4>
+                        </div>
+                        <span class="text-[10px] font-black ${t.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}">${t.status}</span>
                     </div>
-                    <p class="text-[10px] text-slate-400 font-bold">${t.factory} - ${t.style || '--'}</p>
+                    <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
+                        <div>工厂: ${t.factory}</div>
+                        <div>款式: ${t.style || '--'}</div>
+                        <div>数量: ${t.qty || '--'}</div>
+                        <div>交期: ${t.deliveryDate || '--'}</div>
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <button class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase">开始检验 START</button>
+                        <div class="ml-3 text-[10px]">${t.id ? '☁️' : '🏠'}</div>
+                    </div>
                 </div>
             `).join('');
+            if (window.lucide) lucide.createIcons();
         }
 
         function startInspectionByIndex(idx) {
