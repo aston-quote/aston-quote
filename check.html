@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.54 - 系统加载优化版</title>
+    <title>ASTON Q.A. V4.55 - 强力初始化修复版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -21,6 +21,14 @@
         .task-card:active { transform: scale(0.98); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
+    <!-- 将核心脚本移至 head 底部并增加错误捕捉 -->
+    <script>
+        window.onerror = function(msg, url, line) {
+            var d = document.getElementById('debug-info');
+            if (d) { d.innerText = "Fatal: " + msg + " (L" + line + ")"; d.style.color = "#f87171"; }
+            return false;
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -33,7 +41,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.54</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.55</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -755,8 +763,8 @@
         }
 
         function initApp() {
-            const d = document.getElementById('debug-info');
-            if (d) { d.innerText = 'Ready V4.54'; d.style.color = '#10b981'; }
+            var d = document.getElementById('debug-info');
+            if (d) { d.innerText = 'Ready V4.55'; d.style.color = '#10b981'; }
             console.log("App Initializing...");
             try {
                 if (window.supabase) {
@@ -770,10 +778,20 @@
                 if (d) d.innerText = 'Init Warning: ' + e.message;
             }
         }
-        // 使用更快的 DOMContentLoaded 替代 window.onload
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initApp, 100);
-        });
+        // 使用多重启动机制，确保万无一失
+        (function() {
+            var retryCount = 0;
+            var checkReady = setInterval(function() {
+                var d = document.getElementById('debug-info');
+                if (d) {
+                    clearInterval(checkReady);
+                    initApp();
+                } else if (retryCount > 50) { // 5秒后强制停止
+                    clearInterval(checkReady);
+                }
+                retryCount++;
+            }, 100);
+        })();
     </script>
 </body>
 </html>
