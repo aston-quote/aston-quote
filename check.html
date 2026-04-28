@@ -3,55 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.40 - 专业检验全流程版</title>
+    <title>ASTON Q.A. V4.42 - 业务流程标准化版</title>
+    <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
+        .hidden { display: none !important; }
+        #login-view { position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; color: white; padding: 20px; text-align: center; }
+        .login-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; }
+        .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
+        .input-dark { background: #1e293b; border: none; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .photo-slot { aspect-ratio: 4/3; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .photo-slot img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .step-nav-btn { flex: 1; padding: 10px 5px; font-size: 10px; font-weight: 900; background: white; border: none; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .step-active { background: #1d4ed8 !important; color: white !important; }
+        .step-done { background: #10b981 !important; color: white !important; }
+        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; }
+    </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .photo-slot { aspect-ratio: 4/3; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 1.5rem; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
-        .step-active { background: #1d4ed8 !important; color: white !important; border-radius: 999px; }
-        .step-done { background: #10b981 !important; color: white !important; border-radius: 999px; }
-        input, select, textarea { outline: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body>
 
-    <div id="login-view" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100] p-6 overflow-y-auto">
-        <div class="w-full max-w-md space-y-8 py-12">
-            <div class="text-center text-white">
-                <div class="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center shadow-2xl shadow-blue-500/40 mb-6">
-                    <i data-lucide="shield-check" class="w-10 h-10 text-white"></i>
-                </div>
-                <h2 class="text-3xl font-black tracking-tighter">ASTON Q.A.</h2>
-                <p class="text-slate-400 text-sm mt-2 font-medium uppercase tracking-widest">Quality Assurance System V4.40</p>
-            </div>
-            <div class="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl space-y-6">
-                <div id="debug-info" class="text-[10px] text-blue-400 font-mono text-center">System Initializing...</div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">用户账号 User ID</label>
-                    <select id="login-id" onchange="autoSetRole()" class="w-full bg-slate-800 border-none p-4 text-white appearance-none rounded-2xl">
-                        <option value="">请选择账号 Select Account</option>
-                        <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
-                        <option value="Inspector_Li">李检验员 (Li)</option>
-                        <option value="Inspector_Zhang">张检验员 (Zhang)</option>
-                        <option value="Inspector_Wang">王检验员 (Wang)</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">角色权限 Role</label>
-                    <select id="login-role" class="w-full bg-slate-800 border-none p-4 text-white appearance-none rounded-2xl">
-                        <option value="merchandiser">跟单员 (Merchandiser)</option>
-                        <option value="inspector">检验员 (Inspector)</option>
-                    </select>
-                </div>
-                <button onclick="login()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all">进入系统 Login</button>
-            </div>
+    <!-- Login View -->
+    <div id="login-view">
+        <div class="login-card">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.42</p>
+            <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
+            <select id="login-id" onchange="autoSetRole()" class="input-dark">
+                <option value="">请选择账号 Select Account</option>
+                <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
+                <option value="Inspector_Li">李检验员 (Li)</option>
+                <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                <option value="Inspector_Wang">王检验员 (Wang)</option>
+            </select>
+            <select id="login-role" class="input-dark">
+                <option value="merchandiser">跟单员 (Merchandiser)</option>
+                <option value="inspector">检验员 (Inspector)</option>
+            </select>
+            <button onclick="login()" class="btn-blue">进入系统 Login</button>
         </div>
     </div>
 
@@ -69,289 +62,174 @@
     </header>
 
     <main id="app-content">
-        <div id="task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 hidden">
-            <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center">
-                    <h3 id="modal-title" class="text-xl font-black text-slate-800">任务详情 Task Details</h3>
-                    <button onclick="closeModal()" class="p-2 bg-slate-100 rounded-full">×</button>
-                </div>
-                <div id="modal-content" class="space-y-4"></div>
-                <div id="modal-footer" class="pt-4 flex gap-3"></div>
-            </div>
-        </div>
-
+        <!-- Merchandiser View -->
         <div id="merch-view" class="p-4 space-y-4 hidden">
             <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
-                <h3 class="font-black text-gray-800 flex items-center mb-6 text-lg">
-                    <i data-lucide="send" class="w-5 h-5 mr-2 text-blue-600"></i>
-                    下达检验任务 Assign Task
-                </h3>
+                <h3 class="font-black text-gray-800 flex items-center mb-6 text-lg">下达检验计划 Assign Plan</h3>
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">产品类型 Product Type</label>
-                        <select id="new-type" class="w-full bg-transparent border-none font-black text-sm outline-none">
-                            <option>大货成品 Bulk</option>
-                            <option>外购成品 Outsourced</option>
-                            <option>外购面料 Fabric</option>
-                            <option>外购辅料 Accessories</option>
-                        </select>
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl">
+                        <label class="text-[10px] font-black text-slate-400 uppercase">产品类型 Type</label>
+                        <select id="new-type" class="w-full bg-transparent border-none font-black text-sm"><option>大货成品 Bulk</option><option>外购成品 Outsourced</option><option>面料 Fabric</option></select>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">订单号 Order No</label>
-                        <input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="PO#">
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">款式 Style</label>
-                        <input type="text" id="new-style" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="Style">
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">数量 Qty</label>
-                        <input type="text" id="new-qty" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="1000pcs">
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">检验阶段 Stage</label>
-                        <select id="new-stage" class="w-full bg-transparent border-none font-black text-sm outline-none">
-                            <option>尾期检验 Final</option>
-                            <option>中期检验 Mid-term</option>
-                        </select>
-                    </div>
-                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">工厂 Factory</label>
-                        <input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm outline-none" placeholder="Factory">
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">合同交期 Delivery</label>
-                        <input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-black text-sm outline-none">
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">指派检验日期 Insp. Date</label>
-                        <input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm outline-none">
-                    </div>
-                    <div class="col-span-2 bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                        <label class="text-[10px] font-black text-amber-600 uppercase tracking-widest">注意事项 Special Notes</label>
-                        <textarea id="new-notes" class="w-full bg-transparent border-none font-bold text-xs h-16 outline-none" placeholder="Notes..."></textarea>
-                    </div>
-                    <div class="col-span-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">参考照片 Reference Photo</label>
-                        <div class="photo-slot border-blue-200 bg-blue-50/30">
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">订单号 PO#</label><input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm" placeholder="Order#"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">数量 Qty</label><input type="number" id="new-qty" class="w-full bg-transparent border-none font-black text-sm" placeholder="1000"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">工厂 Factory</label><input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm" placeholder="Factory"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">检验日 Date</label><input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">款式样照 (规范显示) Style Photo</label>
+                        <div class="photo-slot border-blue-200 bg-blue-50/20">
                             <input type="file" accept="image/*" onchange="processReferenceImage(this)" class="absolute inset-0 opacity-0 z-10">
-                            <div id="ref-photo-placeholder" class="text-center">
-                                <i data-lucide="image-plus" class="w-6 h-6 mx-auto text-blue-400 mb-1"></i>
-                                <p class="text-[8px] font-black text-blue-400 uppercase">点击上传产品样照<br>CLICK TO UPLOAD</p>
-                            </div>
-                            <img id="ref-photo-preview" class="hidden w-full h-full object-cover">
+                            <div id="ref-photo-placeholder" class="text-center"><p class="text-[10px] font-black text-blue-400">点击上传样照<br>UPLOAD PHOTO</p></div>
+                            <img id="ref-photo-preview" class="hidden w-full h-full">
                         </div>
                     </div>
                     <div class="col-span-2 bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                        <label class="text-[10px] font-black text-blue-600 uppercase tracking-widest">指派检验员 Inspector</label>
-                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm outline-none">
-                            <option value="Inspector_Li">李检验员 (Li)</option>
-                            <option value="Inspector_Zhang">张检验员 (Zhang)</option>
-                            <option value="Inspector_Wang">王检验员 (Wang)</option>
-                        </select>
+                        <label class="text-[10px] font-black text-blue-600 uppercase">指派检验员 Inspector</label>
+                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm"><option value="Inspector_Li">李检验员 (Li)</option><option value="Inspector_Zhang">张检验员 (Zhang)</option></select>
                     </div>
                 </div>
-                <button onclick="assignTask()" class="w-full mt-8 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">确认并下达任务 SEND TASK</button>
+                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase">发送计划 SEND PLAN</button>
             </div>
-            <div class="space-y-3 px-2">
-                <div class="flex justify-between items-center">
-                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">已指派列表 History</h4>
-                    <button onclick="refreshAssignedTasks()" class="text-[10px] font-black text-blue-600 uppercase flex items-center gap-1">
-                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> 刷新 REFRESH
-                    </button>
-                </div>
-                <div id="assigned-task-list" class="space-y-3"></div>
-            </div>
+            <div id="assigned-task-list" class="space-y-3"></div>
         </div>
 
+        <!-- Inspector View -->
         <div id="inspector-view" class="p-4 space-y-4 hidden">
-            <div class="flex justify-between items-center px-2">
-                <h2 class="text-2xl font-black text-slate-800">我的任务 My Tasks - <span id="inspector-display-name">--</span></h2>
-                <button onclick="refreshInspectorTasks()" class="p-2 bg-blue-600 text-white rounded-full shadow-lg active:rotate-180 transition-all">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                </button>
-            </div>
+            <h2 class="text-2xl font-black text-slate-800">我的任务 My Tasks</h2>
             <div id="inspector-task-list" class="space-y-4"></div>
         </div>
 
+        <!-- Inspection Flow -->
         <div id="inspection-flow" class="hidden">
             <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto no-scrollbar">
-                <button onclick="switchStep(1)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black step-active transition-all" id="nav-1">1. 签到<br>SIGN-IN</button>
-                <button onclick="switchStep(2)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-2">2. 环境<br>ENV</button>
-                <button onclick="switchStep(3)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-3">3. 抽样<br>SAMPLE</button>
-                <button onclick="switchStep(4)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-4">4. 拍照<br>PHOTO</button>
-                <button onclick="switchStep(5)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-5">5. 尺寸<br>SIZE</button>
-                <button onclick="switchStep(6)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-6">6. 检验<br>DEFECTS</button>
-                <button onclick="switchStep(7)" class="nav-step flex-1 py-4 px-2 text-[9px] font-black text-slate-400 transition-all" id="nav-7">7. 报告<br>REPORT</button>
+                <button onclick="switchStep(1)" class="step-nav-btn step-active" id="nav-1">1. 签到<br>SIGN</button>
+                <button onclick="switchStep(2)" class="step-nav-btn" id="nav-2">2. 环境<br>ENV</button>
+                <button onclick="switchStep(3)" class="step-nav-btn" id="nav-3">3. 抽样<br>AQL</button>
+                <button onclick="switchStep(4)" class="step-nav-btn" id="nav-4">4. 拍照<br>PHOTO</button>
+                <button onclick="switchStep(5)" class="step-nav-btn" id="nav-5">5. 尺寸<br>SIZE</button>
+                <button onclick="switchStep(6)" class="step-nav-btn" id="nav-6">6. 检验<br>DEFECT</button>
+                <button onclick="switchStep(7)" class="step-nav-btn" id="nav-7">7. 报告<br>REPORT</button>
             </nav>
+
             <div class="p-4 pb-32">
                 <!-- Step 1: Sign-in -->
                 <section id="step-1" class="step-content">
-                    <div class="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 space-y-6">
-                        <div class="flex justify-between items-start border-b pb-4">
-                            <div>
-                                <span id="info-type" class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase">Bulk</span>
-                                <h3 id="info-order" class="text-3xl font-black mt-2">--</h3>
-                            </div>
-                        </div>
+                    <div class="bg-white rounded-[2rem] p-8 shadow-sm space-y-6">
+                        <h3 class="text-3xl font-black">签到 Sign-in</h3>
                         <div class="photo-slot border-blue-200">
                             <input type="file" capture="camera" onchange="processImage(this, 'g0_gate')" class="absolute inset-0 opacity-0 z-10">
-                            <div id="gate-placeholder" class="text-center">
-                                <i data-lucide="camera" class="w-6 h-6 mx-auto text-blue-400 mb-1"></i>
-                                <p class="text-[8px] font-black text-blue-400">拍摄工厂大门拍照<br>PHOTO AT GATE</p>
-                            </div>
+                            <div id="gate-placeholder" class="text-center font-black text-blue-400">拍摄工厂大门<br>PHOTO AT GATE</div>
                             <img id="img-g0_gate" class="hidden">
                         </div>
-                        <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase shadow-xl flex items-center justify-center gap-2">
-                            <i data-lucide="map-pin" class="w-5 h-5"></i> 获取 GPS 签到 CHECK-IN
-                        </button>
-                        <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位 (Not Located)</p>
+                        <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase">GPS 签到 CHECK-IN</button>
+                        <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位</p>
                     </div>
                 </section>
 
                 <!-- Step 2: Environment -->
                 <section id="step-2" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-[2rem] p-6 space-y-6 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-xs uppercase">G0: 生产环境 (2-5张) ENVIRONMENT</h4>
-                        <div class="grid grid-cols-2 gap-3" id="env-photos-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_1" class="hidden">车间 1</div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_2" class="hidden">车间 2</div>
+                    <div class="bg-white rounded-[2rem] p-6 space-y-6">
+                        <h4 class="font-black text-xs uppercase">工厂环境照片 (2-5张)</h4>
+                        <div class="grid grid-cols-2 gap-3" id="env-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_1" class="hidden">场景 1</div>
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_2" class="hidden">场景 2</div>
                         </div>
-                        <button onclick="addPhotoSlot('env-photos-container', 'env')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[10px] font-black uppercase">+ 增加环境照片 ADD</button>
+                        <button onclick="addPhotoSlot('env-container', 'env')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[10px] font-black">+ ADD PHOTO</button>
                         <div class="space-y-3 pt-4 border-t">
-                            <div class="bg-slate-50 p-4 rounded-2xl">
-                                <label class="text-[10px] font-black text-slate-400 uppercase">流水人数 Sewing Lines Staff</label>
-                                <input type="number" id="env-staff" class="w-full bg-transparent border-none font-black text-sm" placeholder="100">
-                            </div>
-                            <div class="bg-slate-50 p-4 rounded-2xl">
-                                <label class="text-[10px] font-black text-slate-400 uppercase">做货人数 Workers on Our Order</label>
-                                <input type="number" id="env-workers" class="w-full bg-transparent border-none font-black text-sm" placeholder="20">
-                            </div>
-                            <div class="bg-slate-50 p-4 rounded-2xl">
-                                <label class="text-[10px] font-black text-slate-400 uppercase">工厂情况 Factory Overview</label>
-                                <textarea id="env-desc" class="w-full bg-transparent border-none font-bold text-xs h-16" placeholder="工厂规模、设备等..."></textarea>
-                            </div>
+                            <input type="number" id="env-staff" class="w-full bg-slate-50 p-4 rounded-2xl font-black text-sm" placeholder="流水总人数 Staff Count">
+                            <input type="number" id="env-workers" class="w-full bg-slate-50 p-4 rounded-2xl font-black text-sm" placeholder="做货人数 Workers on Order">
+                            <textarea id="env-desc" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-xs h-24" placeholder="工厂规模、设备等概况说明..."></textarea>
                         </div>
                     </div>
                 </section>
 
                 <!-- Step 3: Sampling -->
                 <section id="step-3" class="step-content hidden">
-                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6 border border-slate-100 shadow-sm">
-                        <h3 class="font-black text-slate-800 text-lg uppercase tracking-widest">抽样方案 Sampling</h3>
+                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6">
+                        <h3 class="font-black text-lg">AQL 2.5 抽样标准 (二级)</h3>
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-                                <p class="text-[10px] font-black text-blue-400 uppercase">抽样数量 SAMPLE SIZE</p>
-                                <p id="aql-size" class="text-4xl font-black text-blue-700 mt-2">80</p>
-                                <p class="text-[8px] font-black text-slate-400 mt-1 uppercase italic">(AQL 2.5 LEVEL II)</p>
-                            </div>
-                            <div class="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-                                <p class="text-[10px] font-black text-emerald-400 uppercase">AC / RE</p>
-                                <p id="aql-ac-re" class="text-4xl font-black text-emerald-600 mt-2">5/6</p>
-                                <p class="text-[8px] font-black text-slate-400 mt-1 uppercase italic">次品标准 Defect Limit</p>
-                            </div>
+                            <div class="bg-blue-50 p-6 rounded-3xl"><p class="text-[10px] font-black">抽样数量</p><p id="aql-size" class="text-4xl font-black text-blue-700">--</p></div>
+                            <div class="bg-emerald-50 p-6 rounded-3xl"><p class="text-[10px] font-black">AC / RE</p><p id="aql-ac-re" class="text-4xl font-black text-emerald-600">--</p></div>
                         </div>
-                        <div class="text-[10px] font-bold text-slate-400 bg-slate-50 p-4 rounded-2xl leading-relaxed">
-                            系统已根据订单数量自动计算 AQL 2.5 (General Level II) 抽样样本。<br>
-                            Sample size is auto-calculated based on AQL 2.5 standards.
-                        </div>
+                        <p class="text-[10px] font-bold text-slate-400 italic">次品超过拒收数则整单拒收。</p>
                     </div>
                 </section>
 
                 <!-- Step 4: Photos -->
                 <section id="step-4" class="step-content hidden space-y-6">
-                    <!-- G1: Main -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G1: 平铺照片 (正/反/里) MAIN PHOTOS</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g1-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_front')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_front" class="hidden">正面 FRONT</div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_back')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_back" class="hidden">背面 BACK</div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_inside')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_inside" class="hidden">内部 INSIDE</div>
+                    <div class="bg-white rounded-[2.5rem] p-6 space-y-8">
+                        <div class="space-y-3">
+                            <h5 class="font-black text-[10px] text-slate-400">第一组: 正/反/里平铺 MAIN</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g1-container">
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_f')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_f" class="hidden">正面</div>
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_b')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_b" class="hidden">反面</div>
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_i')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_i" class="hidden">内里</div>
+                            </div>
                         </div>
-                        <button onclick="addPhotoSlot('g1-container', 'g1')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
-                    </div>
-
-                    <!-- G2: Colors/Prints -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G2: 颜色/印花平铺 COLORS & PRINTS</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g2-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g2_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g2_1" class="hidden">Photo 1</div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400">第二组: 颜色/印花平铺 COLORS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g2-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g2_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g2_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g2-container', 'g2')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
-                        <button onclick="addPhotoSlot('g2-container', 'g2')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
-                    </div>
-
-                    <!-- G3: Sizes -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G3: 尺码平铺 SIZES</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g3-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g3_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g3_1" class="hidden">Photo 1</div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400">第三组: 尺码平铺 SIZES</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g3-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g3_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g3_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g3-container', 'g3')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
-                        <button onclick="addPhotoSlot('g3-container', 'g3')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
-                    </div>
-
-                    <!-- G4: Labels -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G4: 水洗标/LOGO标 (必拍完整) LABELS</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g4-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g4_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g4_1" class="hidden">Care Label 1</div>
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g4_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-g4_2" class="hidden">Logo 1</div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400">第四组: 水洗标/LOGO标 (必拍完整) LABELS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g4-container">
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g4_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g4_1" class="hidden">照片 1</div>
+                            </div>
+                            <button onclick="addPhotoSlot('g4-container', 'g4')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
-                        <button onclick="addPhotoSlot('g4-container', 'g4')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
-                    </div>
-
-                    <!-- G5: Trims/Match -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G5: 对色照 (线/螺纹/腰绳) COLOR MATCH</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g5-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g5_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g5_1" class="hidden">Match 1</div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400">第五组: 对色照片 (线/螺纹/腰绳) MATCH</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g5-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g5_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g5_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g5-container', 'g5')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
-                        <button onclick="addPhotoSlot('g5-container', 'g5')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
-                    </div>
-
-                    <!-- G6: Special Crafts -->
-                    <div class="bg-white rounded-[2rem] p-6 space-y-4 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-[10px] uppercase text-slate-400">G6: 印花/绣花细节 SPECIAL CRAFTS</h4>
-                        <div class="grid grid-cols-2 gap-3" id="g6-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g6_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g6_1" class="hidden">Detail 1</div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400">第六组: 工艺细节 (印绣花等) DETAILS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g6-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g6_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g6_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g6-container', 'g6')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
-                        <button onclick="addPhotoSlot('g6-container', 'g6')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[8px] font-black">+ ADD</button>
                     </div>
                 </section>
 
-                <!-- Step 5: Size Measurement -->
+                <!-- Step 5: Size -->
                 <section id="step-5" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-slate-800 text-lg uppercase">尺寸测量 SIZE MEASUREMENT</h4>
-                        <p class="text-[10px] font-bold text-slate-400">请拍摄尺寸测试手写结果照片：</p>
-                        <div class="grid grid-cols-2 gap-3" id="size-photos-container">
-                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'size_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-size_1" class="hidden">结果 1</div>
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">尺寸测量 SIZE</h4>
+                        <p class="text-[10px] font-bold text-slate-400">拍摄尺寸测试手写结果照片：</p>
+                        <div class="grid grid-cols-2 gap-3" id="size-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'sz_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-sz_1" class="hidden">照片 1</div>
                         </div>
-                        <button onclick="addPhotoSlot('size-photos-container', 'size')" class="w-full py-5 border-2 border-dashed border-slate-200 text-blue-600 font-black rounded-3xl text-xs">+ 增加测量照片 ADD SIZE PHOTO</button>
+                        <button onclick="addPhotoSlot('size-container', 'sz')" class="w-full py-3 border-2 border-dashed rounded-2xl text-[10px] font-black">+ ADD PHOTO</button>
                     </div>
                 </section>
 
                 <!-- Step 6: Defects -->
                 <section id="step-6" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
-                        <div class="flex justify-between items-end border-b pb-4"><h4 class="font-black text-slate-800 text-lg uppercase">疵点记录 DEFECTS</h4><span id="defect-count" class="text-blue-600 font-black">0</span></div>
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">疵点记录 DEFECTS</h4>
                         <div id="defect-container" class="space-y-3"></div>
-                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-slate-200 text-blue-600 font-black rounded-3xl">+ ADD DEFECT ITEM</button>
+                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-blue-200 text-blue-600 font-black rounded-3xl">+ ADD DEFECT</button>
                     </div>
                 </section>
 
                 <!-- Step 7: Report -->
                 <section id="step-7" class="step-content hidden space-y-4">
-                    <div class="bg-white rounded-[2rem] p-8 space-y-6 border border-slate-100 shadow-sm">
-                        <h4 class="font-black text-slate-800 text-lg uppercase">核对报告 REVIEW</h4>
-                        <div id="report-canvas" class="bg-white p-4 border shadow-sm space-y-4 text-[10px]">
-                            <div id="report-header-info"></div>
-                            <div id="report-photo-preview" class="grid grid-cols-2 gap-1"></div>
-                            <div class="border-t pt-4">
-                                <p class="font-black uppercase mb-2">签名 Signature:</p>
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">导出报告 REPORT</h4>
+                        <div id="report-canvas" class="bg-white p-4 border text-[10px] space-y-4">
+                            <div id="report-header"></div>
+                            <div id="report-photos" class="grid grid-cols-2 gap-1"></div>
+                            <div class="border-t pt-2">
+                                <p class="font-black uppercase">Signature:</p>
                                 <canvas id="sig-pad" class="w-full h-32 bg-slate-50 border rounded-xl"></canvas>
                             </div>
                         </div>
-                        <button onclick="exportPDF()" class="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase shadow-xl">导出 PDF 报告 EXPORT REPORT</button>
+                        <button onclick="exportPDF()" class="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase shadow-xl">完成并导出 PDF</button>
                     </div>
                 </section>
             </div>
@@ -360,9 +238,8 @@
 
     <script>
         var currentUser = ''; var currentRole = ''; var currentStep = 1; var supabase = null;
-        var inspectionData = { order: '', factory: '', gps: '', images: {}, defects: [], stepsCompleted: [] };
-        var merchandiserTasks = []; var inspectorTasks = [];
-        var referencePhotoData = '';
+        var inspectionData = { order: '', factory: '', images: {}, defects: [], stepsCompleted: [] };
+        var merchandiserTasks = []; var inspectorTasks = []; var referencePhotoData = '';
 
         function autoSetRole() {
             const id = document.getElementById('login-id').value;
@@ -375,8 +252,8 @@
             const reader = new FileReader();
             reader.onload = e => {
                 referencePhotoData = e.target.result;
-                const preview = document.getElementById('ref-photo-preview');
-                preview.src = e.target.result; preview.classList.remove('hidden');
+                const p = document.getElementById('ref-photo-preview');
+                p.src = e.target.result; p.classList.remove('hidden');
                 document.getElementById('ref-photo-placeholder').classList.add('hidden');
             };
             reader.readAsDataURL(input.files[0]);
@@ -397,7 +274,6 @@
 
         function showMerchDashboard() {
             document.getElementById('merch-view').classList.remove('hidden');
-            document.getElementById('user-display-name').innerText = currentUser;
             refreshAssignedTasks();
         }
 
@@ -408,32 +284,21 @@
         }
 
         async function assignTask() {
-            const task = {
+            const t = {
                 order: document.getElementById('new-order-no').value,
                 type: document.getElementById('new-type').value,
-                style: document.getElementById('new-style').value,
                 qty: document.getElementById('new-qty').value,
-                stage: document.getElementById('new-stage').value,
                 factory: document.getElementById('new-factory').value,
-                deliveryDate: document.getElementById('new-delivery-date').value,
                 inspectionDate: document.getElementById('new-inspection-date').value,
-                notes: document.getElementById('new-notes').value,
-                inspector: document.getElementById('assign-user').value,
                 referencePhoto: referencePhotoData,
-                status: 'PENDING',
-                creator: currentUser,
-                created_at: new Date().toISOString()
+                inspector: document.getElementById('assign-user').value,
+                status: 'PENDING', created_at: new Date().toISOString(), creator: currentUser
             };
-            if (!task.order || !task.factory) return alert('Fill Order & Factory');
-            if (supabase) await supabase.from('aston_tasks').insert([task]);
-            let tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
-            tasks.push(task); localStorage.setItem('aston_tasks', JSON.stringify(tasks));
-            alert('Success!');
-            document.querySelectorAll('#merch-view input, #merch-view textarea').forEach(i => i.value = '');
-            referencePhotoData = '';
-            document.getElementById('ref-photo-preview').classList.add('hidden');
-            document.getElementById('ref-photo-placeholder').classList.remove('hidden');
-            refreshAssignedTasks();
+            if (!t.order || !t.factory) return alert('Fill Form');
+            if (supabase) await supabase.from('aston_tasks').insert([t]);
+            let ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            ts.push(t); localStorage.setItem('aston_tasks', JSON.stringify(ts));
+            alert('Success!'); refreshAssignedTasks();
         }
 
         async function refreshAssignedTasks() {
@@ -445,18 +310,13 @@
                 tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse();
             }
             merchandiserTasks = tasks;
-            document.getElementById('assigned-task-list').innerHTML = tasks.map((t, idx) => `
-                <div class="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
-                    ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-16 h-16 rounded-xl object-cover">` : `<div class="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center">?</div>`}
-                    <div class="flex-1">
-                        <div class="text-[10px] font-black text-blue-600 uppercase">${t.type}</div>
-                        <div class="font-black text-sm">${t.order}</div>
-                        <div class="text-[8px] text-slate-400 font-bold">${t.factory}</div>
-                    </div>
-                    <button onclick="previewTask(${idx}, 'merch')" class="p-3 bg-slate-50 rounded-xl"><i data-lucide="eye" class="w-4 h-4 text-slate-400"></i></button>
+            document.getElementById('assigned-task-list').innerHTML = tasks.map(t => `
+                <div class="bg-white p-4 rounded-2xl border flex items-center gap-3">
+                    ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-12 h-12 rounded-lg object-contain bg-slate-100">` : `<div class="w-12 h-12 bg-slate-100 rounded-lg"></div>`}
+                    <div class="flex-1 font-black text-xs">${t.order}<br><span class="text-[8px] text-slate-400 font-bold">${t.factory}</span></div>
+                    <span class="text-blue-600 text-[10px] font-black">${t.status}</span>
                 </div>
             `).join('');
-            if (window.lucide) lucide.createIcons();
         }
 
         async function refreshInspectorTasks() {
@@ -469,85 +329,61 @@
             }
             inspectorTasks = tasks;
             const now = new Date();
-            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, index) => {
+            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, idx) => {
                 let timeClass = "text-emerald-500"; let timeText = "Waiting";
                 if (t.inspectionDate) {
-                    const diff = Math.ceil((new Date(t.inspectionDate) - now) / (86400000));
+                    const diff = Math.ceil((new Date(t.inspectionDate) - now) / 86400000);
                     if (diff < 0) { timeClass = "text-red-500 animate-pulse"; timeText = `OVERDUE ${Math.abs(diff)}D`; }
                     else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; }
-                    else { timeText = `${diff} DAYS LEFT`; }
+                    else timeText = `${diff} DAYS LEFT`;
                 }
                 return `
-                <div class="bg-white p-0 rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="flex">
-                        ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-24 h-24 object-cover">` : `<div class="w-24 h-24 bg-slate-100"></div>`}
-                        <div class="p-4 flex-1">
-                            <div class="flex justify-between"><h4 class="font-black text-lg">${t.order}</h4><span class="${timeClass} text-[8px] font-black">${timeText}</span></div>
-                            <p class="text-[9px] font-bold text-slate-500 uppercase mt-1">${t.factory} | Qty: ${t.qty || '--'}</p>
+                <div class="task-card">
+                    <div class="flex p-4 gap-4">
+                        ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-20 h-20 rounded-2xl object-contain bg-slate-50 border">` : `<div class="w-20 h-20 bg-slate-100 rounded-2xl"></div>`}
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start"><h4 class="font-black text-lg leading-none">${t.order}</h4><span class="${timeClass} text-[8px] font-black">${timeText}</span></div>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-2">${t.factory} | Qty: ${t.qty}</p>
                         </div>
                     </div>
-                    <div class="p-4 pt-0 flex gap-2">
-                        <button onclick="previewTask(${index}, 'inspector')" class="flex-1 py-3 bg-slate-50 rounded-xl text-[10px] font-black uppercase">预览 Preview</button>
-                        <button onclick="startInspectionByIndex(${index})" class="flex-[2] bg-slate-900 text-white py-3 rounded-xl font-black text-[10px] uppercase">开始 START</button>
+                    <div class="px-4 pb-4 flex gap-2">
+                        <button onclick="startInspectionByIndex(${idx})" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs">开始检验 START</button>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
-            if (window.lucide) lucide.createIcons();
         }
 
         function calculateAQL(qty) {
             const n = parseInt(qty) || 0;
-            if (n <= 50) return { size: 8, ac: 0, re: 1 };
-            if (n <= 90) return { size: 13, ac: 0, re: 1 };
-            if (n <= 150) return { size: 20, ac: 1, re: 2 };
-            if (n <= 280) return { size: 32, ac: 2, re: 3 };
-            if (n <= 500) return { size: 50, ac: 3, re: 4 };
-            if (n <= 1200) return { size: 80, ac: 5, re: 6 };
-            if (n <= 3200) return { size: 125, ac: 7, re: 8 };
-            return { size: 200, ac: 10, re: 11 };
+            if (n <= 50) return { s: 8, ac: 0, re: 1 };
+            if (n <= 90) return { s: 13, ac: 0, re: 1 };
+            if (n <= 150) return { s: 20, ac: 1, re: 2 };
+            if (n <= 280) return { s: 32, ac: 2, re: 3 };
+            if (n <= 500) return { s: 50, ac: 3, re: 4 };
+            if (n <= 1200) return { s: 80, ac: 5, re: 6 };
+            if (n <= 3200) return { s: 125, ac: 7, re: 8 };
+            return { s: 200, ac: 10, re: 11 };
         }
-
-        function previewTask(idx, role) {
-            const t = role === 'merch' ? merchandiserTasks[idx] : inspectorTasks[idx];
-            document.getElementById('modal-title').innerText = t.order;
-            document.getElementById('modal-content').innerHTML = `
-                ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-full rounded-2xl mb-4">` : ''}
-                <div class="grid grid-cols-2 gap-3 text-[10px] font-bold">
-                    <div class="p-2 bg-slate-50 rounded-lg">Factory: ${t.factory}</div>
-                    <div class="p-2 bg-slate-50 rounded-lg">Qty: ${t.qty}</div>
-                    <div class="p-2 bg-amber-50 rounded-lg col-span-2">Notes: ${t.notes}</div>
-                </div>
-            `;
-            document.getElementById('modal-footer').innerHTML = role === 'inspector' ? `<button onclick="closeModal(); startInspectionByIndex(${idx})" class="w-full py-4 bg-blue-600 text-white rounded-2xl">接受 ACCEPT</button>` : '';
-            document.getElementById('task-modal').classList.remove('hidden');
-        }
-
-        function closeModal() { document.getElementById('task-modal').classList.add('hidden'); }
 
         function startInspectionByIndex(idx) {
             const t = inspectorTasks[idx]; inspectionData.task = t;
-            const aql = calculateAQL(t.qty);
-            document.getElementById('aql-size').innerText = aql.size;
-            document.getElementById('aql-ac-re').innerText = `${aql.ac}/${aql.re}`;
-            document.getElementById('info-order').innerText = t.order;
-            document.getElementById('info-type').innerText = t.type || 'Bulk';
+            const a = calculateAQL(t.qty);
+            document.getElementById('aql-size').innerText = a.s;
+            document.getElementById('aql-ac-re').innerText = `${a.ac}/${a.re}`;
             document.getElementById('inspector-view').classList.add('hidden');
             document.getElementById('inspection-flow').classList.remove('hidden');
             switchStep(1);
         }
 
         function switchStep(step) {
-            if (step > currentStep) {
-                if (!inspectionData.stepsCompleted.includes(currentStep)) {
-                    inspectionData.stepsCompleted.push(currentStep);
-                    document.getElementById('nav-'+currentStep).classList.add('step-done');
-                }
+            if (step > currentStep && !inspectionData.stepsCompleted.includes(currentStep)) {
+                inspectionData.stepsCompleted.push(currentStep);
+                document.getElementById('nav-'+currentStep).classList.add('step-done');
             }
             currentStep = step;
             document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
             document.getElementById('step-'+step).classList.remove('hidden');
-            document.querySelectorAll('.nav-step').forEach(n => n.classList.remove('step-active'));
+            document.querySelectorAll('.step-nav-btn').forEach(n => n.classList.remove('step-active'));
             document.getElementById('nav-'+step).classList.add('step-active');
             if (step === 7) updateReport();
         }
@@ -560,36 +396,34 @@
         }
 
         function processImage(input, id) {
-            const reader = new FileReader();
-            reader.onload = e => {
+            const r = new FileReader();
+            r.onload = e => {
                 inspectionData.images[id] = e.target.result;
-                const img = document.getElementById('img-'+id);
-                img.src = e.target.result; img.classList.remove('hidden');
-                if (id === 'g0_gate') document.getElementById('gate-placeholder').classList.add('hidden');
+                const i = document.getElementById('img-'+id); i.src = e.target.result; i.classList.remove('hidden');
+                if(id==='g0_gate') document.getElementById('gate-placeholder').classList.add('hidden');
             };
-            reader.readAsDataURL(input.files[0]);
+            r.readAsDataURL(input.files[0]);
         }
 
-        function addPhotoSlot(cId, prefix) {
-            const id = prefix + '_' + Date.now();
-            const div = document.createElement('div'); div.className="photo-slot";
-            div.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden">`;
-            document.getElementById(cId).appendChild(div);
+        function addPhotoSlot(cId, pfx) {
+            const id = pfx + '_' + Date.now();
+            const d = document.createElement('div'); d.className="photo-slot";
+            d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden">`;
+            document.getElementById(cId).appendChild(d);
         }
 
         function addDefectRow() {
-            const row = document.createElement('div'); row.className="p-4 bg-slate-50 rounded-2xl flex gap-3 items-center";
-            row.innerHTML = `<select class="flex-1 text-[10px] font-bold bg-white p-3 rounded-xl outline-none"><option>色差 Shade</option><option>跳针 Skip</option><option>污渍 Stain</option><option>线头 Thread</option><option>破洞 Hole</option></select><input type="number" class="w-16 p-3 rounded-xl text-center font-black" placeholder="Qty">`;
-            document.getElementById('defect-container').appendChild(row);
-            document.getElementById('defect-count').innerText = document.getElementById('defect-container').children.length;
+            const r = document.createElement('div'); r.className="p-4 bg-slate-50 rounded-2xl flex gap-3";
+            r.innerHTML = `<select class="flex-1 text-[10px] font-bold bg-white p-3 rounded-xl"><option>色差 Shade</option><option>跳针 Skip</option><option>污渍 Stain</option></select><input type="number" class="w-16 p-3 rounded-xl text-center font-black" placeholder="Qty">`;
+            document.getElementById('defect-container').appendChild(r);
         }
 
         function updateReport() {
             const t = inspectionData.task || {};
-            document.getElementById('report-header-info').innerHTML = `<p><b>ORDER:</b> ${t.order}</p><p><b>Factory:</b> ${t.factory}</p><p><b>GPS:</b> ${inspectionData.gps}</p>`;
-            const prev = document.getElementById('report-photo-preview'); prev.innerHTML = '';
+            document.getElementById('report-header').innerHTML = `<p><b>ORDER:</b> ${t.order}</p><p><b>Factory:</b> ${t.factory}</p><p><b>GPS:</b> ${inspectionData.gps}</p>`;
+            const p = document.getElementById('report-photos'); p.innerHTML = '';
             Object.values(inspectionData.images).forEach(src => {
-                const i = document.createElement('img'); i.src = src; i.className="w-full rounded mb-1"; prev.appendChild(i);
+                const img = document.createElement('img'); img.src = src; img.className="w-full rounded mb-1"; p.appendChild(img);
             });
         }
 
@@ -604,8 +438,7 @@
         var sigPad, sigCtx, drawing = false;
         function initSig() {
             sigPad = document.getElementById('sig-pad'); if(!sigPad) return;
-            sigCtx = sigPad.getContext('2d');
-            sigPad.width = sigPad.offsetWidth; sigPad.height = sigPad.offsetHeight;
+            sigCtx = sigPad.getContext('2d'); sigPad.width = sigPad.offsetWidth; sigPad.height = sigPad.offsetHeight;
             sigPad.addEventListener('mousedown', () => drawing = true);
             sigPad.addEventListener('mousemove', e => { if(drawing) sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); });
             sigPad.addEventListener('mouseup', () => drawing = false);
@@ -615,9 +448,9 @@
         }
 
         function initApp() {
-            const debug = document.getElementById('debug-info');
+            const d = document.getElementById('debug-info');
             try {
-                if (debug) { debug.innerText = 'Ready V4.40'; debug.style.color = '#10b981'; }
+                if (d) { d.innerText = 'Ready V4.42'; d.style.color = '#10b981'; }
                 if (window.supabase) supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
                 initSig(); if(window.lucide) lucide.createIcons();
             } catch (e) { console.error(e); }
