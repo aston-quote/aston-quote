@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.48 - 业务流程标准化版</title>
+    <title>ASTON Q.A. V4.50 - 业务流程标准化版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -31,7 +31,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.48</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.50</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -71,6 +71,42 @@
                         <label class="text-[10px] font-black text-slate-400 uppercase">产品类型 Type</label>
                         <select id="new-type" class="w-full bg-transparent border-none font-black text-sm"><option>大货成品 Bulk</option><option>外购成品 Outsourced</option><option>面料 Fabric</option></select>
                     </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">订单号 PO#</label><input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm" placeholder="Order#"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">数量 Qty</label><input type="number" id="new-qty" class="w-full bg-transparent border-none font-black text-sm" placeholder="1000"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">工厂 Factory</label><input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm" placeholder="Factory"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">款式描述 Style Description</label><input type="text" id="new-style-desc" class="w-full bg-transparent border-none font-black text-sm" placeholder="例如：印花连体衣"></div>
+                    
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">检验日期 Inspection Date</label><input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">合同交期 Ex-fty Date</label><input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">特别注意事项 Special Notes</label><textarea id="new-special-notes" class="w-full bg-transparent border-none font-bold text-xs h-16" placeholder="例如：注意对色，印花牢度等..."></textarea></div>
+                    
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">款式样照 Style Photos</label>
+                        <div class="grid grid-cols-2 gap-3" id="merch-photo-container">
+                            <div class="photo-slot border-blue-200 bg-blue-50/20">
+                                <input type="file" accept="image/*" onchange="processReferenceImage(this, 'ref_1')" class="absolute inset-0 opacity-0 z-10">
+                                <div id="ph-ref_1" class="text-center"><p class="text-[10px] font-black text-blue-400">点击上传样照 1</p></div>
+                                <img id="img-ref_1" class="hidden w-full h-full">
+                            </div>
+                        </div>
+                        <button onclick="addMerchPhotoSlot()" class="w-full py-2 border-2 border-dashed border-slate-100 text-[10px] font-black rounded-xl text-slate-400">+ 增加样照 ADD PHOTO</button>
+                    </div>
+
+                    <div class="col-span-2 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <label class="text-[10px] font-black text-blue-600 uppercase">指派检验员 Inspector</label>
+                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm">
+                            <option value="Inspector_Li">李检验员 (Li)</option>
+                            <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                            <option value="Inspector_Wang">王检验员 (Wang)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase">发送计划 SEND PLAN</button>
+                <button id="cancel-edit-btn" onclick="resetMerchForm()" class="w-full mt-2 bg-slate-100 text-slate-500 py-3 rounded-[1.2rem] font-black uppercase hidden">取消修改 CANCEL</button>
+            </div>
+            <div id="assigned-task-list" class="space-y-3"></div>
+        </div>
                     <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">订单号 PO#</label><input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm" placeholder="Order#"></div>
                     <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">数量 Qty</label><input type="number" id="new-qty" class="w-full bg-transparent border-none font-black text-sm" placeholder="1000"></div>
                     <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">工厂 Factory</label><input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm" placeholder="Factory"></div>
@@ -247,7 +283,8 @@
     <script>
         var currentUser = ''; var currentRole = ''; var currentStep = 1; var supabase = null;
         var inspectionData = { order: '', factory: '', images: {}, defects: [], stepsCompleted: [] };
-        var merchandiserTasks = []; var inspectorTasks = []; var referencePhotoData = '';
+        var merchandiserTasks = []; var inspectorTasks = []; 
+        var referencePhotos = {};
 
         function autoSetRole() {
             const id = document.getElementById('login-id').value;
@@ -256,15 +293,26 @@
             else if (id.includes('Inspector')) roleSelect.value = 'inspector';
         }
 
-        function processReferenceImage(input) {
+        function processReferenceImage(input, id) {
             const reader = new FileReader();
             reader.onload = e => {
-                referencePhotoData = e.target.result;
-                const p = document.getElementById('ref-photo-preview');
+                referencePhotos[id] = e.target.result;
+                const p = document.getElementById('img-'+id);
                 p.src = e.target.result; p.classList.remove('hidden');
-                document.getElementById('ref-photo-placeholder').classList.add('hidden');
+                if (document.getElementById('ph-'+id)) document.getElementById('ph-'+id).classList.add('hidden');
             };
             reader.readAsDataURL(input.files[0]);
+        }
+
+        function addMerchPhotoSlot() {
+            const id = 'ref_' + Date.now();
+            const d = document.createElement('div'); d.className="photo-slot border-blue-200 bg-blue-50/20";
+            d.innerHTML = `
+                <input type="file" accept="image/*" onchange="processReferenceImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10">
+                <div id="ph-${id}" class="text-center"><p class="text-[10px] font-black text-blue-400">点击上传样照</p></div>
+                <img id="img-${id}" class="hidden w-full h-full">
+            `;
+            document.getElementById('merch-photo-container').appendChild(d);
         }
 
         function login() {
@@ -301,7 +349,7 @@
                 deliveryDate: document.getElementById('new-delivery-date').value,
                 styleDesc: document.getElementById('new-style-desc').value,
                 specialNotes: document.getElementById('new-special-notes').value,
-                referencePhoto: referencePhotoData,
+                referencePhotos: referencePhotos,
                 inspector: document.getElementById('assign-user').value,
                 status: 'PENDING', created_at: new Date().toISOString(), creator: currentUser
             };
@@ -331,17 +379,18 @@
                     else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; }
                     else timeText = `${diff}D LEFT`;
                 }
+                const firstPhoto = t.referencePhotos ? Object.values(t.referencePhotos)[0] : null;
                 return `
                 <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-3">
                     <div class="flex items-center gap-3">
-                        ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-12 h-12 rounded-xl object-contain bg-slate-50 border">` : `<div class="w-12 h-12 bg-slate-100 rounded-xl"></div>`}
+                        ${firstPhoto ? `<img src="${firstPhoto}" class="w-12 h-12 rounded-xl object-contain bg-slate-50 border">` : `<div class="w-12 h-12 bg-slate-100 rounded-xl"></div>`}
                         <div class="flex-1 min-w-0">
                             <div class="font-black text-sm truncate">${t.order}</div>
                             <div class="text-[9px] text-slate-400 font-bold truncate uppercase">${t.factory} | ${t.qty} PCS</div>
                         </div>
                         <div class="text-right">
                             <span class="${timeClass} text-[9px] font-black">${timeText}</span>
-                            <div class="text-[8px] font-bold text-slate-300 mt-1 uppercase">${t.inspector.split('_')[1]}</div>
+                            <div class="text-[8px] font-bold text-slate-300 mt-1 uppercase">${t.inspector ? t.inspector.split('_')[1] : 'NONE'}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50">
@@ -366,12 +415,22 @@
             document.getElementById('new-style-desc').value = t.styleDesc || '';
             document.getElementById('new-special-notes').value = t.specialNotes || '';
             document.getElementById('assign-user').value = t.inspector;
-            referencePhotoData = t.referencePhoto;
-            if (t.referencePhoto) {
-                const p = document.getElementById('ref-photo-preview');
-                p.src = t.referencePhoto; p.classList.remove('hidden');
-                document.getElementById('ref-photo-placeholder').classList.add('hidden');
+            
+            referencePhotos = t.referencePhotos || {};
+            document.getElementById('merch-photo-container').innerHTML = '';
+            if (Object.keys(referencePhotos).length === 0) {
+                addMerchPhotoSlot();
+            } else {
+                Object.entries(referencePhotos).forEach(([id, src]) => {
+                    const d = document.createElement('div'); d.className="photo-slot border-blue-200 bg-blue-50/20";
+                    d.innerHTML = `
+                        <input type="file" accept="image/*" onchange="processReferenceImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10">
+                        <img id="img-${id}" src="${src}" class="w-full h-full object-contain bg-black">
+                    `;
+                    document.getElementById('merch-photo-container').appendChild(d);
+                });
             }
+
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.querySelector('#merch-view h3').innerText = '修改检验计划 Edit Plan';
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
@@ -391,7 +450,7 @@
                 deliveryDate: document.getElementById('new-delivery-date').value,
                 styleDesc: document.getElementById('new-style-desc').value,
                 specialNotes: document.getElementById('new-special-notes').value,
-                referencePhoto: referencePhotoData,
+                referencePhotos: referencePhotos,
                 inspector: document.getElementById('assign-user').value
             };
 
@@ -419,10 +478,10 @@
             document.getElementById('new-delivery-date').value = '';
             document.getElementById('new-style-desc').value = '';
             document.getElementById('new-special-notes').value = '';
-            document.getElementById('ref-photo-preview').classList.add('hidden');
-            document.getElementById('ref-photo-placeholder').classList.remove('hidden');
+            document.getElementById('merch-photo-container').innerHTML = '';
+            referencePhotos = {};
+            addMerchPhotoSlot();
             document.getElementById('cancel-edit-btn').classList.add('hidden');
-            referencePhotoData = '';
             document.querySelector('#merch-view h3').innerText = '下达检验计划 Assign Plan';
             const btn = document.querySelector('#merch-view button[onclick^="updateTask"]');
             if (btn) {
@@ -435,10 +494,18 @@
             const t = merchandiserTasks[idx];
             const modal = document.getElementById('preview-modal');
             const content = document.getElementById('preview-content');
+            let photosHtml = '';
+            if (t.referencePhotos) {
+                Object.values(t.referencePhotos).forEach(src => {
+                    photosHtml += `<img src="${src}" class="w-full h-48 object-contain bg-slate-50 rounded-2xl border mb-2">`;
+                });
+            }
             content.innerHTML = `
                 <div class="space-y-4">
                     <h3 class="text-xl font-black border-b pb-2">计划详情 PLAN DETAILS</h3>
-                    ${t.referencePhoto ? `<img src="${t.referencePhoto}" class="w-full h-48 object-contain bg-slate-50 rounded-2xl border">` : ''}
+                    <div class="max-h-60 overflow-y-auto no-scrollbar">
+                        ${photosHtml}
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="text-slate-400">PO#</label><p class="text-sm">${t.order}</p></div>
                         <div><label class="text-slate-400">数量 QTY</label><p class="text-sm">${t.qty}</p></div>
@@ -447,6 +514,7 @@
                         <div><label class="text-slate-400">检验日期 INSP</label><p class="text-sm">${t.inspectionDate || '-'}</p></div>
                         <div><label class="text-slate-400">合同交期 DELV</label><p class="text-sm">${t.deliveryDate || '-'}</p></div>
                         <div class="col-span-2"><label class="text-slate-400">注意事项 NOTES</label><p class="text-sm">${t.specialNotes || '-'}</p></div>
+                        <div class="col-span-2"><label class="text-slate-400">检验员 INSPECTOR</label><p class="text-sm">${t.inspector}</p></div>
                     </div>
                 </div>
             `;
@@ -612,7 +680,7 @@
         function initApp() {
             const d = document.getElementById('debug-info');
             try {
-                if (d) { d.innerText = 'Ready V4.48'; d.style.color = '#10b981'; }
+                if (d) { d.innerText = 'Ready V4.50'; d.style.color = '#10b981'; }
                 if (window.supabase) supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
                 initSig(); if(window.lucide) lucide.createIcons();
             } catch (e) { console.error(e); }
