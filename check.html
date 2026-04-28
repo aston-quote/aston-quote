@@ -205,6 +205,10 @@
                             <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'sz_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-sz_1" class="hidden">照片 1</div>
                         </div>
                         <button onclick="addPhotoSlot('size-container', 'sz')" class="w-full py-3 border-2 border-dashed rounded-2xl text-[10px] font-black">+ ADD PHOTO</button>
+                        <div class="pt-4 border-t">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">尺码结果说明 Size Result Description</label>
+                            <textarea id="sz-desc" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-xs h-24 mt-2" placeholder="填写尺码判定结果或备注..."></textarea>
+                        </div>
                     </div>
                 </section>
 
@@ -401,6 +405,7 @@
                 inspectionData.images[id] = e.target.result;
                 const i = document.getElementById('img-'+id); i.src = e.target.result; i.classList.remove('hidden');
                 if(id==='g0_gate') document.getElementById('gate-placeholder').classList.add('hidden');
+                if(document.getElementById('ph-'+id)) document.getElementById('ph-'+id).classList.add('hidden');
             };
             r.readAsDataURL(input.files[0]);
         }
@@ -408,13 +413,29 @@
         function addPhotoSlot(cId, pfx) {
             const id = pfx + '_' + Date.now();
             const d = document.createElement('div'); d.className="photo-slot";
-            d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden">`;
+            d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><div id="ph-${id}" class="text-[8px] font-black text-slate-400">点击拍照 PHOTO</div><img id="img-${id}" class="hidden">`;
             document.getElementById(cId).appendChild(d);
         }
 
         function addDefectRow() {
-            const r = document.createElement('div'); r.className="p-4 bg-slate-50 rounded-2xl flex gap-3";
-            r.innerHTML = `<select class="flex-1 text-[10px] font-bold bg-white p-3 rounded-xl"><option>色差 Shade</option><option>跳针 Skip</option><option>污渍 Stain</option></select><input type="number" class="w-16 p-3 rounded-xl text-center font-black" placeholder="Qty">`;
+            const id = 'df_' + Date.now();
+            const r = document.createElement('div'); r.className="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-200";
+            r.innerHTML = `
+                <div class="flex gap-2">
+                    <select class="flex-1 text-[10px] font-bold bg-white p-3 rounded-xl outline-none border">
+                        <option>色差 Shade</option><option>跳针 Skip</option><option>污渍 Stain</option><option>线头 Thread</option><option>破洞 Hole</option><option>其它 Other</option>
+                    </select>
+                    <select class="w-24 text-[10px] font-black bg-white p-3 rounded-xl border text-red-600">
+                        <option value="major">大疵 MAJOR</option><option value="minor">小疵 MINOR</option>
+                    </select>
+                    <input type="number" class="w-16 p-3 rounded-xl text-center font-black border" placeholder="Qty">
+                </div>
+                <div class="photo-slot h-32 bg-white">
+                    <input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10">
+                    <div id="ph-${id}" class="text-[8px] font-black text-slate-400">拍摄疵点照片 PHOTO</div>
+                    <img id="img-${id}" class="hidden">
+                </div>
+            `;
             document.getElementById('defect-container').appendChild(r);
         }
 
