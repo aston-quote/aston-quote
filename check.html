@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.55 - 强力初始化修复版</title>
+    <title>ASTON Q.A. V4.56 - 语法修复与预览优化版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -41,7 +41,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.55</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.56</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -586,60 +586,8 @@
                 </div>`;
             }).join('');
         }
-            content.innerHTML = `
-                <div class="space-y-4 text-xs">
-                    <h3 class="text-xl font-black border-b pb-2">计划详情 PLAN DETAILS</h3>
-                    <div class="max-h-60 overflow-y-auto no-scrollbar">${photosHtml}</div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-slate-400">PO#</label><p class="text-sm">${t.order}</p></div>
-                        <div><label class="text-slate-400">数量 QTY</label><p class="text-sm">${t.qty}</p></div>
-                        <div><label class="text-slate-400">工厂 FACTORY</label><p class="text-sm">${t.factory}</p></div>
-                        <div><label class="text-slate-400">款式 DESC</label><p class="text-sm">${t.styleDesc || '-'}</p></div>
-                        <div><label class="text-slate-400">检验日期 INSP</label><p class="text-sm">${t.inspectionDate || '-'}</p></div>
-                        <div><label class="text-slate-400">合同交期 DELV</label><p class="text-sm">${t.deliveryDate || '-'}</p></div>
-                        <div class="col-span-2"><label class="text-slate-400">注意事项 NOTES</label><p class="text-sm">${t.specialNotes || '-'}</p></div>
-                        <div class="col-span-2"><label class="text-slate-400">检验员 INSPECTOR</label><p class="text-sm">${t.inspector}</p></div>
-                    </div>
-                </div>
-            `;
-            modal.classList.remove('hidden');
-        }
-        function closePreview() { document.getElementById('preview-modal').classList.add('hidden'); }
 
-        async function refreshInspectorTasks() {
-            let tasks = [];
-            if (supabase) {
-                const { data } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false });
-                if (data) tasks = data;
-            } else {
-                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
-            }
-            inspectorTasks = tasks;
-            const now = new Date();
-            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, idx) => {
-                let timeClass = "text-emerald-500"; let timeText = "Waiting";
-                if (t.inspectionDate) {
-                    const diff = Math.ceil((new Date(t.inspectionDate) - now) / 86400000);
-                    if (diff < 0) { timeClass = "text-red-500 animate-pulse"; timeText = `OVERDUE ${Math.abs(diff)}D`; }
-                    else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; }
-                    else timeText = `${diff} DAYS LEFT`;
-                }
-                const firstPhoto = t.referencePhotos ? Object.values(t.referencePhotos)[0] : null;
-                return `
-                <div class="task-card">
-                    <div class="flex p-4 gap-4">
-                        ${firstPhoto ? `<img src="${firstPhoto}" class="w-20 h-20 rounded-2xl object-contain bg-slate-50 border">` : `<div class="w-20 h-20 bg-slate-100 rounded-2xl"></div>`}
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start"><h4 class="font-black text-lg leading-none">${t.order}</h4><span class="${timeClass} text-[8px] font-black">${timeText}</span></div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-2">${t.factory} | Qty: ${t.qty}</p>
-                        </div>
-                    </div>
-                    <div class="px-4 pb-4 flex gap-2">
-                        <button onclick="startInspectionByIndex(${idx})" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs">开始检验 START</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
+        function closePreview() { document.getElementById('preview-modal').classList.add('hidden'); }
 
         function calculateAQL(qty) {
             const n = parseInt(qty) || 0;
@@ -764,7 +712,7 @@
 
         function initApp() {
             var d = document.getElementById('debug-info');
-            if (d) { d.innerText = 'Ready V4.55'; d.style.color = '#10b981'; }
+            if (d) { d.innerText = 'Ready V4.56'; d.style.color = '#10b981'; }
             console.log("App Initializing...");
             try {
                 if (window.supabase) {
