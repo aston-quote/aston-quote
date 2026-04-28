@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.56 - 语法修复与预览优化版</title>
+    <title>ASTON Q.A. V4.57 - 流程命名优化版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -41,7 +41,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.56</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.57</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -137,7 +137,7 @@
                 <button onclick="switchStep(1)" class="step-nav-btn step-active" id="nav-1">1. 签到<br>SIGN</button>
                 <button onclick="switchStep(2)" class="step-nav-btn" id="nav-2">2. 环境<br>ENV</button>
                 <button onclick="switchStep(3)" class="step-nav-btn" id="nav-3">3. 抽样<br>AQL</button>
-                <button onclick="switchStep(4)" class="step-nav-btn" id="nav-4">4. 拍照<br>PHOTO</button>
+                <button onclick="switchStep(4)" class="step-nav-btn" id="nav-4">4. 外观<br>APPEARANCE</button>
                 <button onclick="switchStep(5)" class="step-nav-btn" id="nav-5">5. 尺寸<br>SIZE</button>
                 <button onclick="switchStep(6)" class="step-nav-btn" id="nav-6">6. 检验<br>DEFECT</button>
                 <button onclick="switchStep(7)" class="step-nav-btn" id="nav-7">7. 报告<br>REPORT</button>
@@ -187,7 +187,7 @@
                     </div>
                 </section>
 
-                <!-- Step 4: Photos -->
+                <!-- Step 4: Appearance -->
                 <section id="step-4" class="step-content hidden space-y-6">
                     <div class="bg-white rounded-[2.5rem] p-6 space-y-8">
                         <div class="space-y-3">
@@ -197,6 +197,7 @@
                                 <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_b')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_b" class="hidden">反面</div>
                                 <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_i')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_i" class="hidden">内里</div>
                             </div>
+                            <button onclick="addPhotoSlot('g1-container', 'g1')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
                         </div>
                         <div class="space-y-3 pt-4 border-t">
                             <h5 class="font-black text-[10px] text-slate-400 uppercase">第二组: 颜色/印花平铺 COLORS</h5>
@@ -712,7 +713,7 @@
 
         function initApp() {
             var d = document.getElementById('debug-info');
-            if (d) { d.innerText = 'Ready V4.56'; d.style.color = '#10b981'; }
+            if (d) { d.innerText = 'Ready V4.57'; d.style.color = '#10b981'; }
             console.log("App Initializing...");
             try {
                 if (window.supabase) {
