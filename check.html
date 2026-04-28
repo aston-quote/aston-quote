@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.42 - 业务流程标准化版</title>
+    <title>ASTON Q.A. V4.43 - 业务流程标准化版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -31,7 +31,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.42</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.43</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -471,7 +471,7 @@
         function initApp() {
             const d = document.getElementById('debug-info');
             try {
-                if (d) { d.innerText = 'Ready V4.42'; d.style.color = '#10b981'; }
+                if (d) { d.innerText = 'Ready V4.43'; d.style.color = '#10b981'; }
                 if (window.supabase) supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
                 initSig(); if(window.lucide) lucide.createIcons();
             } catch (e) { console.error(e); }
