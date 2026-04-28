@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ASTON Q.A. V4.52 - 业务流程标准化版</title>
+    <title>ASTON Q.A. V4.53 - 检验员体验增强版</title>
     <!-- 增加内联基础样式，防止 Tailwind 加载失败导致完全打不开 -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
@@ -17,7 +17,8 @@
         .step-nav-btn { flex: 1; padding: 10px 5px; font-size: 10px; font-weight: 900; background: white; border: none; border-bottom: 2px solid transparent; transition: all 0.3s; }
         .step-active { background: #1d4ed8 !important; color: white !important; }
         .step-done { background: #10b981 !important; color: white !important; }
-        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; }
+        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; transition: transform 0.2s; }
+        .task-card:active { transform: scale(0.98); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -32,7 +33,7 @@
     <div id="login-view">
         <div class="login-card">
             <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.52</p>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.53</p>
             <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
             <select id="login-id" onchange="autoSetRole()" class="input-dark">
                 <option value="">请选择账号 Select Account</option>
@@ -479,16 +480,104 @@
             refreshAssignedTasks();
         }
 
-        function previewTask(idx) {
-            const t = merchandiserTasks[idx];
+        function previewTask(idx, isMerch = true) {
+            const t = isMerch ? merchandiserTasks[idx] : inspectorTasks[idx];
             const modal = document.getElementById('preview-modal');
             const content = document.getElementById('preview-content');
             let photosHtml = '';
             if (t.referencePhotos) {
                 Object.values(t.referencePhotos).forEach(src => {
-                    photosHtml += `<img src="${src}" class="w-full h-48 object-contain bg-slate-50 rounded-2xl border mb-2">`;
+                    photosHtml += `<img src="${src}" class="w-full h-auto object-contain bg-slate-50 rounded-2xl border mb-2 shadow-sm">`;
                 });
             }
+            content.innerHTML = `
+                <div class="space-y-4 text-[10px]">
+                    <h3 class="text-lg font-black border-b pb-2 flex justify-between items-center">
+                        <span>计划详情 PLAN DETAILS</span>
+                        <span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">${t.status || 'PENDING'}</span>
+                    </h3>
+                    <div class="max-h-80 overflow-y-auto no-scrollbar space-y-2">
+                        ${photosHtml || '<div class="h-32 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold">无样照 NO PHOTOS</div>'}
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 bg-slate-50 p-4 rounded-3xl">
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">订单号 PO#</label><p class="text-xs font-black text-slate-800">${t.order}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">数量 QTY</label><p class="text-xs font-black text-slate-800">${t.qty} PCS</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">工厂 FACTORY</label><p class="text-xs font-black text-slate-800">${t.factory}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">款式描述 DESC</label><p class="text-xs font-black text-slate-800">${t.styleDesc || '-'}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">检验日期 INSP</label><p class="text-xs font-black text-blue-600">${t.inspectionDate || '-'}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">合同交期 DELV</label><p class="text-xs font-black text-emerald-600">${t.deliveryDate || '-'}</p></div>
+                        <div class="col-span-2 border-t pt-2 mt-1">
+                            <label class="text-red-500 font-black uppercase block mb-0.5 italic underline">特别注意事项 SPECIAL NOTES</label>
+                            <p class="text-xs font-bold text-slate-700 leading-relaxed">${t.specialNotes || '无 None'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        async function refreshInspectorTasks() {
+            let tasks = [];
+            if (supabase) {
+                const { data } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false });
+                if (data) tasks = data;
+            } else {
+                tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
+            }
+            inspectorTasks = tasks;
+            const now = new Date();
+            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, idx) => {
+                let timeClass = "text-emerald-500"; let timeText = "Waiting";
+                if (t.inspectionDate) {
+                    const diff = Math.ceil((new Date(t.inspectionDate) - now) / 86400000);
+                    if (diff < 0) { timeClass = "text-red-500 animate-pulse"; timeText = `OVERDUE ${Math.abs(diff)}D`; }
+                    else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; }
+                    else timeText = `${diff} DAYS LEFT`;
+                }
+                const firstPhoto = t.referencePhotos ? Object.values(t.referencePhotos)[0] : null;
+                return `
+                <div class="task-card shadow-sm border-slate-100">
+                    <div class="p-4 space-y-3">
+                        <div class="flex gap-4">
+                            <div class="w-20 h-24 flex-shrink-0 relative group" onclick="previewTask(${idx}, false)">
+                                ${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-full rounded-xl object-contain bg-slate-50 border shadow-inner">` : `<div class="w-full h-full bg-slate-100 rounded-xl flex items-center justify-center text-[10px] text-slate-300">NO IMG</div>`}
+                                <div class="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="text-[8px] text-white font-black bg-black/50 px-2 py-1 rounded-full">ZOOM</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-black text-lg leading-tight text-slate-800">${t.order}</h4>
+                                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-tighter">${t.styleDesc || '无款式描述'}</p>
+                                    </div>
+                                    <span class="${timeClass} text-[9px] font-black bg-slate-50 px-2 py-1 rounded-lg">${timeText}</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-y-1 text-[9px] font-bold text-slate-500 uppercase italic">
+                                    <div class="truncate">Fty: <span class="text-slate-800">${t.factory}</span></div>
+                                    <div class="text-right">Qty: <span class="text-slate-800">${t.qty}</span></div>
+                                    <div class="col-span-2">Delv: <span class="text-emerald-600 font-black">${t.deliveryDate || '-'}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${t.specialNotes ? `
+                        <div class="bg-red-50 p-3 rounded-xl border border-red-100" onclick="previewTask(${idx}, false)">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[8px] font-black text-red-500 uppercase">⚠ 特别注意 Special Notes</span>
+                                <span class="text-[7px] font-black text-red-300 uppercase">点击放大 CLICK TO ZOOM</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-red-800 line-clamp-2 leading-tight">${t.specialNotes}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="px-4 pb-4 flex gap-2">
+                        <button onclick="previewTask(${idx}, false)" class="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition-all">预览详情 PREVIEW</button>
+                        <button onclick="startInspectionByIndex(${idx})" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-blue-200 active:scale-95 transition-all">开始检验 START</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
             content.innerHTML = `
                 <div class="space-y-4 text-xs">
                     <h3 class="text-xl font-black border-b pb-2">计划详情 PLAN DETAILS</h3>
@@ -668,7 +757,7 @@
         function initApp() {
             const d = document.getElementById('debug-info');
             try {
-                if (d) { d.innerText = 'Ready V4.52'; d.style.color = '#10b981'; }
+                if (d) { d.innerText = 'Ready V4.53'; d.style.color = '#10b981'; }
                 if (window.supabase) supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4');
                 initSig(); if(window.lucide) lucide.createIcons();
                 addMerchPhotoSlot();
