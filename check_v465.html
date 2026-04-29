@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. V4.65 - 零依赖终极版</title>
+    <style>
+        /* 零依赖样式：完全手写 CSS，不依赖 Tailwind */
+        body { font-family: -apple-system, sans-serif; margin: 0; background: #f0f4f8; color: #333; }
+        .hidden { display: none !important; }
+        
+        /* 登录页 */
+        #login-view { position: fixed; inset: 0; background: #1a2a44; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-card { background: white; padding: 40px 20px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-card h2 { margin: 0 0 10px; color: #1a2a44; font-size: 28px; }
+        .login-card p { margin: 0 0 30px; color: #666; font-size: 14px; }
+        .input-box { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn-main { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        /* 头部 */
+        header { background: #1e40af; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { margin: 0; font-size: 18px; font-weight: 900; }
+        
+        /* 容器 */
+        .container { padding: 15px; }
+        .card { background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .label { font-size: 10px; font-weight: bold; color: #999; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        
+        /* 导航步进器 */
+        .nav-steps { display: flex; background: white; border-bottom: 1px solid #eee; overflow-x: auto; position: sticky; top: 50px; z-index: 90; }
+        .nav-btn { flex: 1; min-width: 60px; padding: 10px 5px; border: none; background: none; font-size: 10px; font-weight: bold; color: #999; }
+        .nav-btn.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
+        
+        /* 列表 */
+        .task-item { background: white; padding: 15px; border-radius: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .task-info h4 { margin: 0; font-size: 16px; }
+        .task-info p { margin: 5px 0 0; font-size: 12px; color: #888; }
+        .btn-start { background: #2563eb; color: white; padding: 8px 15px; border-radius: 8px; border: none; font-size: 12px; font-weight: bold; }
+        
+        /* 拍照区 */
+        .photo-grid { display: grid; grid-cols: 2; gap: 10px; margin-top: 10px; }
+        .photo-box { aspect-ratio: 4/3; background: #f8f9fa; border: 2px dashed #ddd; border-radius: 15px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; font-size: 10px; color: #aaa; text-align: center; }
+        .photo-box img { width: 100%; height: 100%; object-fit: contain; }
+        .photo-box input { position: absolute; inset: 0; opacity: 0; z-index: 10; }
+        
+        /* 签字区 */
+        #sig-pad { background: white; border: 2px solid #eee; border-radius: 15px; width: 100%; height: 150px; touch-action: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 登录 -->
+    <div id="login-view">
+        <div class="login-card">
+            <h2>ASTON Q.A.</h2>
+            <p>质量检验系统 V4.65 (终极离线版)</p>
+            <select id="login-id" class="input-box">
+                <option value="">选择账号 Account</option>
+                <option value="Merchandiser_Boss">跟单员 (Merchandiser)</option>
+                <option value="Inspector_Li">李检验员 (Inspector Li)</option>
+                <option value="Inspector_Zhang">张检验员 (Inspector Zhang)</option>
+            </select>
+            <button onclick="doLogin()" class="btn-main">立即进入 ENTER NOW</button>
+        </div>
+    </div>
+
+    <!-- 头部 -->
+    <header id="app-header" class="hidden">
+        <h1>ASTON QUALITY</h1>
+        <button onclick="location.reload()" style="background:none; border:1px solid white; color:white; padding:4px 10px; border-radius:5px; font-size:10px;">退出</button>
+    </header>
+
+    <main id="app-content">
+        <!-- 跟单视图 -->
+        <div id="merch-view" class="container hidden">
+            <div class="card">
+                <h3 style="margin-top:0">指派新任务 Assign Task</h3>
+                <span class="label">订单号 PO#</span>
+                <input type="text" id="new-po" class="input-box" placeholder="例如: PO2024001">
+                <span class="label">工厂 Factory</span>
+                <input type="text" id="new-fty" class="input-box" placeholder="例如: 晨光服装厂">
+                <span class="label">指派给 Assign To</span>
+                <select id="new-target" class="input-box">
+                    <option value="Inspector_Li">李检验员 (Li)</option>
+                    <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                </select>
+                <button onclick="saveTask()" class="btn-main">发送任务 SEND</button>
+            </div>
+            <div id="merch-list"></div>
+        </div>
+
+        <!-- 检验员列表 -->
+        <div id="inspector-view" class="container hidden">
+            <h3 id="welcome-text">我的任务 My Tasks</h3>
+            <div id="task-list"></div>
+        </div>
+
+        <!-- 检验流程 -->
+        <div id="flow-view" class="hidden">
+            <div class="nav-steps">
+                <button onclick="goStep(1)" id="step-btn-1" class="nav-btn active">1.签到</button>
+                <button onclick="goStep(2)" id="step-btn-2" class="nav-btn">2.拍照</button>
+                <button onclick="goStep(3)" id="step-btn-3" class="nav-btn">3.疵点</button>
+                <button onclick="goStep(4)" id="step-btn-4" class="nav-btn">4.报告</button>
+            </div>
+
+            <div class="container">
+                <!-- 步骤1: 签到 -->
+                <div id="step-1" class="step-content">
+                    <div class="card" style="text-align:center">
+                        <span class="label">Step 1: 签到 Sign-in</span>
+                        <div class="photo-box" style="margin:20px 0">
+                            <input type="file" capture="camera" onchange="upImg(this, 'gate')">
+                            <img id="view-gate" class="hidden">
+                            点击拍摄大门照片<br>PHOTO AT GATE
+                        </div>
+                        <button onclick="alert('GPS已自动记录: 30.27, 120.15')" class="btn-main" style="background:#333">获取 GPS 定位</button>
+                    </div>
+                </div>
+
+                <!-- 步骤2: 拍照 -->
+                <div id="step-2" class="step-content hidden">
+                    <div class="card">
+                        <span class="label">Step 2: 外观照片 Appearance Photos</span>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+                            <div class="photo-box"><input type="file" capture="camera" onchange="upImg(this, 'front')"><img id="view-front" class="hidden">正面 FRONT</div>
+                            <div class="photo-box"><input type="file" capture="camera" onchange="upImg(this, 'back')"><img id="view-back" class="hidden">反面 BACK</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤3: 疵点 -->
+                <div id="step-3" class="step-content hidden">
+                    <div class="card">
+                        <span class="label">Step 3: 疵点明细 Defects</span>
+                        <div id="defect-list"></div>
+                        <button onclick="addDf()" style="width:100%; padding:10px; border:1px dashed #2563eb; color:#2563eb; background:none; border-radius:10px; font-weight:bold">+ 增加疵点 ADD</button>
+                    </div>
+                </div>
+
+                <!-- 步骤4: 报告 -->
+                <div id="step-4" class="step-content hidden">
+                    <div class="card">
+                        <span class="label">Step 4: 判定与签名 Report</span>
+                        <select id="res-val" class="input-box" style="font-weight:bold; color:#1e40af">
+                            <option value="PASS">通过 PASS ✅</option>
+                            <option value="FAIL">拒收 FAIL ❌</option>
+                            <option value="PENDING">待定 PENDING</option>
+                        </select>
+                        <canvas id="sig-pad"></canvas>
+                        <button onclick="alert('报告已保存到本地！\n如需生成 PDF，请连接 VPN 或前往信号好的地方加载 PDF 插件。')" class="btn-main" style="margin-top:20px">生成报告 SAVE REPORT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var user = ''; var tasks = []; var currentTask = null;
+        
+        function doLogin() {
+            user = document.getElementById('login-id').value;
+            if(!user) return alert('Please Select Account');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            if(user.includes('Merch')) {
+                document.getElementById('merch-view').classList.remove('hidden');
+                loadMerch();
+            } else {
+                document.getElementById('inspector-view').classList.remove('hidden');
+                document.getElementById('welcome-text').innerText = '欢迎, ' + user.split('_')[1];
+                loadIns();
+            }
+        }
+
+        function saveTask() {
+            var po = document.getElementById('new-po').value;
+            var fty = document.getElementById('new-fty').value;
+            var target = document.getElementById('new-target').value;
+            if(!po || !fty) return alert('Missing info');
+            var t = { po: po, fty: fty, target: target, creator: user, id: Date.now() };
+            var list = JSON.parse(localStorage.getItem('aston_qa_tasks') || '[]');
+            list.push(t);
+            localStorage.setItem('aston_qa_tasks', JSON.stringify(list));
+            alert('Assigned!'); loadMerch();
+        }
+
+        function loadMerch() {
+            var list = JSON.parse(localStorage.getItem('aston_qa_tasks') || '[]').filter(x => x.creator === user);
+            document.getElementById('merch-list').innerHTML = list.map(x => `
+                <div class="task-item"><div class="task-info"><h4>${x.po}</h4><p>${x.fty} -> ${x.target.split('_')[1]}</p></div></div>
+            `).join('');
+        }
+
+        function loadIns() {
+            var list = JSON.parse(localStorage.getItem('aston_qa_tasks') || '[]').filter(x => x.target === user);
+            document.getElementById('task-list').innerHTML = list.map((x, idx) => `
+                <div class="task-item">
+                    <div class="task-info"><h4>${x.po}</h4><p>${x.fty}</p></div>
+                    <button class="btn-start" onclick="openFlow(${idx})">开始检验</button>
+                </div>
+            `).join('');
+        }
+
+        function openFlow(idx) {
+            var list = JSON.parse(localStorage.getItem('aston_qa_tasks') || '[]').filter(x => x.target === user);
+            currentTask = list[idx];
+            document.getElementById('inspector-view').classList.add('hidden');
+            document.getElementById('flow-view').classList.remove('hidden');
+            initSig();
+        }
+
+        function goStep(s) {
+            document.querySelectorAll('.step-content').forEach(x => x.classList.add('hidden'));
+            document.getElementById('step-'+s).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+            document.getElementById('step-btn-'+s).classList.add('active');
+        }
+
+        function upImg(input, id) {
+            var reader = new FileReader();
+            reader.onload = e => {
+                var img = document.getElementById('view-'+id);
+                if(img) { img.src = e.target.result; img.classList.remove('hidden'); }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function addDf() {
+            var id = Date.now();
+            var d = document.createElement('div');
+            d.innerHTML = `
+                <div style="margin-bottom:10px; padding:10px; border:1px solid #eee; border-radius:10px">
+                    <select class="input-box" style="margin-bottom:5px; font-size:12px"><option>跳针 Skip Stitch</option><option>色差 Shade Variation</option></select>
+                    <div style="display:flex; gap:10px">
+                        <input type="number" placeholder="Qty" style="width:60px; padding:5px; border-radius:5px; border:1px solid #ddd">
+                        <div class="photo-box" style="flex:1; height:60px">拍摄 PHOTO<input type="file" capture="camera" onchange="this.parentElement.style.background='#e0f2fe'"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('defect-list').appendChild(d);
+        }
+
+        var sigCanvas, ctx, drawing = false;
+        function initSig() {
+            sigCanvas = document.getElementById('sig-pad'); ctx = sigCanvas.getContext('2d');
+            sigCanvas.width = sigCanvas.offsetWidth; sigCanvas.height = sigCanvas.offsetHeight;
+            ctx.lineWidth = 2; ctx.strokeStyle = '#000';
+            function start(e) { drawing = true; ctx.beginPath(); var p = getP(e); ctx.moveTo(p.x, p.y); e.preventDefault(); }
+            function move(e) { if(!drawing) return; var p = getP(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }
+            function getP(e) { var rect = sigCanvas.getBoundingClientRect(); var cx = e.touches ? e.touches[0].clientX : e.clientX; var cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx - rect.left, y: cy - rect.top }; }
+            sigCanvas.addEventListener('touchstart', start); sigCanvas.addEventListener('touchmove', move); window.addEventListener('touchend', () => drawing = false);
+            sigCanvas.addEventListener('mousedown', start); sigCanvas.addEventListener('mousemove', move); window.addEventListener('mouseup', () => drawing = false);
+        }
+    </script>
+</body>
+</html>

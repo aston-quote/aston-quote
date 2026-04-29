@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. V4.61 - 专业报告与签字修复版</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
+        .hidden { display: none !important; }
+        #login-view { position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; color: white; padding: 20px; text-align: center; }
+        .login-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; }
+        .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
+        .input-dark { background: #1e293b; border: none; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .photo-slot { aspect-ratio: 4/3; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .photo-slot img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .step-nav-btn { flex: 1; padding: 10px 5px; font-size: 10px; font-weight: 900; background: white; border: none; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .step-active { background: #1d4ed8 !important; color: white !important; }
+        .step-done { background: #10b981 !important; color: white !important; }
+        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; transition: transform 0.2s; }
+        .task-card:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        #sig-pad { touch-action: none; cursor: crosshair; }
+        .report-label { color: #64748b; font-size: 8px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
+        .report-value { color: #1e293b; font-size: 11px; font-weight: 900; margin-bottom: 8px; }
+        .report-section { border-top: 2px solid #f1f5f9; padding-top: 12px; margin-top: 12px; }
+        .report-section-title { font-size: 12px; font-weight: 900; color: #1e293b; margin-bottom: 10px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; }
+    </style>
+    <script>
+        window.onerror = function(msg, url, line) {
+            var d = document.getElementById('debug-info');
+            if (d) { d.innerText = "Fatal: " + msg + " (L" + line + ")"; d.style.color = "#f87171"; }
+            return false;
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <div id="login-view">
+        <div class="login-card">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.61</p>
+            <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">System Initializing...</div>
+            <select id="login-id" onchange="autoSetRole()" class="input-dark">
+                <option value="">请选择账号 Select Account</option>
+                <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
+                <option value="Inspector_Li">李检验员 (Li)</option>
+                <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                <option value="Inspector_Wang">王检验员 (Wang)</option>
+            </select>
+            <select id="login-role" class="input-dark">
+                <option value="merchandiser">跟单员 (Merchandiser)</option>
+                <option value="inspector">检验员 (Inspector)</option>
+            </select>
+            <button onclick="login()" class="btn-blue">进入系统 Login</button>
+        </div>
+    </div>
+
+    <header id="app-header" class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center hidden">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black italic">A</div>
+            <h1 class="font-black tracking-tighter text-lg">ASTON Q.A.</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <div id="sync-status" class="flex items-center text-[8px] font-bold px-2 py-1 rounded bg-slate-800/50 text-slate-400">
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></div> LOCAL ONLY
+            </div>
+            <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded font-bold">退出 Logout</button>
+        </div>
+    </header>
+
+    <main id="app-content">
+        <div id="merch-view" class="p-4 space-y-4 hidden">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
+                <h3 class="font-black text-gray-800 flex items-center mb-6 text-lg">下达检验计划 Assign Plan</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl">
+                        <label class="text-[10px] font-black text-slate-400 uppercase">产品类型 Type</label>
+                        <select id="new-type" class="w-full bg-transparent border-none font-black text-sm"><option>大货成品 Bulk</option><option>外购成品 Outsourced</option><option>面料 Fabric</option></select>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">订单号 PO#</label><input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm" placeholder="Order#"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">数量 Qty</label><input type="number" id="new-qty" class="w-full bg-transparent border-none font-black text-sm" placeholder="1000"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">工厂 Factory</label><input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm" placeholder="Factory"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">款式描述 Style Desc</label><input type="text" id="new-style-desc" class="w-full bg-transparent border-none font-black text-sm" placeholder="例如：印花连体衣"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">检验日期 Inspection Date</label><input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">合同交期 Ex-fty Date</label><input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">特别注意事项 Special Notes</label><textarea id="new-special-notes" class="w-full bg-transparent border-none font-bold text-xs h-16" placeholder="注意对色，印花牢度等..."></textarea></div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">款式样照 Style Photos</label>
+                        <div class="grid grid-cols-2 gap-3" id="merch-photo-container"></div>
+                        <button onclick="addMerchPhotoSlot()" class="w-full py-2 border-2 border-dashed border-slate-100 text-[10px] font-black rounded-xl text-slate-400">+ 增加样照 ADD PHOTO</button>
+                    </div>
+                    <div class="col-span-2 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <label class="text-[10px] font-black text-blue-600 uppercase">指派检验员 Inspector</label>
+                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm">
+                            <option value="Inspector_Li">李检验员 (Li)</option>
+                            <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                            <option value="Inspector_Wang">王检验员 (Wang)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase shadow-lg">发送计划 SEND PLAN</button>
+                <button id="cancel-edit-btn" onclick="resetMerchForm()" class="w-full mt-2 bg-slate-100 text-slate-500 py-3 rounded-[1.2rem] font-black uppercase hidden">取消修改 CANCEL</button>
+            </div>
+            <div id="assigned-task-list" class="space-y-3"></div>
+        </div>
+
+        <div id="inspector-view" class="p-4 space-y-4 hidden">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black text-slate-800">我的任务 My Tasks</h2>
+                <p id="inspector-display-name" class="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase"></p>
+            </div>
+            <div id="inspector-task-list" class="space-y-4"></div>
+        </div>
+
+        <div id="preview-modal" class="fixed inset-0 bg-black/90 z-[2000] hidden overflow-y-auto p-4 flex items-center justify-center">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+                <button onclick="closePreview()" class="absolute top-4 right-4 w-10 h-10 bg-black/10 rounded-full flex items-center justify-center font-black">✕</button>
+                <div id="preview-content" class="p-6 space-y-4 text-xs font-bold"></div>
+            </div>
+        </div>
+
+        <div id="inspection-flow" class="hidden">
+            <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto no-scrollbar">
+                <button onclick="switchStep(1)" class="step-nav-btn step-active" id="nav-1">1. 签到<br>SIGN</button>
+                <button onclick="switchStep(2)" class="step-nav-btn" id="nav-2">2. 环境<br>ENV</button>
+                <button onclick="switchStep(3)" class="step-nav-btn" id="nav-3">3. 抽样<br>AQL</button>
+                <button onclick="switchStep(4)" class="step-nav-btn" id="nav-4">4. 外观<br>APPEARANCE</button>
+                <button onclick="switchStep(5)" class="step-nav-btn" id="nav-5">5. 尺寸<br>SIZE</button>
+                <button onclick="switchStep(6)" class="step-nav-btn" id="nav-6">6. 检验<br>DEFECT</button>
+                <button onclick="switchStep(7)" class="step-nav-btn" id="nav-7">7. 报告<br>REPORT</button>
+            </nav>
+
+            <div class="p-4 pb-32">
+                <section id="step-1" class="step-content">
+                    <div class="bg-white rounded-[2rem] p-8 shadow-sm space-y-6 text-center">
+                        <h3 class="text-3xl font-black">签到 Sign-in</h3>
+                        <div class="photo-slot border-blue-200">
+                            <input type="file" capture="camera" onchange="processImage(this, 'g0_gate')" class="absolute inset-0 opacity-0 z-10">
+                            <div id="gate-placeholder" class="text-center font-black text-blue-400">拍摄工厂大门<br>PHOTO AT GATE</div>
+                            <img id="img-g0_gate" class="hidden">
+                        </div>
+                        <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase">GPS 签到 CHECK-IN</button>
+                        <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位</p>
+                    </div>
+                </section>
+
+                <section id="step-2" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-6 space-y-6">
+                        <h4 class="font-black text-xs uppercase text-slate-400">工厂环境照片 (2-5张)</h4>
+                        <div class="grid grid-cols-2 gap-3" id="env-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_1" class="hidden">场景 1</div>
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_2')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_2" class="hidden">场景 2</div>
+                        </div>
+                        <button onclick="addPhotoSlot('env-container', 'env')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[10px] font-black">+ ADD PHOTO</button>
+                        <div class="space-y-3 pt-4 border-t">
+                            <input type="number" id="env-staff" class="w-full bg-slate-50 p-4 rounded-2xl font-black text-sm" placeholder="流水总人数 Staff Count">
+                            <input type="number" id="env-workers" class="w-full bg-slate-50 p-4 rounded-2xl font-black text-sm" placeholder="做货人数 Workers on Order">
+                            <textarea id="env-desc" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-xs h-24" placeholder="工厂规模、设备等概况说明..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step-3" class="step-content hidden">
+                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6">
+                        <h3 class="font-black text-lg">AQL 2.5 抽样标准 (二级)</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-6 rounded-3xl"><p class="text-[10px] font-black">抽样数量</p><p id="aql-size" class="text-4xl font-black text-blue-700">--</p></div>
+                            <div class="bg-emerald-50 p-6 rounded-3xl"><p class="text-[10px] font-black">AC / RE</p><p id="aql-ac-re" class="text-4xl font-black text-emerald-600">--</p></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step-4" class="step-content hidden space-y-6">
+                    <div class="bg-white rounded-[2.5rem] p-6 space-y-8">
+                        <div class="space-y-3">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第一组: 正/反/里平铺 MAIN</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g1-container">
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_f')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_f" class="hidden">正面</div>
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_b')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_b" class="hidden">反面</div>
+                                <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g1_i')" class="absolute inset-0 opacity-0 z-10"><img id="img-g1_i" class="hidden">内里</div>
+                            </div>
+                            <button onclick="addPhotoSlot('g1-container', 'g1')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第二组: 颜色/印花平铺 COLORS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g2-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g2_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g2_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g2-container', 'g2')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第三组: 尺码平铺 SIZES</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g3-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g3_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g3_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g3-container', 'g3')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第四组: 水洗标/LOGO标 LABELS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g4-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g4_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g4_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g4-container', 'g4')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第五组: 对色照片 MATCH</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g5-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g5_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g5_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g5-container', 'g5')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                        <div class="space-y-3 pt-4 border-t">
+                            <h5 class="font-black text-[10px] text-slate-400 uppercase">第六组: 工艺细节 DETAILS</h5>
+                            <div class="grid grid-cols-2 gap-3" id="g6-container"><div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'g6_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-g6_1" class="hidden">照片 1</div></div>
+                            <button onclick="addPhotoSlot('g6-container', 'g6')" class="w-full py-2 border-dashed border-2 rounded-xl text-[8px] font-black">+ ADD</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step-5" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">尺寸测量 SIZE</h4>
+                        <p class="text-[10px] font-bold text-slate-400">拍摄尺寸测试手写结果照片：</p>
+                        <div class="grid grid-cols-2 gap-3" id="size-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'sz_1')" class="absolute inset-0 opacity-0 z-10"><img id="img-sz_1" class="hidden">照片 1</div>
+                        </div>
+                        <button onclick="addPhotoSlot('size-container', 'sz')" class="w-full py-3 border-2 border-dashed rounded-2xl text-[10px] font-black">+ ADD PHOTO</button>
+                        <div class="pt-4 border-t">
+                            <label class="text-[10px] font-black text-slate-400 uppercase">尺码结果说明 Size Result Description</label>
+                            <textarea id="sz-desc" class="w-full bg-slate-50 p-4 rounded-2xl font-bold text-xs h-24 mt-2" placeholder="填写尺码判定结果或备注..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step-6" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">疵点记录 DEFECTS</h4>
+                        <div id="defect-container" class="space-y-3"></div>
+                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-blue-200 text-blue-600 font-black rounded-3xl">+ ADD DEFECT</button>
+                    </div>
+                </section>
+
+                <section id="step-7" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">报告摘要 & 判定 REPORT SUMMARY</h4>
+                        <div class="bg-blue-50 p-6 rounded-3xl border border-blue-100">
+                            <label class="text-[10px] font-black text-blue-600 uppercase mb-2 block">最终判定 RESULT DETERMINATION</label>
+                            <select id="final-result" onchange="inspectionData.finalResult = this.value; updateReport();" class="w-full bg-white border-2 border-blue-200 p-4 rounded-2xl font-black text-lg">
+                                <option value="PENDING">待定 PENDING</option>
+                                <option value="PASS">通过 PASS ✅</option>
+                                <option value="FAIL">拒收 FAIL ❌</option>
+                            </select>
+                        </div>
+                        <div class="border rounded-2xl overflow-hidden shadow-inner bg-slate-50 p-2 overflow-x-auto">
+                            <div id="report-canvas" class="bg-white p-12 w-[800px] text-slate-800 shadow-2xl origin-top scale-[0.35] mb-[-680px]"></div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center"><h5 class="text-[10px] font-black text-slate-400 uppercase">电子签字 SIGNATURE</h5><button onclick="clearSig()" class="text-[8px] font-black text-blue-600 uppercase">清除 CLEAR</button></div>
+                            <canvas id="sig-pad" class="w-full h-40 bg-white border-2 border-slate-200 rounded-3xl shadow-inner"></canvas>
+                        </div>
+                        <button onclick="exportPDF()" class="w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase shadow-xl active:scale-95 transition-all">生成并导出 PDF 报告</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var currentUser = ''; var currentRole = ''; var currentStep = 1; var supabase = null;
+        var inspectionData = { order: '', factory: '', images: {}, defects: [], stepsCompleted: [], finalResult: 'PENDING' };
+        var merchandiserTasks = []; var inspectorTasks = []; var referencePhotos = {};
+
+        function autoSetRole() {
+            const id = document.getElementById('login-id').value;
+            const roleSelect = document.getElementById('login-role');
+            if (id.includes('Merch')) roleSelect.value = 'merchandiser';
+            else if (id.includes('Inspector')) roleSelect.value = 'inspector';
+        }
+
+        function processReferenceImage(input, id) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                referencePhotos[id] = e.target.result;
+                const p = document.getElementById('img-'+id); p.src = e.target.result; p.classList.remove('hidden');
+                if (document.getElementById('ph-'+id)) document.getElementById('ph-'+id).classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function addMerchPhotoSlot() {
+            const id = 'ref_' + Date.now();
+            const d = document.createElement('div'); d.className="photo-slot border-blue-200 bg-blue-50/20";
+            d.innerHTML = `<input type="file" accept="image/*" onchange="processReferenceImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><div id="ph-${id}" class="text-center"><p class="text-[10px] font-black text-blue-400">点击上传样照</p></div><img id="img-${id}" class="hidden w-full h-full">`;
+            document.getElementById('merch-photo-container').appendChild(d);
+        }
+
+        function login() {
+            try {
+                var id = document.getElementById('login-id').value;
+                var role = document.getElementById('login-role').value;
+                if (!id) return alert('Select Account');
+                currentUser = id; currentRole = role;
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('app-header').classList.remove('hidden');
+                document.getElementById('merch-view').classList.add('hidden');
+                document.getElementById('inspector-view').classList.add('hidden');
+                document.getElementById('inspection-flow').classList.add('hidden');
+                if (role === 'merchandiser') { document.getElementById('merch-view').classList.remove('hidden'); refreshAssignedTasks(); } 
+                else { document.getElementById('inspector-view').classList.remove('hidden'); document.getElementById('inspector-display-name').innerText = currentUser; refreshInspectorTasks(); }
+                if (window.lucide) lucide.createIcons();
+            } catch (e) { alert(e.message); }
+        }
+
+        async function assignTask() {
+            const t = {
+                order: document.getElementById('new-order-no').value, type: document.getElementById('new-type').value, qty: document.getElementById('new-qty').value, factory: document.getElementById('new-factory').value,
+                inspectionDate: document.getElementById('new-inspection-date').value, deliveryDate: document.getElementById('new-delivery-date').value, styleDesc: document.getElementById('new-style-desc').value,
+                specialNotes: document.getElementById('new-special-notes').value, referencePhotos: referencePhotos, inspector: document.getElementById('assign-user').value,
+                status: 'PENDING', created_at: new Date().toISOString(), creator: currentUser
+            };
+            if (!t.order || !t.factory) return alert('Fill Form');
+            if (supabase) await supabase.from('aston_tasks').insert([t]);
+            let ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]'); ts.push(t); localStorage.setItem('aston_tasks', JSON.stringify(ts));
+            resetMerchForm(); alert('Success!'); refreshAssignedTasks();
+        }
+
+        async function refreshAssignedTasks() {
+            let tasks = [];
+            if (supabase) { const { data } = await supabase.from('aston_tasks').select('*').eq('creator', currentUser).order('created_at', { ascending: false }); if (data) tasks = data; } 
+            else { tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.creator === currentUser).reverse(); }
+            merchandiserTasks = tasks;
+            const now = new Date();
+            document.getElementById('assigned-task-list').innerHTML = tasks.map((t, idx) => {
+                let timeClass = "text-emerald-500"; let timeText = "WAITING";
+                if (t.inspectionDate) { const diff = Math.ceil((new Date(t.inspectionDate) - now) / 86400000); if (diff < 0) { timeClass = "text-red-500"; timeText = `OVERDUE ${Math.abs(diff)}D`; } else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; } else timeText = `${diff}D LEFT`; }
+                const firstPhoto = t.referencePhotos ? Object.values(t.referencePhotos)[0] : null;
+                return `<div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex flex-col gap-3">
+                    <div class="flex items-center gap-3">
+                        ${firstPhoto ? `<img src="${firstPhoto}" class="w-12 h-12 rounded-xl object-contain bg-slate-50 border">` : `<div class="w-12 h-12 bg-slate-100 rounded-lg"></div>`}
+                        <div class="flex-1 min-w-0"><div class="font-black text-sm truncate">${t.order}</div><div class="text-[9px] text-slate-400 font-bold truncate uppercase">${t.factory} | ${t.qty} PCS</div></div>
+                        <div class="text-right"><span class="${timeClass} text-[9px] font-black">${timeText}</span><div class="text-[8px] font-bold text-slate-300 mt-1 uppercase">${t.inspector ? t.inspector.split('_')[1] : 'NONE'}</div></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50">
+                        <button onclick="previewTask(${idx})" class="py-2 bg-slate-50 text-slate-600 rounded-xl font-black text-[9px] uppercase">预览 PREVIEW</button>
+                        <button onclick="editTask(${idx})" class="py-2 bg-blue-50 text-blue-600 rounded-xl font-black text-[9px] uppercase">修改 EDIT</button>
+                        <button onclick="deleteTask(${idx})" class="py-2 bg-red-50 text-red-600 rounded-xl font-black text-[9px] uppercase">删除 DEL</button>
+                    </div></div>`;
+            }).join('');
+        }
+
+        function editTask(idx) {
+            const t = merchandiserTasks[idx];
+            document.getElementById('new-order-no').value = t.order; document.getElementById('new-type').value = t.type; document.getElementById('new-qty').value = t.qty; document.getElementById('new-factory').value = t.factory;
+            document.getElementById('new-inspection-date').value = t.inspectionDate || ''; document.getElementById('new-delivery-date').value = t.deliveryDate || '';
+            document.getElementById('new-style-desc').value = t.styleDesc || ''; document.getElementById('new-special-notes').value = t.specialNotes || ''; document.getElementById('assign-user').value = t.inspector;
+            referencePhotos = JSON.parse(JSON.stringify(t.referencePhotos || {}));
+            document.getElementById('merch-photo-container').innerHTML = '';
+            if (Object.keys(referencePhotos).length === 0) { addMerchPhotoSlot(); } 
+            else { Object.entries(referencePhotos).forEach(([id, src]) => {
+                    const d = document.createElement('div'); d.className="photo-slot border-blue-200 bg-blue-50/20";
+                    d.innerHTML = `<input type="file" accept="image/*" onchange="processReferenceImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" src="${src}" class="w-full h-full object-contain bg-black">`;
+                    document.getElementById('merch-photo-container').appendChild(d);
+                });
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.querySelector('#merch-view h3').innerText = '修改检验计划 Edit Plan';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            const btn = document.querySelector('#merch-view button[onclick="assignTask()"]'); btn.innerText = '保存修改 SAVE CHANGES'; btn.setAttribute('onclick', `updateTask(${idx})`);
+        }
+
+        async function updateTask(idx) {
+            const oldTask = merchandiserTasks[idx];
+            const newTask = {
+                order: document.getElementById('new-order-no').value, type: document.getElementById('new-type').value, qty: document.getElementById('new-qty').value, factory: document.getElementById('new-factory').value,
+                inspectionDate: document.getElementById('new-inspection-date').value, deliveryDate: document.getElementById('new-delivery-date').value, styleDesc: document.getElementById('new-style-desc').value,
+                specialNotes: document.getElementById('new-special-notes').value, referencePhotos: referencePhotos, inspector: document.getElementById('assign-user').value
+            };
+            if (supabase && oldTask.id) { await supabase.from('aston_tasks').update(newTask).eq('id', oldTask.id); } 
+            else { let ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]'); const oIdx = ts.findIndex(t => t.order === oldTask.order && t.created_at === oldTask.created_at); if (oIdx !== -1) { ts[oIdx] = { ...ts[oIdx], ...newTask }; localStorage.setItem('aston_tasks', JSON.stringify(ts)); } }
+            resetMerchForm(); alert('Updated!'); refreshAssignedTasks();
+        }
+
+        function resetMerchForm() {
+            document.getElementById('new-order-no').value = ''; document.getElementById('new-qty').value = ''; document.getElementById('new-factory').value = ''; document.getElementById('new-style-desc').value = '';
+            document.getElementById('new-inspection-date').value = ''; document.getElementById('new-delivery-date').value = ''; document.getElementById('new-special-notes').value = '';
+            document.getElementById('merch-photo-container').innerHTML = ''; referencePhotos = {}; addMerchPhotoSlot();
+            document.getElementById('cancel-edit-btn').classList.add('hidden'); document.querySelector('#merch-view h3').innerText = '下达检验计划 Assign Plan';
+            const btn = document.querySelector('#merch-view button[onclick^="updateTask"]'); if (btn) { btn.innerText = '发送计划 SEND PLAN'; btn.setAttribute('onclick', 'assignTask()'); }
+        }
+
+        async function deleteTask(idx) {
+            if (!confirm('确定删除此任务？')) return;
+            const t = merchandiserTasks[idx];
+            if (supabase && t.id) await supabase.from('aston_tasks').delete().eq('id', t.id);
+            else { let ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]'); const oIdx = ts.findIndex(task => task.order === t.order && task.created_at === t.created_at); if (oIdx !== -1) { ts.splice(oIdx, 1); localStorage.setItem('aston_tasks', JSON.stringify(ts)); } }
+            refreshAssignedTasks();
+        }
+
+        function previewTask(idx, isMerch = true) {
+            const t = isMerch ? merchandiserTasks[idx] : inspectorTasks[idx];
+            const modal = document.getElementById('preview-modal');
+            const content = document.getElementById('preview-content');
+            let photosHtml = ''; if (t.referencePhotos) { Object.values(t.referencePhotos).forEach(src => { photosHtml += `<img src="${src}" class="w-full h-auto object-contain bg-slate-50 rounded-2xl border mb-2 shadow-sm">`; }); }
+            content.innerHTML = `
+                <div class="space-y-4 text-[10px]">
+                    <h3 class="text-lg font-black border-b pb-2 flex justify-between items-center"><span>计划详情 PLAN DETAILS</span><span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">${t.status || 'PENDING'}</span></h3>
+                    <div class="max-h-80 overflow-y-auto no-scrollbar space-y-2">${photosHtml || '<div class="h-32 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 font-bold">无样照 NO PHOTOS</div>'}</div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 bg-slate-50 p-4 rounded-3xl">
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">订单号 PO#</label><p class="text-xs font-black text-slate-800">${t.order}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">数量 QTY</label><p class="text-xs font-black text-slate-800">${t.qty} PCS</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">工厂 FACTORY</label><p class="text-xs font-black text-slate-800">${t.factory}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">款式描述 DESC</label><p class="text-xs font-black text-slate-800">${t.styleDesc || '-'}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">检验日期 INSP</label><p class="text-xs font-black text-blue-600">${t.inspectionDate || '-'}</p></div>
+                        <div><label class="text-slate-400 font-black uppercase block mb-0.5">合同交期 DELV</label><p class="text-xs font-black text-emerald-600">${t.deliveryDate || '-'}</p></div>
+                        <div class="col-span-2 border-t pt-2 mt-1"><label class="text-blue-500 font-black uppercase block mb-0.5 italic underline">指派检验员 INSPECTOR</label><p class="text-xs font-black text-slate-800">${t.inspector ? t.inspector.split('_').join(' ') : '未指派 Unassigned'}</p></div>
+                        <div class="col-span-2 border-t pt-2 mt-1"><label class="text-red-500 font-black uppercase block mb-0.5 italic underline">特别注意事项 SPECIAL NOTES</label><p class="text-xs font-bold text-slate-700 leading-relaxed">${t.specialNotes || '无 None'}</p></div>
+                    </div></div>`;
+            modal.classList.remove('hidden');
+        }
+        function closePreview() { document.getElementById('preview-modal').classList.add('hidden'); }
+
+        async function refreshInspectorTasks() {
+            let tasks = [];
+            if (supabase) { const { data } = await supabase.from('aston_tasks').select('*').eq('inspector', currentUser).order('created_at', { ascending: false }); if (data) tasks = data; } 
+            else { tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse(); }
+            inspectorTasks = tasks;
+            const now = new Date();
+            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, idx) => {
+                let timeClass = "text-emerald-500"; let timeText = "Waiting";
+                if (t.inspectionDate) { const diff = Math.ceil((new Date(t.inspectionDate) - now) / 86400000); if (diff < 0) { timeClass = "text-red-500 animate-pulse"; timeText = `OVERDUE ${Math.abs(diff)}D`; } else if (diff === 0) { timeClass = "text-orange-500"; timeText = "DUE TODAY"; } else timeText = `${diff} DAYS LEFT`; }
+                const firstPhoto = t.referencePhotos ? Object.values(t.referencePhotos)[0] : null;
+                return `<div class="task-card shadow-sm border-slate-100"><div class="p-4 space-y-3"><div class="flex gap-4"><div class="w-20 h-24 flex-shrink-0 relative group" onclick="previewTask(${idx}, false)">${firstPhoto ? `<img src="${firstPhoto}" class="w-full h-full rounded-xl object-contain bg-slate-50 border shadow-inner">` : `<div class="w-full h-full bg-slate-100 rounded-xl flex items-center justify-center text-[10px] text-slate-300">NO IMG</div>`}<div class="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-[8px] text-white font-black bg-black/50 px-2 py-1 rounded-full">ZOOM</span></div></div><div class="flex-1 space-y-2"><div class="flex justify-between items-start"><div><h4 class="font-black text-lg leading-tight text-slate-800">${t.order}</h4><p class="text-[10px] font-black text-blue-600 uppercase tracking-tighter">${t.styleDesc || '无款式描述'}</p></div><span class="${timeClass} text-[9px] font-black bg-slate-50 px-2 py-1 rounded-lg">${timeText}</span></div><div class="grid grid-cols-2 gap-y-1 text-[9px] font-bold text-slate-500 uppercase italic"><div class="truncate">Fty: <span class="text-slate-800">${t.factory}</span></div><div class="text-right">Qty: <span class="text-slate-800">${t.qty}</span></div><div class="col-span-2">Delv: <span class="text-emerald-600 font-black">${t.deliveryDate || '-'}</span></div></div></div></div>${t.specialNotes ? `<div class="bg-red-50 p-3 rounded-xl border border-red-100" onclick="previewTask(${idx}, false)"><div class="flex justify-between items-center mb-1"><span class="text-[8px] font-black text-red-500 uppercase">⚠ 特别注意 Special Notes</span><span class="text-[7px] font-black text-red-300 uppercase">点击放大 CLICK TO ZOOM</span></div><p class="text-[10px] font-bold text-red-800 line-clamp-2 leading-tight">${t.specialNotes}</p></div>` : ''}</div><div class="px-4 pb-4 flex gap-2"><button onclick="previewTask(${idx}, false)" class="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition-all">预览详情 PREVIEW</button><button onclick="startInspectionByIndex(${idx})" class="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-lg shadow-blue-200 active:scale-95 transition-all">开始检验 START</button></div></div>`;
+            }).join('');
+        }
+
+        function calculateAQL(qty) {
+            const n = parseInt(qty) || 0;
+            if (n <= 50) return { s: 8, ac: 0, re: 1 }; if (n <= 90) return { s: 13, ac: 0, re: 1 }; if (n <= 150) return { s: 20, ac: 1, re: 2 }; if (n <= 280) return { s: 32, ac: 2, re: 3 }; if (n <= 500) return { s: 50, ac: 3, re: 4 }; if (n <= 1200) return { s: 80, ac: 5, re: 6 }; if (n <= 3200) return { s: 125, ac: 7, re: 8 }; return { s: 200, ac: 10, re: 11 };
+        }
+
+        function startInspectionByIndex(idx) {
+            const t = inspectorTasks[idx]; inspectionData.task = t; const a = calculateAQL(t.qty); document.getElementById('aql-size').innerText = a.s; document.getElementById('aql-ac-re').innerText = `${a.ac}/${a.re}`; document.getElementById('inspector-view').classList.add('hidden'); document.getElementById('inspection-flow').classList.remove('hidden'); switchStep(1);
+        }
+
+        function switchStep(step) {
+            if (step > currentStep && !inspectionData.stepsCompleted.includes(currentStep)) { inspectionData.stepsCompleted.push(currentStep); document.getElementById('nav-'+currentStep).classList.add('step-done'); }
+            currentStep = step; document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden')); document.getElementById('step-'+step).classList.remove('hidden'); document.querySelectorAll('.step-nav-btn').forEach(n => n.classList.remove('step-active')); document.getElementById('nav-'+step).classList.add('step-active');
+            if (step === 7) updateReport();
+        }
+
+        function getGPS() { navigator.geolocation.getCurrentPosition(p => { inspectionData.gps = p.coords.latitude.toFixed(4) + ',' + p.coords.longitude.toFixed(4); document.getElementById('gps-display').innerText = 'GPS: ' + inspectionData.gps; }, e => alert(e.message)); }
+
+        function processImage(input, id) {
+            const r = new FileReader(); r.onload = e => { inspectionData.images[id] = e.target.result; const i = document.getElementById('img-'+id); i.src = e.target.result; i.classList.remove('hidden'); if(id==='g0_gate') document.getElementById('gate-placeholder').classList.add('hidden'); if(document.getElementById('ph-'+id)) document.getElementById('ph-'+id).classList.add('hidden'); }; r.readAsDataURL(input.files[0]);
+        }
+
+        function addPhotoSlot(cId, pfx) {
+            const id = pfx + '_' + Date.now(); const d = document.createElement('div'); d.className="photo-slot"; d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><div id="ph-${id}" class="text-[8px] font-black text-slate-400">点击拍照 PHOTO</div><img id="img-${id}" class="hidden">`; document.getElementById(cId).appendChild(d);
+        }
+
+        function addDefectRow() {
+            const id = 'df_' + Date.now();
+            const r = document.createElement('div'); r.className="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-200";
+            r.innerHTML = `<div class="flex gap-2"><select id="defect-type-${id}" class="flex-1 text-[10px] font-bold bg-white p-3 rounded-xl outline-none border"><optgroup label="面料类 Fabric"><option>色差 Shade Variation</option><option>抽纱/抽丝 Yarn Pull / Snag</option><option>破洞 Fabric Hole</option><option>色花/染色不均 Dye Spot / Uneven Dyeing</option></optgroup><optgroup label="缝制工艺 Sewing"><option>跳针 Skip Stitch</option><option>断线 Broken Stitch</option><option>露毛边 Raw Edge</option><option>歪斜 Twisted / Slanted</option><option>起皱 Puckering</option><option>车缝不佳 Poor stitching</option></optgroup><optgroup label="辅料标志 Trims"><option>扣子松动 Loose Button</option><option>钉扣不安全 Snaps Not safe</option><option>拉链不畅 Malfunctional Zipper</option><option>唛头装反 Label Reversed</option></optgroup><optgroup label="安全/整理 Safety"><option>针头残留 Broken Needle Remaining</option><option>污渍/油污 Stain / Oil Mark</option><option>线头 Untrimmed Thread</option><option>气味 Odor / Chemical Smell</option></optgroup></select><select id="defect-level-${id}" class="w-24 text-[10px] font-black bg-white p-3 rounded-xl border text-red-600"><option value="major">大疵 MAJOR</option><option value="minor">小疵 MINOR</option></select><input type="number" id="defect-qty-${id}" class="w-16 p-3 rounded-xl text-center font-black border" placeholder="Qty"></div><div class="grid grid-cols-2 gap-2" id="ph-container-${id}"><div class="photo-slot h-32 bg-white"><input type="file" capture="camera" onchange="processImage(this, '${id}_1')" class="absolute inset-0 opacity-0 z-10"><div id="ph-${id}_1" class="text-[8px] font-black text-slate-400">拍摄照片 1 PHOTO 1</div><img id="img-${id}_1" class="hidden"></div></div><button onclick="addDefectPhoto('${id}')" class="w-full py-2 border border-dashed border-slate-300 text-[8px] font-black rounded-xl text-slate-400">+ 增加疵点图片 ADD PHOTO</button>`;
+            document.getElementById('defect-container').appendChild(r);
+        }
+
+        function addDefectPhoto(defectGroupId) {
+            const id = defectGroupId + '_' + Date.now(); const d = document.createElement('div'); d.className="photo-slot h-32 bg-white"; d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}')" class="absolute inset-0 opacity-0 z-10"><div id="ph-${id}" class="text-[8px] font-black text-slate-400">拍摄照片 PHOTO</div><img id="img-${id}" class="hidden">`; document.getElementById('ph-container-' + defectGroupId).appendChild(d);
+        }
+
+        function updateReport() {
+            const t = inspectionData.task || {};
+            const canvas = document.getElementById('report-canvas');
+            let resColor = "#94a3b8"; if (inspectionData.finalResult === 'PASS') resColor = "#10b981"; if (inspectionData.finalResult === 'FAIL') resColor = "#ef4444";
+            let majorCount = 0; let minorCount = 0; const defectRows = document.getElementById('defect-container').children; let defectsHtml = "";
+            for (let row of defectRows) {
+                const id = row.querySelector('[id^="ph-container-"]').id.replace('ph-container-', '');
+                const type = document.getElementById(`defect-type-${id}`).value; const level = document.getElementById(`defect-level-${id}`).value; const qty = document.getElementById(`defect-qty-${id}`).value || 0;
+                if (level === 'major') majorCount += parseInt(qty); else minorCount += parseInt(qty);
+                defectsHtml += `<div class="p-4 border rounded-xl mb-2 flex items-center justify-between"><div><p class="font-black text-sm">${type}</p><p class="text-[9px] font-bold text-slate-400 uppercase">${level}</p></div><p class="text-lg font-black">${qty}</p></div>`;
+            }
+            const photoCategories = { 'g0_gate': '工厂签到 FACTORY SIGN-IN', 'env': '工厂环境 ENVIRONMENT', 'g1': '外观：正/反/里平铺 MAIN', 'g2': '外观：颜色/印花 COLORS', 'g3': '外观：尺码平铺 SIZES', 'g4': '外观：水洗标/LOGO标 LABELS', 'g5': '外观：对色照片 MATCH', 'g6': '外观：工艺细节 DETAILS', 'sz': '尺寸测量 SIZE TEST', 'df': '疵点细节 DEFECT DETAILS' };
+            let photosGroupedHtml = "";
+            Object.entries(photoCategories).forEach(([key, title]) => {
+                let categoryPhotos = Object.entries(inspectionData.images).filter(([id, src]) => id.startsWith(key)).map(([id, src]) => `<div class="p-1"><img src="${src}" class="w-full h-auto rounded-lg"><p class="text-[7px] text-center mt-1 text-slate-400">${id}</p></div>`).join('');
+                if (categoryPhotos) { photosGroupedHtml += `<div class="report-section"><div class="report-section-title">${title}</div><div class="grid grid-cols-3 gap-2">${categoryPhotos}</div></div>`; }
+            });
+            canvas.innerHTML = `
+                <div class="flex justify-between items-start mb-8"><div><h1 class="text-4xl font-black italic tracking-tighter text-blue-700">ASTON Q.A. REPORT</h1><p class="text-[10px] font-black text-slate-400 uppercase mt-2">Professional Garment Inspection Service</p></div><div class="text-right"><div class="px-6 py-4 rounded-3xl text-white font-black text-2xl" style="background: ${resColor}">${inspectionData.finalResult}</div></div></div>
+                <div class="grid grid-cols-3 gap-8 mb-8 bg-slate-50 p-6 rounded-[2rem]"><div><p class="report-label">Order PO#</p><p class="report-value">${t.order}</p></div><div><p class="report-label">Product Type</p><p class="report-value">${t.type}</p></div><div><p class="report-label">Factory</p><p class="report-value">${t.factory}</p></div><div><p class="report-label">Quantity</p><p class="report-value">${t.qty} PCS</p></div><div><p class="report-label">Inspector</p><p class="report-value">${currentUser}</p></div><div><p class="report-label">GPS Location</p><p class="report-value">${inspectionData.gps || '-'}</p></div></div>
+                <div class="report-section"><div class="report-section-title">款式描述 & 特别注意 STYLE & NOTES</div><div class="grid grid-cols-2 gap-8"><div><p class="report-label">Style Description</p><p class="report-value">${t.styleDesc || '-'}</p></div><div><p class="report-label">Special Notes</p><p class="report-value text-red-600">${t.specialNotes || '-'}</p></div></div></div>
+                <div class="report-section"><div class="report-section-title">疵点统计 & 判定 DEFECTS SUMMARY</div><div class="grid grid-cols-2 gap-4 mb-4"><div class="bg-red-50 p-4 rounded-2xl"><p class="report-label text-red-400">Major Defects</p><p class="text-2xl font-black text-red-600">${majorCount}</p></div><div class="bg-orange-50 p-4 rounded-2xl"><p class="report-label text-orange-400">Minor Defects</p><p class="text-2xl font-black text-orange-600">${minorCount}</p></div></div>${defectsHtml}</div>
+                ${photosGroupedHtml}
+                <div class="report-section flex justify-between items-end mt-12 border-t-4 border-slate-900 pt-8"><div class="w-1/2"><p class="report-label">Sign-off Signature</p><div id="sig-display" class="mt-4 border-b h-24 flex items-end"></div></div><div class="text-right w-1/2"><p class="report-label">Report Date</p><p class="text-xl font-black">${new Date().toLocaleDateString()}</p></div></div>`;
+        }
+
+        function exportPDF() {
+            const sigImg = sigPad.toDataURL('image/png');
+            document.getElementById('sig-display').innerHTML = `<img src="${sigImg}" class="h-24">`;
+            html2canvas(document.getElementById('report-canvas'), { scale: 2 }).then(cvs => {
+                const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                const imgData = cvs.toDataURL('image/jpeg', 1.0);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (cvs.height * pdfWidth) / cvs.width;
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`ASTON_Report_${inspectionData.task.order}.pdf`);
+            });
+        }
+
+        var sigPad, sigCtx, drawing = false;
+        function initSig() {
+            sigPad = document.getElementById('sig-pad'); if(!sigPad) return;
+            sigCtx = sigPad.getContext('2d');
+            const rect = sigPad.getBoundingClientRect();
+            sigPad.width = sigPad.offsetWidth; sigPad.height = sigPad.offsetHeight;
+            sigCtx.lineWidth = 3; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#000';
+            const getPos = e => {
+                const r = sigPad.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - r.left, y: clientY - r.top };
+            };
+            const start = e => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); e.preventDefault(); };
+            const move = e => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); e.preventDefault(); };
+            const stop = () => drawing = false;
+            sigPad.addEventListener('mousedown', start); sigPad.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
+            sigPad.addEventListener('touchstart', start); sigPad.addEventListener('touchmove', move); sigPad.addEventListener('touchend', stop);
+        }
+        function clearSig() { sigCtx.clearRect(0,0,sigPad.width,sigPad.height); }
+
+        function initApp() {
+            var d = document.getElementById('debug-info'); if (d) { d.innerText = 'Ready V4.61'; d.style.color = '#10b981'; }
+            try {
+                if (window.supabase) { supabase = window.supabase.createClient('https://mrrtjetiincpovhedeql.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ycnRqZXRpaW5jcG92aGVkZXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyODEwMzksImV4cCI6MjA5Mjg1NzAzOX0.VgCb6VJQKYeE_0nVRecZPtbxkGfzOU8MGiUoTf92uF4'); }
+                initSig(); if(window.lucide) lucide.createIcons(); addMerchPhotoSlot();
+            } catch (e) { console.error("Init Error:", e); if (d) d.innerText = 'Init Warning: ' + e.message; }
+        }
+        (function() { var retryCount = 0; var checkReady = setInterval(function() { var d = document.getElementById('debug-info'); if (d) { clearInterval(checkReady); initApp(); } else if (retryCount > 50) { clearInterval(checkReady); } retryCount++; }, 100); })();
+    </script>
+</body>
+</html>
