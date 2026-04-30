@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. V4.69 - 深度定制报告版</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
+        .hidden { display: none !important; }
+        #login-view { position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; color: white; padding: 20px; text-align: center; }
+        .login-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; }
+        .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
+        .input-dark { background: #1e293b; border: none; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .photo-slot { aspect-ratio: 4/3; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 16px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .photo-slot img { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .step-nav-btn { flex: 1; padding: 10px 5px; font-size: 10px; font-weight: 900; background: white; border: none; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .step-active { background: #1d4ed8 !important; color: white !important; }
+        .step-done { background: #10b981 !important; color: white !important; }
+        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; transition: transform 0.2s; }
+        .task-card:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* 报告专用样式 */
+        #report-container { width: 1000px; margin: 0 auto; background: white; color: #1e293b; display: none; }
+        .report-page { width: 1000px; padding: 60px; box-sizing: border-box; background: white; border-bottom: 1px dashed #ccc; position: relative; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 14px; }
+        .report-table th { background: #f8fafc; font-weight: 900; width: 200px; }
+        .report-section-title { background: #1e293b; color: white; padding: 10px 20px; font-weight: 900; margin-bottom: 20px; border-radius: 8px; }
+        .report-result-box { border: 4px solid #1e293b; padding: 20px; font-size: 24px; font-weight: 900; text-align: center; border-radius: 16px; margin-bottom: 30px; }
+        .photo-grid { display: grid; grid-cols-2; gap: 20px; }
+        .photo-item { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .photo-item img { width: 100%; height: 250px; object-fit: contain; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .photo-item p { padding: 10px; text-align: center; font-size: 12px; font-weight: bold; background: white; margin: 0; }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <!-- Login View -->
+    <div id="login-view">
+        <div class="login-card">
+            <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 8px;">ASTON Q.A.</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 24px;">Quality Assurance System V4.69</p>
+            <div id="debug-info" style="font-size: 10px; color: #60a5fa; margin-bottom: 20px;">Ready (Custom Report Engine)</div>
+            <select id="login-id" onchange="autoSetRole()" class="input-dark">
+                <option value="">请选择账号 Select Account</option>
+                <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
+                <option value="Inspector_Li">李检验员 (Li)</option>
+                <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                <option value="Inspector_Wang">王检验员 (Wang)</option>
+            </select>
+            <select id="login-role" class="input-dark">
+                <option value="merchandiser">跟单员 (Merchandiser)</option>
+                <option value="inspector">检验员 (Inspector)</option>
+            </select>
+            <button onclick="login()" class="btn-blue">进入系统 Login</button>
+        </div>
+    </div>
+
+    <header id="app-header" class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center hidden">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center font-black italic">A</div>
+            <h1 class="font-black tracking-tighter text-lg">ASTON Q.A.</h1>
+        </div>
+        <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded font-bold">退出 Logout</button>
+    </header>
+
+    <main id="app-content">
+        <!-- Merchandiser View (Exact 4.60) -->
+        <div id="merch-view" class="p-4 space-y-4 hidden">
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
+                <h3 class="font-black text-gray-800 flex items-center mb-6 text-lg">下达检验计划 Assign Plan</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl">
+                        <label class="text-[10px] font-black text-slate-400 uppercase">产品类型 Type</label>
+                        <select id="new-type" class="w-full bg-transparent border-none font-black text-sm"><option>大货成品 Bulk</option><option>外购成品 Outsourced</option><option>面料 Fabric</option></select>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">订单号 PO#</label><input type="text" id="new-order-no" class="w-full bg-transparent border-none font-black text-sm" placeholder="Order#"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">数量 Qty</label><input type="number" id="new-qty" class="w-full bg-transparent border-none font-black text-sm" placeholder="1000"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">工厂 Factory</label><input type="text" id="new-factory" class="w-full bg-transparent border-none font-black text-sm" placeholder="Factory"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">款式描述 Style Desc</label><input type="text" id="new-style-desc" class="w-full bg-transparent border-none font-black text-sm" placeholder="描述"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">检验日期 Inspection Date</label><input type="date" id="new-inspection-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">合同交期 Ex-fty Date</label><input type="date" id="new-delivery-date" class="w-full bg-transparent border-none font-black text-sm"></div>
+                    <div class="col-span-2 bg-slate-50 p-4 rounded-2xl"><label class="text-[10px] font-black text-slate-400 uppercase">特别注意事项 Special Notes</label><textarea id="new-special-notes" class="w-full bg-transparent border-none font-bold text-xs h-16" placeholder="注意对色..."></textarea></div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-2">款式样照 Style Photos</label>
+                        <div class="grid grid-cols-2 gap-3" id="merch-photo-container"></div>
+                        <button onclick="addMerchPhotoSlot()" class="w-full py-2 border-2 border-dashed border-slate-100 text-[10px] font-black rounded-xl text-slate-400">+ 增加样照 ADD PHOTO</button>
+                    </div>
+                    <div class="col-span-2 bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <label class="text-[10px] font-black text-blue-600 uppercase">指派检验员 Inspector</label>
+                        <select id="assign-user" class="w-full bg-transparent border-none font-black text-sm">
+                            <option value="Inspector_Li">李检验员 (Li)</option>
+                            <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="assignTask()" class="w-full mt-6 bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase shadow-lg">发送计划 SEND PLAN</button>
+            </div>
+            <div id="assigned-task-list" class="space-y-3"></div>
+        </div>
+
+        <!-- Inspector View -->
+        <div id="inspector-view" class="p-4 space-y-4 hidden">
+            <h2 class="text-2xl font-black text-slate-800">我的任务 My Tasks</h2>
+            <div id="inspector-task-list" class="space-y-4"></div>
+        </div>
+
+        <!-- Inspection Flow -->
+        <div id="inspection-flow" class="hidden">
+            <nav class="flex bg-white border-b sticky top-14 z-40 overflow-x-auto no-scrollbar">
+                <button onclick="switchStep(1)" class="step-nav-btn step-active" id="nav-1">1. 签到<br>SIGN</button>
+                <button onclick="switchStep(2)" class="step-nav-btn" id="nav-2">2. 环境<br>ENV</button>
+                <button onclick="switchStep(3)" class="step-nav-btn" id="nav-3">3. 抽样<br>AQL</button>
+                <button onclick="switchStep(4)" class="step-nav-btn" id="nav-4">4. 照片<br>PHOTO</button>
+                <button onclick="switchStep(5)" class="step-nav-btn" id="nav-5">5. 尺寸<br>SIZE</button>
+                <button onclick="switchStep(6)" class="step-nav-btn" id="nav-6">6. 检验<br>DEFECT</button>
+                <button onclick="switchStep(7)" class="step-nav-btn" id="nav-7">7. 报告<br>REPORT</button>
+            </nav>
+
+            <div class="p-4 pb-32">
+                <!-- Step 1-6 UI (Same as 4.60) -->
+                <section id="step-1" class="step-content">
+                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6">
+                        <h3 class="text-3xl font-black">签到 Sign-in</h3>
+                        <div class="photo-slot border-blue-200">
+                            <input type="file" capture="camera" onchange="processImage(this, 'g0_gate', '工厂大门 Gate')" class="absolute inset-0 opacity-0 z-10">
+                            <div id="gate-placeholder" class="text-center font-black text-blue-400">拍摄工厂大门<br>PHOTO AT GATE</div>
+                            <img id="img-g0_gate" class="hidden">
+                        </div>
+                        <button onclick="getGPS()" class="w-full py-5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase">GPS 签到 CHECK-IN</button>
+                        <p id="gps-display" class="text-[10px] font-mono text-center text-slate-400">GPS: 未定位</p>
+                    </div>
+                </section>
+
+                <section id="step-2" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-6 space-y-6">
+                        <h4 class="font-black text-xs uppercase text-slate-400">工厂环境照片</h4>
+                        <div class="grid grid-cols-2 gap-3" id="env-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'env_1', '环境场景 1')" class="absolute inset-0 opacity-0 z-10"><img id="img-env_1" class="hidden">场景 1</div>
+                        </div>
+                        <button onclick="addPhotoSlot('env-container', 'env', '环境场景')" class="w-full py-3 border-2 border-dashed border-slate-100 text-[10px] font-black">+ ADD PHOTO</button>
+                    </div>
+                </section>
+
+                <section id="step-3" class="step-content hidden">
+                    <div class="bg-white rounded-[2rem] p-8 text-center space-y-6">
+                        <h3 class="font-black text-lg">AQL 2.5 抽样标准</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-6 rounded-3xl"><p class="text-[10px] font-black">抽样数量</p><p id="aql-size" class="text-4xl font-black text-blue-700">--</p></div>
+                            <div class="bg-emerald-50 p-6 rounded-3xl"><p class="text-[10px] font-black">AC / RE</p><p id="aql-ac-re" class="text-4xl font-black text-emerald-600">--</p></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="step-4" class="step-content hidden space-y-6">
+                    <div class="bg-white rounded-[2.5rem] p-6 space-y-8">
+                        <h4 class="font-black text-lg">产品照片 PHOTO</h4>
+                        <div class="grid grid-cols-2 gap-3" id="photo-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'p_f', '产品正面')" class="absolute inset-0 opacity-0 z-10"><img id="img-p_f" class="hidden">正面</div>
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'p_b', '产品反面')" class="absolute inset-0 opacity-0 z-10"><img id="img-p_b" class="hidden">反面</div>
+                        </div>
+                        <button onclick="addPhotoSlot('photo-container', 'p', '产品照片')" class="w-full py-3 border-dashed border-2 rounded-xl text-xs font-black">+ ADD PHOTO</button>
+                    </div>
+                </section>
+
+                <section id="step-5" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">尺寸测量 SIZE</h4>
+                        <div class="grid grid-cols-2 gap-3" id="size-container">
+                            <div class="photo-slot"><input type="file" capture="camera" onchange="processImage(this, 'sz_1', '尺寸测量 1')" class="absolute inset-0 opacity-0 z-10"><img id="img-sz_1" class="hidden">照片 1</div>
+                        </div>
+                        <button onclick="addPhotoSlot('size-container', 'sz', '尺寸测量')" class="w-full py-3 border-2 border-dashed rounded-2xl text-[10px] font-black">+ ADD PHOTO</button>
+                    </div>
+                </section>
+
+                <section id="step-6" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg">疵点记录 DEFECTS</h4>
+                        <div id="defect-container" class="space-y-3"></div>
+                        <button onclick="addDefectRow()" class="w-full py-5 border-2 border-dashed border-blue-200 text-blue-600 font-black rounded-3xl">+ ADD DEFECT</button>
+                    </div>
+                </section>
+
+                <!-- Step 7: Professional Report & Signature -->
+                <section id="step-7" class="step-content hidden space-y-4">
+                    <div class="bg-white rounded-[2rem] p-8 space-y-6">
+                        <h4 class="font-black text-lg italic text-blue-700">预览并导出专业报告 EXPORT REPORT</h4>
+                        
+                        <!-- 最终判定 -->
+                        <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-xl">
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">最终检验判定 RESULT DETERMINATION</label>
+                            <select id="final-result" onchange="inspectionData.finalResult = this.value; updateReportUI();" class="w-full bg-slate-800 border-none p-4 rounded-2xl font-black text-xl text-yellow-400">
+                                <option value="PENDING">待定 PENDING</option>
+                                <option value="PASSED">通过 PASSED ✅</option>
+                                <option value="FAILED">拒收 FAILED ❌</option>
+                            </select>
+                        </div>
+
+                        <!-- 电子签名 -->
+                        <div class="space-y-2 pt-4 border-t">
+                            <div class="flex justify-between items-center"><h5 class="text-[10px] font-black text-slate-400 uppercase">检验员电子签字 SIGNATURE</h5><button onclick="clearSig()" class="text-[10px] font-black text-blue-600 uppercase underline">清除 CLEAR</button></div>
+                            <div class="relative w-full h-48 bg-slate-50 border-2 border-slate-200 rounded-3xl overflow-hidden shadow-inner">
+                                <canvas id="sig-pad" class="absolute inset-0 w-full h-full touch-none"></canvas>
+                                <div id="sig-placeholder" class="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-300 font-black italic">SIGN HERE</div>
+                            </div>
+                        </div>
+
+                        <button onclick="generateProfessionalPDF()" class="w-full py-6 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase shadow-2xl flex items-center justify-center gap-3">
+                            <span id="btn-text">导出正式 PDF 报告</span>
+                        </button>
+
+                        <!-- 隐藏的报告容器 (用于渲染 PDF) -->
+                        <div id="report-render-target" class="fixed left-[-2000px] top-0">
+                            <div id="report-container"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var currentUser = ''; var currentRole = ''; var currentStep = 1;
+        var inspectionData = { task: null, images: {}, imageNames: {}, defects: [], gps: '-', finalResult: 'PENDING' };
+        var inspectorTasks = [];
+
+        function autoSetRole() {
+            const id = document.getElementById('login-id').value;
+            const roleSelect = document.getElementById('login-role');
+            if (id.includes('Merch')) roleSelect.value = 'merchandiser';
+            else if (id.includes('Inspector')) roleSelect.value = 'inspector';
+        }
+
+        function login() {
+            currentUser = document.getElementById('login-id').value;
+            currentRole = document.getElementById('login-role').value;
+            if (!currentUser) return alert('Select Account');
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            if (currentRole === 'merchandiser') document.getElementById('merch-view').classList.remove('hidden');
+            else { document.getElementById('inspector-view').classList.remove('hidden'); refreshInspectorTasks(); }
+        }
+
+        function refreshInspectorTasks() {
+            let tasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser).reverse();
+            inspectorTasks = tasks;
+            document.getElementById('inspector-task-list').innerHTML = tasks.map((t, idx) => `
+                <div class="task-card bg-white p-5 flex justify-between items-center shadow-sm rounded-3xl border border-slate-100">
+                    <div class="space-y-1"><div class="font-black text-lg">${t.order}</div><div class="text-[10px] font-black text-slate-400 uppercase">${t.factory} | ${t.qty} PCS</div></div>
+                    <button onclick="startInspectionByIndex(${idx})" class="bg-blue-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg">开始 START</button>
+                </div>`).join('');
+        }
+
+        function startInspectionByIndex(idx) {
+            inspectionData.task = inspectorTasks[idx];
+            const a = calculateAQL(inspectionData.task.qty);
+            document.getElementById('aql-size').innerText = a.s;
+            document.getElementById('aql-ac-re').innerText = `${a.ac}/${a.re}`;
+            document.getElementById('inspector-view').classList.add('hidden');
+            document.getElementById('inspection-flow').classList.remove('hidden');
+            switchStep(1);
+            initSig();
+        }
+
+        function switchStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
+            document.getElementById('step-'+step).classList.remove('hidden');
+            document.querySelectorAll('.step-nav-btn').forEach(n => n.classList.remove('step-active'));
+            document.getElementById('nav-'+step).classList.add('step-active');
+            window.scrollTo(0,0);
+        }
+
+        function calculateAQL(qty) {
+            const n = parseInt(qty) || 0;
+            if (n <= 50) return { s: 8, ac: 0, re: 1 }; if (n <= 90) return { s: 13, ac: 0, re: 1 }; if (n <= 150) return { s: 20, ac: 1, re: 2 }; if (n <= 280) return { s: 32, ac: 2, re: 3 }; if (n <= 500) return { s: 50, ac: 3, re: 4 }; if (n <= 1200) return { s: 80, ac: 5, re: 6 }; if (n <= 3200) return { s: 125, ac: 7, re: 8 }; return { s: 200, ac: 10, re: 11 };
+        }
+
+        function processImage(input, id, name) {
+            const r = new FileReader(); r.onload = e => {
+                inspectionData.images[id] = e.target.result;
+                inspectionData.imageNames[id] = name;
+                const i = document.getElementById('img-'+id); if(i){ i.src = e.target.result; i.classList.remove('hidden'); }
+                if(id==='g0_gate' && document.getElementById('gate-placeholder')) document.getElementById('gate-placeholder').classList.add('hidden');
+            }; r.readAsDataURL(input.files[0]);
+        }
+
+        function getGPS() { navigator.geolocation.getCurrentPosition(p => { inspectionData.gps = p.coords.latitude.toFixed(4) + ',' + p.coords.longitude.toFixed(4); document.getElementById('gps-display').innerText = 'GPS: ' + inspectionData.gps; }, e => alert(e.message)); }
+
+        function addPhotoSlot(cId, pfx, baseName) {
+            const id = pfx + '_' + Date.now();
+            const d = document.createElement('div'); d.className="photo-slot";
+            d.innerHTML = `<input type="file" capture="camera" onchange="processImage(this, '${id}', '${baseName} ' + (Date.now()%100))" class="absolute inset-0 opacity-0 z-10"><div class="text-[8px] font-black text-slate-400">点击拍照 PHOTO</div><img id="img-${id}" class="hidden">`;
+            document.getElementById(cId).appendChild(d);
+        }
+
+        function addDefectRow() {
+            const id = 'df_' + Date.now();
+            const r = document.createElement('div'); r.className="p-4 bg-slate-50 rounded-2xl border space-y-3";
+            r.innerHTML = `
+                <input type="text" id="desc-${id}" placeholder="瑕疵描述 (例如: 断线 Broken Stitch)" class="w-full p-3 rounded-xl text-xs font-bold border">
+                <div class="flex gap-2">
+                    <select id="level-${id}" class="flex-1 p-3 rounded-xl font-black text-xs border"><option value="Major">大疵 MAJOR</option><option value="Minor">小疵 MINOR</option></select>
+                    <input type="number" id="qty-${id}" class="w-20 p-3 rounded-xl text-center font-black border" placeholder="数量">
+                </div>
+                <div class="photo-slot h-24"><input type="file" capture="camera" onchange="processImage(this, '${id}', '瑕疵图 Defect')" class="absolute inset-0 opacity-0 z-10"><img id="img-${id}" class="hidden">拍照 PHOTO</div>
+            `;
+            document.getElementById('defect-container').appendChild(r);
+            inspectionData.defects.push(id);
+        }
+
+        function updateReportUI() {
+            // UI反馈
+        }
+
+        var sigPad, sigCtx, drawing = false;
+        function initSig() {
+            sigPad = document.getElementById('sig-pad'); if(!sigPad) return;
+            sigCtx = sigPad.getContext('2d');
+            sigPad.width = sigPad.offsetWidth; sigPad.height = sigPad.offsetHeight;
+            sigCtx.lineWidth = 4; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#000';
+            const getPos = e => { const r = sigPad.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx - r.left, y: cy - r.top }; };
+            const start = e => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); if(document.getElementById('sig-placeholder')) document.getElementById('sig-placeholder').classList.add('hidden'); e.preventDefault(); };
+            const move = e => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); e.preventDefault(); };
+            sigPad.addEventListener('touchstart', start); sigPad.addEventListener('touchmove', move); window.addEventListener('touchend', () => drawing = false);
+            sigPad.addEventListener('mousedown', start); sigPad.addEventListener('mousemove', move); window.addEventListener('mouseup', () => drawing = false);
+        }
+        function clearSig() { sigCtx.clearRect(0,0,sigPad.width,sigPad.height); document.getElementById('sig-placeholder').classList.remove('hidden'); }
+
+        async function generateProfessionalPDF() {
+            const btn = document.getElementById('btn-text');
+            btn.innerText = "正在生成报告 Generating...";
+            
+            const t = inspectionData.task;
+            const aql = calculateAQL(t.qty);
+            const container = document.getElementById('report-container');
+            container.style.display = 'block';
+            
+            // 构建报告内容
+            let html = `
+                <!-- Page 1: Summary -->
+                <div class="report-page">
+                    <div class="flex justify-between items-center mb-10 border-b-8 border-blue-700 pb-6">
+                        <div><h1 class="text-5xl font-black italic text-blue-800">ASTON Q.A.</h1><p class="text-sm font-black tracking-widest text-slate-400 uppercase mt-2">Professional Inspection Report</p></div>
+                        <div class="text-right">
+                            <p class="text-xs font-black text-slate-400">REPORT NO: ${Date.now()}</p>
+                            <p class="text-xs font-black text-slate-400">DATE: ${new Date().toLocaleDateString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="report-result-box ${inspectionData.finalResult === 'PASSED' ? 'border-emerald-500 text-emerald-600' : (inspectionData.finalResult === 'FAILED' ? 'border-red-500 text-red-600' : 'border-slate-800')}">
+                        OVERALL CONCLUSION: ${inspectionData.finalResult}
+                    </div>
+
+                    <div class="report-section-title">A. GENERAL INFORMATION</div>
+                    <table class="report-table">
+                        <tr><th>ORDER PO#</th><td>${t.order}</td><th>FACTORY</th><td>${t.factory}</td></tr>
+                        <tr><th>PRODUCT</th><td>${t.styleDesc || '-'}</td><th>QUANTITY</th><td>${t.qty} PCS</td></tr>
+                        <tr><th>INSPECTOR</th><td>${currentUser}</td><th>GPS LOC</th><td>${inspectionData.gps}</td></tr>
+                        <tr><th>AQL LEVEL</th><td>ANSI/ASQ Z1.4 (Level II)</td><th>SAMPLING</th><td>${aql.s} PCS</td></tr>
+                    </table>
+
+                    <div class="report-section-title">B. WORKMANSHIP SUMMARY (AQL 2.5)</div>
+                    <table class="report-table">
+                        <tr><th>DEFECT LEVEL</th><th>ALLOW (AC)</th><th>FOUND</th><th>RESULT</th></tr>
+                        <tr><td>MAJOR DEFECTS</td><td>${aql.ac}</td><td>${countDefects('Major')}</td><td>${countDefects('Major') <= aql.ac ? 'PASS' : 'FAIL'}</td></tr>
+                        <tr><td>MINOR DEFECTS</td><td>${aql.ac + 2}</td><td>${countDefects('Minor')}</td><td>${countDefects('Minor') <= (aql.ac+2) ? 'PASS' : 'FAIL'}</td></tr>
+                    </table>
+
+                    <div class="report-section-title">C. DEFECT DETAILS TABLE</div>
+                    <table class="report-table">
+                        <thead><tr><th>DEFECT DESCRIPTION</th><th>LEVEL</th><th>QTY</th></tr></thead>
+                        <tbody>
+                            ${inspectionData.defects.map(id => `
+                                <tr>
+                                    <td>${document.getElementById('desc-'+id).value || 'Unspecified'}</td>
+                                    <td>${document.getElementById('level-'+id).value}</td>
+                                    <td>${document.getElementById('qty-'+id).value || 0}</td>
+                                </tr>
+                            `).join('') || '<tr><td colspan="3" style="text-align:center">No defects found</td></tr>'}
+                        </tbody>
+                    </table>
+                    
+                    <div class="mt-20 flex justify-end gap-10">
+                        <div class="text-center"><p class="text-xs font-black uppercase mb-4">Inspector Signature</p><img src="${sigPad.toDataURL()}" class="h-20 border-b border-black"></div>
+                    </div>
+                </div>
+
+                <!-- Page 2+: Photos -->
+                <div class="report-page">
+                    <div class="report-section-title">D. INSPECTION PHOTOS (EVIDENCE)</div>
+                    <div class="grid grid-cols-2 gap-10">
+                        ${Object.entries(inspectionData.images).map(([id, src]) => `
+                            <div class="photo-item">
+                                <img src="${src}">
+                                <p>${inspectionData.imageNames[id] || 'Inspection Photo'}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+
+            // 渲染并保存
+            const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            const pages = document.querySelectorAll('.report-page');
+            
+            for (let i = 0; i < pages.length; i++) {
+                const canvas = await html2canvas(pages[i], { scale: 2 });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            }
+            
+            pdf.save(`ASTON_Report_${t.order}.pdf`);
+            container.style.display = 'none';
+            btn.innerText = "导出完成 Done!";
+            setTimeout(() => btn.innerText = "导出正式 PDF 报告", 2000);
+        }
+
+        function countDefects(level) {
+            let count = 0;
+            inspectionData.defects.forEach(id => {
+                if (document.getElementById('level-'+id).value === level) {
+                    count += parseInt(document.getElementById('qty-'+id).value || 0);
+                }
+            });
+            return count;
+        }
+
+        window.onload = function() { };
+    </script>
+</body>
+</html>
