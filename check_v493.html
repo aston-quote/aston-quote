@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. V4.93 - 布局优化与照片旋转版</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; background: #f8fafc; }
+        .hidden { display: none !important; }
+        #login-view { position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; color: white; padding: 20px; text-align: center; }
+        .login-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; }
+        .btn-blue { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; }
+        .input-dark { background: #1e293b; border: none; color: white; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
+        .task-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 15px; }
+        .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 900; }
+        .badge-red { background: #fee2e2; color: #ef4444; }
+        .badge-green { background: #dcfce7; color: #10b981; }
+        .badge-blue { background: #dbeafe; color: #2563eb; }
+        .card-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; background: #000; }
+        .label-sm { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; display: block; }
+        #sync-status { font-size: 8px; font-weight: bold; color: #94a3b8; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .btn-action { font-size: 10px; font-weight: 900; padding: 6px 0; border-radius: 10px; text-align: center; flex: 1; }
+        .date-line { font-size: 9px; font-weight: bold; color: #64748b; display: flex; align-items: center; gap: 4px; }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body onload="autoInit()">
+
+    <div id="login-view">
+        <div class="login-card">
+            <h2 style="font-size: 24px; font-weight: 900;">ASTON Q.A.</h2>
+            <p style="font-size: 10px; color: #94a3b8; margin-bottom: 20px;">V4.93 Layout & Rotate</p>
+            <select id="login-id" onchange="autoSetRole()" class="input-dark">
+                <option value="">选择账号 Account</option>
+                <option value="Merchandiser_Boss">跟单总监 (Boss)</option>
+                <option value="Inspector_Li">李检验员 (Li)</option>
+                <option value="Inspector_Zhang">张检验员 (Zhang)</option>
+                <option value="Inspector_Wang">王检验员 (Wang)</option>
+            </select>
+            <select id="login-role" class="input-dark"><option value="merchandiser">跟单 (Merch)</option><option value="inspector">检验 (Insp)</option></select>
+            <button onclick="login()" class="btn-blue">登录并同步 Login</button>
+        </div>
+    </div>
+
+    <header id="app-header" class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center hidden">
+        <div>
+            <h1 class="font-black text-lg">ASTON Q.A.</h1>
+            <p id="sync-status">● 云端已对齐 Cloud Aligned</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="syncCloud()" class="bg-white text-blue-900 text-[10px] font-black px-3 py-1.5 rounded-full shadow-lg">🔄 刷新/同步</button>
+            <button onclick="location.reload()" class="text-xs bg-red-500/20 px-2 py-1 rounded">退出</button>
+        </div>
+    </header>
+
+    <main id="app-content">
+        <div id="merch-view" class="p-4 space-y-4 hidden">
+            <div class="bg-white p-6 rounded-[2rem] border shadow-sm" id="merch-form-container">
+                <h3 class="font-black text-lg mb-4" id="form-title">下达检验计划</h3>
+                <input type="hidden" id="editing-task-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2 bg-slate-50 p-3 rounded-2xl"><label class="label-sm">订单 PO#</label><input id="new-order-no" class="w-full bg-transparent font-black text-sm" placeholder="例如: PO20240504"></div>
+                    <div class="bg-slate-50 p-3 rounded-2xl"><label class="label-sm">款式描述 Style</label><input id="new-style-desc" class="w-full bg-transparent font-black text-sm" placeholder="款式名称"></div>
+                    <div class="bg-slate-50 p-3 rounded-2xl"><label class="label-sm">订单数量 Qty</label><input type="number" id="new-order-qty" class="w-full bg-transparent font-black text-sm" placeholder="件数"></div>
+                    <div class="bg-slate-50 p-3 rounded-2xl"><label class="label-sm">验货日期 Inspection</label><input type="date" id="new-inspection-date" class="w-full bg-transparent font-black text-sm"></div>
+                    <div class="bg-slate-50 p-3 rounded-2xl"><label class="label-sm">交期日期 Delivery</label><input type="date" id="new-delivery-date" class="w-full bg-transparent font-black text-sm"></div>
+                    <div class="col-span-2 bg-slate-50 p-3 rounded-2xl"><label class="label-sm">工厂 Factory</label><input id="new-factory" class="w-full bg-transparent font-black text-sm" placeholder="工厂名称"></div>
+                    <div class="col-span-2 bg-slate-50 p-3 rounded-2xl"><label class="label-sm">备注 Notes</label><textarea id="new-special-notes" class="w-full bg-transparent font-bold text-xs h-16" placeholder="特殊说明..."></textarea></div>
+                    <div class="col-span-2 bg-slate-50 p-3 rounded-2xl"><label class="label-sm">样照 Styles (点 🔄 旋转照片)</label><div id="merch-photo-container" class="grid grid-cols-4 gap-2 mt-2"></div><button onclick="addMerchPhotoSlot()" class="w-full mt-2 py-2 border-dashed border-2 rounded-xl text-[10px] font-black">+ 增加照片</button></div>
+                    <div class="col-span-2 bg-blue-50 p-3 rounded-2xl"><label class="label-sm text-blue-600">指派检验员</label><select id="assign-user" class="w-full bg-transparent font-black text-sm"><option value="Inspector_Li">李检验员 (Li)</option><option value="Inspector_Zhang">张检验员 (Zhang)</option><option value="Inspector_Wang">王检验员 (Wang)</option></select></div>
+                </div>
+                <div class="flex gap-2 mt-6">
+                    <button id="submit-btn" onclick="assignTask()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg">发送计划 SEND & SYNC</button>
+                    <button id="cancel-edit-btn" onclick="cancelEdit()" class="hidden bg-slate-200 text-slate-600 px-6 py-4 rounded-2xl font-black">取消</button>
+                </div>
+            </div>
+            <div id="merch-task-list" class="space-y-4 pt-6"></div>
+        </div>
+
+        <div id="inspector-view" class="p-4 space-y-4 hidden">
+            <h2 class="text-xl font-black">我的任务 My Tasks</h2>
+            <div id="inspector-task-list" class="space-y-4"></div>
+        </div>
+
+        <!-- 预览模态框 -->
+        <div id="preview-modal" class="fixed inset-0 bg-black/80 z-[100] hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden max-h-[90vh] flex flex-col">
+                <div class="p-6 overflow-y-auto" id="preview-content"></div>
+                <button onclick="closePreview()" class="m-6 bg-slate-900 text-white py-4 rounded-2xl font-black">关闭预览 Close</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        var currentUser = ''; var currentRole = ''; var referencePhotos = {};
+        const CLOUD_URL = "https://npoint.io/documents/49899326e578f14c0a52";
+
+        function autoSetRole() { const id = document.getElementById('login-id').value; document.getElementById('login-role').value = id.includes('Merch')?'merchandiser':'inspector'; }
+
+        async function compressImage(base64Str, maxWidth = 300) {
+            return new Promise(resolve => {
+                const img = new Image(); img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height; if(w > maxWidth){ h *= maxWidth/w; w = maxWidth; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.4));
+                };
+            });
+        }
+
+        async function rotateImage(base64Str) {
+            return new Promise(resolve => {
+                const img = new Image(); img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.height; canvas.height = img.width;
+                    const ctx = canvas.getContext('2d');
+                    ctx.translate(canvas.width/2, canvas.height/2);
+                    ctx.rotate(Math.PI / 2);
+                    ctx.drawImage(img, -img.width/2, -img.height/2);
+                    resolve(canvas.toDataURL('image/jpeg', 0.5));
+                };
+            });
+        }
+
+        async function autoInit() { await syncCloud(true); }
+
+        function login() {
+            currentUser = document.getElementById('login-id').value; currentRole = document.getElementById('login-role').value;
+            if(!currentUser) return; document.getElementById('login-view').classList.add('hidden'); document.getElementById('app-header').classList.remove('hidden');
+            if(currentRole==='merchandiser'){ document.getElementById('merch-view').classList.remove('hidden'); refreshMerchTasks(); }
+            else { document.getElementById('inspector-view').classList.remove('hidden'); refreshInspectorTasks(); }
+        }
+
+        async function syncCloud(isSilent = false) {
+            const status = document.getElementById('sync-status');
+            if(!isSilent) status.innerText = "⏳ 正在同步中...";
+            try {
+                const getRes = await fetch(CLOUD_URL);
+                if(!getRes.ok) throw new Error("连接云端失败");
+                const cloudTasks = await getRes.json();
+                let localTasks = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+                let merged = [...cloudTasks.tasks || []];
+                localTasks.forEach(lt => {
+                    const idx = merged.findIndex(ct => ct.id === lt.id);
+                    if (idx === -1) merged.push(lt);
+                    else if (lt.modified_at > (merged[idx].modified_at || 0)) merged[idx] = lt;
+                });
+                merged = merged.filter(t => !t.isDeleted);
+                await fetch(CLOUD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tasks: merged }) });
+                localStorage.setItem('aston_tasks', JSON.stringify(merged));
+                status.innerText = "● 云端已对齐 " + new Date().toLocaleTimeString();
+                refreshMerchTasks(); refreshInspectorTasks();
+            } catch(e) { 
+                console.error(e);
+                status.innerText = "○ 同步失败 (检查网络)";
+            }
+        }
+
+        async function assignTask() {
+            const editingId = document.getElementById('editing-task-id').value;
+            const t = { 
+                id: editingId || 'T'+Date.now(), 
+                order: document.getElementById('new-order-no').value, 
+                factory: document.getElementById('new-factory').value, 
+                inspector: document.getElementById('assign-user').value, 
+                styleDesc: document.getElementById('new-style-desc').value, 
+                orderQty: document.getElementById('new-order-qty').value,
+                inspectionDate: document.getElementById('new-inspection-date').value, 
+                deliveryDate: document.getElementById('new-delivery-date').value, 
+                specialNotes: document.getElementById('new-special-notes').value, 
+                referencePhotos: referencePhotos, 
+                modified_at: Date.now(), 
+                isDeleted: false 
+            };
+            if(!t.order) return alert('请填写 PO#');
+            let ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            if(editingId) {
+                const idx = ts.findIndex(x => x.id === editingId);
+                if(idx !== -1) ts[idx] = t;
+            } else {
+                ts.push(t);
+            }
+            localStorage.setItem('aston_tasks', JSON.stringify(ts));
+            await syncCloud(true);
+            cancelEdit();
+            alert(editingId ? '修改已保存！' : '计划已下达！');
+            refreshMerchTasks();
+        }
+
+        function cancelEdit() {
+            document.getElementById('editing-task-id').value = '';
+            document.getElementById('new-order-no').value = '';
+            document.getElementById('new-factory').value = '';
+            document.getElementById('new-style-desc').value = '';
+            document.getElementById('new-order-qty').value = '';
+            document.getElementById('new-inspection-date').value = '';
+            document.getElementById('new-delivery-date').value = '';
+            document.getElementById('new-special-notes').value = '';
+            referencePhotos = {};
+            renderRefPhotos();
+            document.getElementById('form-title').innerText = '下达检验计划';
+            document.getElementById('submit-btn').innerText = '发送计划 SEND & SYNC';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function editTask(tid) {
+            const ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            const t = ts.find(x => x.id === tid);
+            if(!t) return;
+            document.getElementById('editing-task-id').value = t.id;
+            document.getElementById('new-order-no').value = t.order;
+            document.getElementById('new-factory').value = t.factory;
+            document.getElementById('new-style-desc').value = t.styleDesc || '';
+            document.getElementById('new-order-qty').value = t.orderQty || '';
+            document.getElementById('new-inspection-date').value = t.inspectionDate;
+            document.getElementById('new-delivery-date').value = t.deliveryDate;
+            document.getElementById('new-special-notes').value = t.specialNotes || '';
+            referencePhotos = JSON.parse(JSON.stringify(t.referencePhotos || {}));
+            renderRefPhotos();
+            document.getElementById('form-title').innerText = '修改检验计划';
+            document.getElementById('submit-btn').innerText = '保存修改 SAVE';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function copyTask(tid) {
+            const ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            const t = ts.find(x => x.id === tid);
+            if(!t) return;
+            document.getElementById('new-order-no').value = t.order + '-副本';
+            document.getElementById('new-factory').value = t.factory;
+            document.getElementById('new-style-desc').value = t.styleDesc || '';
+            document.getElementById('new-order-qty').value = t.orderQty || '';
+            document.getElementById('new-inspection-date').value = t.inspectionDate;
+            document.getElementById('new-delivery-date').value = t.deliveryDate;
+            document.getElementById('new-special-notes').value = t.specialNotes || '';
+            referencePhotos = JSON.parse(JSON.stringify(t.referencePhotos || {}));
+            renderRefPhotos();
+            document.getElementById('form-title').innerText = '复制计划 (请修改PO#)';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function previewTask(tid) {
+            const ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]');
+            const t = ts.find(x => x.id === tid);
+            if(!t) return;
+            const photoHtml = Object.values(t.referencePhotos || {}).map(src => `<img src="${src}" class="w-full rounded-xl mb-2">`).join('');
+            document.getElementById('preview-content').innerHTML = `
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-black border-b pb-2">${t.order}</h2>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div><p class="text-slate-400 font-bold uppercase text-[10px]">款式描述 Style</p><p class="font-black">${t.styleDesc || '--'}</p></div>
+                        <div><p class="text-slate-400 font-bold uppercase text-[10px]">订单数量 Qty</p><p class="font-black">${t.orderQty || '--'} 件</p></div>
+                        <div><p class="text-slate-400 font-bold uppercase text-[10px]">验货日期 Insp</p><p class="font-black">${t.inspectionDate}</p></div>
+                        <div><p class="text-slate-400 font-bold uppercase text-[10px]">交期日期 Deliv</p><p class="font-black">${t.deliveryDate}</p></div>
+                    </div>
+                    <div><p class="text-slate-400 font-bold uppercase text-[10px]">工厂 Factory</p><p class="font-black">${t.factory}</p></div>
+                    <div><p class="text-slate-400 font-bold uppercase text-[10px]">指派检验员 Inspector</p><p class="font-black text-blue-600">${t.inspector}</p></div>
+                    <div class="bg-slate-50 p-4 rounded-2xl"><p class="text-slate-400 font-bold uppercase text-[10px] mb-1">备注说明 Notes</p><p class="text-xs font-bold">${t.specialNotes || '无'}</p></div>
+                    <div><p class="text-slate-400 font-bold uppercase text-[10px] mb-2">参考图片 Photos</p><div class="grid grid-cols-2 gap-2">${photoHtml}</div></div>
+                </div>
+            `;
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        function closePreview() { document.getElementById('preview-modal').classList.add('hidden'); }
+
+        async function deleteTask(tid) {
+            if(confirm('确定要删除此计划吗？云端也会同步删除。')){ 
+                let ts = JSON.parse(localStorage.getItem('aston_tasks')||'[]'); 
+                const idx = ts.findIndex(x => x.id === tid);
+                if(idx !== -1) { ts[idx].isDeleted = true; ts[idx].modified_at = Date.now(); localStorage.setItem('aston_tasks', JSON.stringify(ts)); } 
+                await syncCloud(true);
+                refreshMerchTasks(); 
+            }
+        }
+
+        function getDaysDiff(d) { if(!d) return "--"; const today = new Date(); today.setHours(0,0,0,0); const target = new Date(d); target.setHours(0,0,0,0); return Math.ceil((target-today)/(86400000)); }
+        function renderBadge(days, label) { 
+            const cls = days < 0 ? 'badge-red' : (days <= 3 ? 'badge-blue' : 'badge-green'); 
+            const text = days < 0 ? '逾期 '+Math.abs(days) : '剩余 '+days;
+            return `<div class="badge ${cls}">${text}天</div>`; 
+        }
+
+        function refreshMerchTasks() {
+            const ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => !t.isDeleted).reverse();
+            document.getElementById('merch-task-list').innerHTML = ts.map(t => {
+                const photoHtml = Object.values(t.referencePhotos || {}).map(src => `<img src="${src}" class="card-img">`).join('');
+                return `
+                <div class="task-card p-5 border shadow-sm">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="font-black text-lg">${t.order}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">${t.factory}</div>
+                        </div>
+                        <div class="text-right flex flex-col gap-1 items-end">
+                            <div class="date-line">${t.inspectionDate} ${renderBadge(getDaysDiff(t.inspectionDate), '验货')}</div>
+                            <div class="date-line">${t.deliveryDate} ${renderBadge(getDaysDiff(t.deliveryDate), '交期')}</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl mb-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><span class="label-sm">款式描述 Style</span><div class="text-[10px] font-black truncate">${t.styleDesc || '--'}</div></div>
+                            <div><span class="label-sm">订单数量 Qty</span><div class="text-[10px] font-black">${t.orderQty || '--'} 件</div></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 overflow-x-auto no-scrollbar py-1 mb-3">${photoHtml}</div>
+                    <div class="flex gap-2 pt-3 border-t">
+                        <button onclick="previewTask('${t.id}')" class="btn-action bg-slate-100 text-slate-900">预览</button>
+                        <button onclick="editTask('${t.id}')" class="btn-action bg-blue-50 text-blue-600">修改</button>
+                        <button onclick="copyTask('${t.id}')" class="btn-action bg-green-50 text-green-600">复制</button>
+                        <button onclick="deleteTask('${t.id}')" class="btn-action bg-red-50 text-red-600">删除</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function refreshInspectorTasks() {
+            const ts = JSON.parse(localStorage.getItem('aston_tasks') || '[]').filter(t => t.inspector === currentUser && !t.isDeleted).reverse();
+            document.getElementById('inspector-task-list').innerHTML = ts.map(t => {
+                const photoHtml = Object.values(t.referencePhotos || {}).map(src => `<img src="${src}" class="card-img">`).join('');
+                return `
+                <div class="task-card p-5 border shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="font-black text-lg">${t.order}</div>
+                            <div class="text-[10px] text-slate-400 font-bold">${t.factory}</div>
+                        </div>
+                        <div class="text-right flex flex-col gap-1 items-end">
+                            <div class="date-line">${t.inspectionDate} ${renderBadge(getDaysDiff(t.inspectionDate), '验货')}</div>
+                            <div class="date-line">${t.deliveryDate} ${renderBadge(getDaysDiff(t.deliveryDate), '交期')}</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl mb-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><span class="label-sm">款式描述 Style</span><div class="text-xs font-black truncate">${t.styleDesc || '--'}</div></div>
+                            <div><span class="label-sm">订单数量 Qty</span><div class="text-xs font-black">${t.orderQty || '--'} 件</div></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 overflow-x-auto no-scrollbar py-1 mb-3">${photoHtml}</div>
+                    <div class="flex gap-2">
+                        <button onclick="previewTask('${t.id}')" class="w-24 py-3 bg-slate-100 text-slate-900 text-[10px] font-black rounded-xl shadow-md">详细预览</button>
+                        <button class="flex-1 py-3 bg-blue-600 text-white text-[10px] font-black rounded-xl shadow-md">开始检验 START</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function processReferenceImage(input, id) { const r = new FileReader(); r.onload = async e => { const c = await compressImage(e.target.result); referencePhotos[id] = c; renderRefPhotos(); }; r.readAsDataURL(input.files[0]); }
+        function renderRefPhotos() { const container = document.getElementById('merch-photo-container'); container.innerHTML = ''; Object.entries(referencePhotos).forEach(([pid, src]) => { const d = document.createElement('div'); d.className="relative"; d.innerHTML = `<img src="${src}" class="w-full h-16 object-cover rounded-lg"><button onclick="rotateRefPhoto('${pid}')" class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center font-bold shadow-sm">🔄</button><button onclick="deleteRefPhoto('${pid}')" class="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[8px] flex items-center justify-center font-bold shadow-sm">×</button>`; container.appendChild(d); }); }
+        function addMerchPhotoSlot() { const id = 'ref_'+Date.now(); const input = document.createElement('input'); input.type='file'; input.accept='image/*'; input.onchange = (e) => processReferenceImage(e.target, id); input.click(); }
+        function deleteRefPhoto(id){ delete referencePhotos[id]; renderRefPhotos(); }
+        async function rotateRefPhoto(id) { referencePhotos[id] = await rotateImage(referencePhotos[id]); renderRefPhotos(); }
+    </script>
+</body>
+</html>
