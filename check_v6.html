@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASTON 验货系统 v6.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-slate-900">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-24">
+        <header class="bg-slate-900 text-white p-5 sticky top-0 z-20 flex justify-between items-center shadow-lg">
+            <div>
+                <h1 class="text-xl font-black italic tracking-tighter leading-none">ASTON Q.A. <span class="text-blue-500 italic">v6.0</span></h1>
+                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Professional Factory Inspection</p>
+            </div>
+            <button onclick="loadPlans()" class="p-2 bg-slate-800 rounded-lg active:scale-90 transition-all border border-slate-700">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </header>
+
+        <!-- 任务选择区 (无缝对接核心) -->
+        <section class="p-5">
+            <div class="bg-blue-600 p-6 rounded-[2rem] shadow-xl shadow-blue-100 mb-6">
+                <label class="block text-[10px] font-black text-blue-200 mb-2 tracking-widest uppercase italic">Select Order Plan</label>
+                <select id="planSelector" onchange="applyPlan(this.value)" class="w-full bg-blue-700 text-white p-3 rounded-xl border-none outline-none font-bold text-lg appearance-none cursor-pointer">
+                    <option value="">-- LOADING PLANS... --</option>
+                </select>
+                <p id="planCount" class="text-[9px] text-blue-300 mt-2 font-bold italic">Checking cloud for new orders...</p>
+            </div>
+
+            <!-- 详情区 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Style Name</label>
+                    <input type="text" id="styleDesc" readonly class="w-full bg-transparent text-sm font-black text-slate-600 outline-none" placeholder="Auto-fill">
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Target Qty</label>
+                    <input type="text" id="orderQty" readonly class="w-full bg-transparent text-sm font-black text-slate-600 outline-none" placeholder="Auto-fill">
+                </div>
+            </div>
+        </section>
+
+        <!-- 检查点 -->
+        <section class="px-5">
+            <h2 class="text-[10px] font-black text-slate-400 mb-4 tracking-widest uppercase flex items-center">
+                <span class="w-6 h-[1px] bg-slate-200 mr-3"></span> Quality Checklist
+            </h2>
+            <div id="defectContainer" class="grid grid-cols-2 gap-2"></div>
+        </section>
+
+        <!-- 现场快照 -->
+        <section class="p-5 mb-10">
+            <h2 class="text-[10px] font-black text-slate-400 mb-4 tracking-widest uppercase flex items-center">
+                <span class="w-6 h-[1px] bg-slate-200 mr-3"></span> Snapshots
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-all shadow-inner">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30">
+                        <div class="text-3xl font-light mb-1">+</div>
+                        <div class="text-[8px] font-black uppercase">Factory Gate</div>
+                    </div>
+                </div>
+                <div class="relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-all shadow-inner">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30">
+                        <div class="text-3xl font-light mb-1">+</div>
+                        <div class="text-[8px] font-black uppercase">Final Check</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 提交按钮 -->
+        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+            <button id="btnSubmit" onclick="uploadData()" class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-2xl shadow-slate-200 active:scale-95 transition-all text-sm tracking-[0.2em] uppercase italic">
+                Send to Synology
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 核心专线逻辑 (v6.0 加固型)
+        const PLAN_ID = "496f86c2d135d46f396a"; // 计划专用 ID
+        const RESULT_ID = "07c1348873426e952613"; // 结果专用 ID
+        
+        let activePlans = [];
+        let selectedDefects = [];
+        const defects = ["Stains", "Skip Stitches", "Shading", "Open Seams", "Measurement", "Zipper Issue", "Loose Thread", "Packing", "Wrong Label", "Print Fault"];
+
+        // 初始化计划
+        async function loadPlans() {
+            const selector = document.getElementById('planSelector');
+            const countLabel = document.getElementById('planCount');
+            selector.innerHTML = '<option value="">-- REFRESHING... --</option>';
+            
+            try {
+                const res = await fetch(`https://api.npoint.io/${PLAN_ID}`, {cache: 'no-cache'});
+                const data = await res.json();
+                if(Array.isArray(data)) {
+                    activePlans = data;
+                    selector.innerHTML = '<option value="">CHOOSE PO#</option>' + 
+                        data.map(p => `<option value="${p.po}">${p.po}</option>`).join('');
+                    countLabel.innerText = `READY: Found ${data.length} orders in queue.`;
+                }
+            } catch(e) {
+                selector.innerHTML = '<option value="">-- PLAN SYNC ERROR --</option>';
+                countLabel.innerText = "Error fetching plans. Try again.";
+            }
+        }
+
+        function applyPlan(po) {
+            const plan = activePlans.find(p => p.po === po);
+            if(plan) {
+                document.getElementById('styleDesc').value = plan.style;
+                document.getElementById('orderQty').value = plan.qty;
+            }
+        }
+
+        // 初始化检查点
+        const container = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-4 text-[10px] font-black bg-white border border-slate-100 rounded-2xl text-slate-400 transition-all text-left flex justify-between items-center";
+            btn.innerHTML = `<span>${d}</span><div class="w-2 h-2 rounded-full bg-slate-100 shadow-inner"></div>`;
+            btn.onclick = () => {
+                const dot = btn.querySelector('div');
+                if(selectedDefects.includes(d)) {
+                    selectedDefects = selectedDefects.filter(i => i !== d);
+                    btn.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                    dot.classList.replace('bg-blue-500', 'bg-slate-100');
+                } else {
+                    selectedDefects.push(d);
+                    btn.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                    dot.classList.replace('bg-slate-100', 'bg-blue-500');
+                }
+            };
+            container.appendChild(btn);
+        });
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const el = document.getElementById(targetId);
+                    el.src = e.target.result;
+                    el.classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadData() {
+            const po = document.getElementById('planSelector').value;
+            if(!po) return alert('Please select a PO# from the plan first!');
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "CONNECTING...";
+
+            const payload = {
+                po: po,
+                style: document.getElementById('styleDesc').value,
+                qty: document.getElementById('orderQty').value,
+                defects: selectedDefects,
+                time: new Date().toLocaleString('zh-CN', { hour12: false }),
+                inspector: "Professional_A"
+            };
+
+            try {
+                // 1. 获取现有结果
+                const res = await fetch(`https://api.npoint.io/${RESULT_ID}`);
+                let current = [];
+                try {
+                    const json = await res.json();
+                    if(Array.isArray(json)) current = json;
+                } catch(e) { console.warn("New storage start"); }
+
+                // 2. 追加新结果
+                current.unshift(payload);
+                if(current.length > 30) current = current.slice(0, 30); // 保留最新30条
+
+                // 3. 推送
+                const saveRes = await fetch(`https://api.npoint.io/${RESULT_ID}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(current)
+                });
+
+                if(!saveRes.ok) throw new Error("Cloud Refused");
+
+                btn.innerText = "SYCHRONIZED ✓";
+                btn.className = "w-full py-5 bg-green-600 text-white font-black rounded-2xl shadow-xl";
+                alert('Inspection saved to bridge. Ready to archive on NAS.');
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerText = "Send to Synology";
+                    btn.className = "w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-2xl";
+                }, 4000);
+
+            } catch (e) {
+                alert('SYNC ERROR: ' + e.message);
+                btn.disabled = false;
+                btn.innerText = "RETRY SYNC";
+            }
+        }
+
+        // 启动加载
+        loadPlans();
+    </script>
+</body>
+</html>
