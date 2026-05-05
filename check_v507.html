@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASTON 验货系统 v5.07</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-20">
+        <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center shadow-md">
+            <h1 class="text-lg font-bold tracking-tighter italic">ASTON Q.A. v5.07</h1>
+            <div id="syncStatus" class="text-[10px] px-2 py-1 bg-blue-700 rounded-full font-mono uppercase tracking-widest">Active</div>
+        </header>
+
+        <section class="p-4 space-y-4">
+            <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 shadow-sm">
+                <label class="block text-[10px] font-black text-blue-800 mb-1 tracking-widest uppercase">Order PO# Number</label>
+                <input type="text" id="poNumber" oninput="this.value = this.value.toUpperCase()" class="w-full p-3 border-2 border-blue-200 rounded-xl text-2xl font-black focus:border-blue-600 outline-none transition-all" placeholder="PO2024">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <input type="text" id="styleDesc" class="p-3 border-2 border-gray-100 rounded-xl text-sm focus:border-blue-400 outline-none" placeholder="Style">
+                <input type="number" id="orderQty" class="p-3 border-2 border-gray-100 rounded-xl text-sm focus:border-blue-400 outline-none" placeholder="Qty">
+            </div>
+        </section>
+
+        <section class="p-4 mb-20">
+            <h2 class="font-black mb-3 text-gray-400 text-[10px] tracking-widest uppercase">Checklist</h2>
+            <div id="defectContainer" class="grid grid-cols-2 gap-2 mb-8"></div>
+            
+            <h2 class="font-black mb-3 text-gray-400 text-[10px] tracking-widest uppercase">Photos</h2>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="relative bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-transform">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <div class="relative bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-transform">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+            </div>
+        </section>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm border-t">
+            <button id="btnSubmit" onclick="uploadData()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all text-lg">
+                SUBMIT INSPECTION
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 金牌专线 ID (已由助手通过后台 API 激活)
+        const CLOUD_API = "https://api.npoint.io/07c1348873426e952613";
+        const defects = ["Stains", "Skip Stitches", "Shading", "Open Seams", "Measurement", "Zipper Issue", "Loose Thread", "Packing", "Wrong Label", "Print Fault"];
+        let selectedDefects = [];
+
+        const container = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-3 text-[10px] font-bold border-2 border-gray-50 rounded-xl bg-gray-50 text-gray-400 transition-all";
+            btn.innerText = d;
+            btn.onclick = () => {
+                btn.classList.toggle('bg-blue-600');
+                btn.classList.toggle('text-white');
+                btn.classList.toggle('border-blue-600');
+                if(selectedDefects.includes(d)) selectedDefects = selectedDefects.filter(i => i !== d);
+                else selectedDefects.push(d);
+            };
+            container.appendChild(btn);
+        });
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById(targetId).src = e.target.result;
+                    document.getElementById(targetId).classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadData() {
+            const po = document.getElementById('poNumber').value;
+            if(!po) return alert('PO# Required!');
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "Syncing...";
+
+            const data = {
+                po: po,
+                style: document.getElementById('styleDesc').value,
+                qty: document.getElementById('orderQty').value,
+                defects: selectedDefects,
+                time: new Date().toLocaleString()
+            };
+
+            try {
+                // 直接抓取最新云端数组
+                const res = await fetch(CLOUD_API);
+                let current = await res.json();
+                if(!Array.isArray(current)) current = [];
+                current.unshift(data);
+                
+                // 强制 POST 更新
+                const saveRes = await fetch(CLOUD_API, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(current)
+                });
+
+                if(!saveRes.ok) throw new Error("Cloud Rejected (" + saveRes.status + ")");
+
+                alert('Inspection Synced Successfully!');
+                btn.innerText = "SUCCESS";
+                btn.className = "w-full py-4 bg-green-600 text-white font-black rounded-2xl";
+            } catch (e) {
+                alert('Sync Error: ' + e.message + "\n\nTry again in a better signal area.");
+                btn.disabled = false;
+                btn.innerText = "RETRY SYNC";
+            }
+        }
+    </script>
+</body>
+</html>
