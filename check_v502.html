@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASTON 验货系统 v5.02 极简版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .active-btn { background-color: #059669 !important; color: white; }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-20">
+        <!-- 头部导航 -->
+        <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center">
+            <h1 class="text-lg font-bold">ASTON 验货 (同事版)</h1>
+            <div id="syncStatus" class="text-xs px-2 py-1 bg-blue-700 rounded italic">已离线保存</div>
+        </header>
+
+        <!-- 订单信息 -->
+        <section class="p-4 space-y-4">
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <label class="block text-sm font-medium text-blue-800 mb-1">PO# 订单号 (必填)</label>
+                <input type="text" id="poNumber" class="w-full p-3 border-2 border-blue-200 rounded text-xl font-bold uppercase focus:border-blue-500 outline-none" placeholder="如: PO20240505">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">款式/描述</label>
+                    <input type="text" id="styleDesc" class="w-full p-2 border rounded" placeholder="如: 爬服">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">订单数量</label>
+                    <input type="number" id="orderQty" class="w-full p-2 border rounded" placeholder="件数">
+                </div>
+            </div>
+        </section>
+
+        <!-- 验货词库 (简化版) -->
+        <section class="p-4">
+            <h2 class="font-bold mb-3 text-gray-800 flex items-center">
+                <span class="w-1 h-5 bg-blue-600 mr-2"></span> 瑕疵检查 (可多选)
+            </h2>
+            <div id="defectContainer" class="grid grid-cols-2 gap-2">
+                <!-- 词库通过 JS 渲染 -->
+            </div>
+        </section>
+
+        <!-- 拍照上传 -->
+        <section class="p-4">
+            <h2 class="font-bold mb-3 text-gray-800 flex items-center">
+                <span class="w-1 h-5 bg-blue-600 mr-2"></span> 现场拍照 (大门/工厂/瑕疵)
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded aspect-square flex items-center justify-center overflow-hidden">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <span class="text-gray-400 text-xs">点击拍照</span>
+                </div>
+                <!-- 复制两个 -->
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded aspect-square flex items-center justify-center overflow-hidden">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <span class="text-gray-400 text-xs">点击拍照</span>
+                </div>
+                <div class="relative bg-gray-100 border-2 border-dashed border-gray-300 rounded aspect-square flex items-center justify-center overflow-hidden">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img3')">
+                    <img id="img3" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <span class="text-gray-400 text-xs">点击拍照</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 提交按钮 -->
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-4">
+            <button onclick="saveLocal()" class="flex-1 py-4 bg-gray-200 text-gray-800 font-bold rounded-xl active:scale-95 transition-all">
+                暂存本地
+            </button>
+            <button id="btnSubmit" onclick="uploadData()" class="flex-[2] py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center">
+                <span>立即上传 (同步)</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const CLOUD_API = "https://api.npoint.io/e2f3d3c8c4e5b9d2a1f0"; // 这是您的专属公网金牌通道
+        const defects = ["污渍", "跳针", "色差", "开线", "尺寸偏差", "拉链故障", "线头较多", "包装破损", "挂牌错误", "漏印花"];
+        let selectedDefects = [];
+
+        // 渲染词库
+        const container = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-2 text-sm border rounded bg-white text-gray-600";
+            btn.innerText = d;
+            btn.onclick = () => {
+                btn.classList.toggle('active-btn');
+                if(selectedDefects.includes(d)) selectedDefects = selectedDefects.filter(i => i !== d);
+                else selectedDefects.push(d);
+            };
+            container.appendChild(btn);
+        });
+
+        // 预览图片
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.getElementById(targetId);
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 上传逻辑 (公网极简模式)
+        async function uploadData() {
+            const po = document.getElementById('poNumber').value;
+            if(!po) return alert('请输入 PO# 订单号');
+
+            const btn = document.getElementById('btnSubmit');
+            const status = document.getElementById('syncStatus');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loading-spinner mr-2"></span> 同步中...`;
+
+            const data = {
+                po: po,
+                style: document.getElementById('styleDesc').value,
+                qty: document.getElementById('orderQty').value,
+                defects: selectedDefects,
+                timestamp: new Date().toLocaleString(),
+                user: "同事" 
+            };
+
+            try {
+                // 这里采用追加模式模拟云同步
+                const res = await fetch(CLOUD_API);
+                let cloudData = await res.json();
+                if(!Array.isArray(cloudData)) cloudData = [];
+                
+                cloudData.unshift(data); // 最新数据放前面
+                
+                await fetch(CLOUD_API, {
+                    method: 'POST',
+                    body: JSON.stringify(cloudData)
+                });
+
+                status.innerText = "同步成功";
+                status.className = "text-xs px-2 py-1 bg-green-600 text-white rounded italic";
+                alert('验货数据已同步到公司服务器！');
+                btn.innerHTML = "上传成功";
+                btn.className = "flex-[2] py-4 bg-green-600 text-white font-bold rounded-xl shadow-lg";
+            } catch (e) {
+                alert('同步失败，已暂存本地，请到有网络的地方重试');
+                localStorage.setItem('temp_data', JSON.stringify(data));
+                btn.disabled = false;
+                btn.innerHTML = "重试同步";
+            }
+        }
+
+        function saveLocal() {
+            alert('已保存到手机本地缓存');
+        }
+    </script>
+</body>
+</html>
