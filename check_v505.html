@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ASTON 验货系统 v5.05</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg pb-20">
+        <header class="bg-blue-600 text-white p-4 sticky top-0 z-10 flex justify-between items-center">
+            <h1 class="text-lg font-bold">ASTON Q.A. v5.05</h1>
+            <div id="syncStatus" class="text-[10px] px-2 py-1 bg-blue-700 rounded italic font-mono">STANDBY</div>
+        </header>
+
+        <section class="p-4 space-y-4">
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <label class="block text-xs font-bold text-blue-800 mb-1">PO#</label>
+                <input type="text" id="poNumber" oninput="this.value = this.value.toUpperCase()" class="w-full p-3 border-2 border-blue-200 rounded-lg text-xl font-bold focus:border-blue-500 outline-none" placeholder="Enter PO Number">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="styleDesc" class="p-2 border rounded-lg text-sm" placeholder="Style Name">
+                <input type="number" id="orderQty" class="p-2 border rounded-lg text-sm" placeholder="Qty">
+            </div>
+        </section>
+
+        <section class="p-4 pb-20">
+            <h2 class="font-bold mb-3 text-gray-800 flex items-center text-sm">
+                <span class="w-1 h-4 bg-blue-600 mr-2 rounded"></span> DEFECTS
+            </h2>
+            <div id="defectContainer" class="grid grid-cols-2 gap-2 mb-6"></div>
+            
+            <h2 class="font-bold mb-3 text-gray-800 flex items-center text-sm">
+                <span class="w-1 h-4 bg-blue-600 mr-2 rounded"></span> PHOTOS
+            </h2>
+            <div class="grid grid-cols-2 gap-2">
+                <div class="relative bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl aspect-square flex items-center justify-center">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <span class="text-gray-400 text-xs">Tap to Photo</span>
+                </div>
+                <div class="relative bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl aspect-square flex items-center justify-center">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <span class="text-gray-400 text-xs">Tap to Photo</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-20">
+            <button id="btnSubmit" onclick="uploadData()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all text-lg">
+                SUBMIT & SYNC
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const CLOUD_API = "https://kvdb.io/K7x2r9p4h9m9a9n9g9e9r9/aston_sync";
+        const defects = ["Stains", "Skip Stitches", "Shading", "Open Seams", "Measurement", "Zipper Issue", "Loose Thread", "Packing", "Wrong Label", "Print Fault"];
+        let selectedDefects = [];
+
+        const container = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-2 text-xs border rounded-lg bg-white text-gray-500";
+            btn.innerText = d;
+            btn.onclick = () => {
+                btn.classList.toggle('bg-blue-600');
+                btn.classList.toggle('text-white');
+                if(selectedDefects.includes(d)) selectedDefects = selectedDefects.filter(i => i !== d);
+                else selectedDefects.push(d);
+            };
+            container.appendChild(btn);
+        });
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById(targetId).src = e.target.result;
+                    document.getElementById(targetId).classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadData() {
+            const po = document.getElementById('poNumber').value;
+            if(!po) return alert('PO# Required!');
+
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "Syncing...";
+
+            const data = {
+                po: po,
+                style: document.getElementById('styleDesc').value,
+                qty: document.getElementById('orderQty').value,
+                defects: selectedDefects,
+                time: new Date().toLocaleString()
+            };
+
+            try {
+                // 1. 获取旧数据
+                let currentData = [];
+                try {
+                    const res = await fetch(CLOUD_API);
+                    if(res.ok) currentData = await res.json();
+                } catch(e) {}
+                
+                if(!Array.isArray(currentData)) currentData = [];
+                currentData.unshift(data);
+                
+                // 2. 使用 PUT 方法保存 (解决 Cloud Save Failed 的关键)
+                const saveRes = await fetch(CLOUD_API, {
+                    method: 'PUT',
+                    body: JSON.stringify(currentData)
+                });
+
+                if(!saveRes.ok) throw new Error("Cloud rejected the data (HTTP " + saveRes.status + ")");
+
+                alert('Synced Successfully!');
+                document.getElementById('syncStatus').innerText = "SYNCED";
+                btn.innerText = "SUCCESS";
+                btn.className = "w-full py-4 bg-green-600 text-white font-bold rounded-2xl";
+            } catch (e) {
+                alert('Sync Failed! ' + e.message + "\n\nTip: Check if your phone has Internet.");
+                btn.disabled = false;
+                btn.innerText = "RETRY";
+            }
+        }
+    </script>
+</body>
+</html>
