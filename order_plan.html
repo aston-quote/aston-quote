@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTON 跟单下单计划系统 v1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-md mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
+        <header class="bg-indigo-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold italic">ASTON 跟单下单</h1>
+            <p class="text-xs opacity-80 mt-1">下达验货计划，实时同步云端</p>
+        </header>
+
+        <div class="p-6 space-y-6">
+            <!-- 核心表单 -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">PO# 订单号</label>
+                    <input type="text" id="planPo" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none uppercase font-bold text-lg" placeholder="必填，如 PO24001">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">款式描述</label>
+                    <input type="text" id="planStyle" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none" placeholder="如：婴儿连体衣">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">订单数量</label>
+                        <input type="number" id="planQty" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none" placeholder="件数">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">计划验货日</label>
+                        <input type="date" id="planDate" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="publishTask()" id="btnPub" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all hover:bg-indigo-700">
+                下达计划 (发布到云端)
+            </button>
+
+            <!-- 列表预览 -->
+            <div class="pt-6 border-t">
+                <h3 class="text-sm font-bold text-gray-400 mb-3 flex justify-between">
+                    <span>当前云端任务池</span>
+                    <button onclick="loadPool()" class="text-indigo-600 text-xs">点击刷新</button>
+                </h3>
+                <div id="poolContainer" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- 动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CLOUD_API = "https://api.npoint.io/e2f3d3c8c4e5b9d2a1f0";
+
+        async function publishTask() {
+            const po = document.getElementById('planPo').value;
+            if(!po) return alert('请输入 PO#');
+
+            const btn = document.getElementById('btnPub');
+            btn.disabled = true;
+            btn.innerText = "同步中...";
+
+            const newTask = {
+                po: po.toUpperCase(),
+                style: document.getElementById('planStyle').value,
+                qty: document.getElementById('planQty').value,
+                planDate: document.getElementById('planDate').value,
+                status: "待验货",
+                type: "plan",
+                createTime: new Date().toLocaleString()
+            };
+
+            try {
+                const res = await fetch(CLOUD_API);
+                let data = await res.json();
+                if(!Array.isArray(data)) data = [];
+
+                // 如果 PO 已存在计划，则更新它
+                const idx = data.findIndex(i => i.po === newTask.po);
+                if(idx > -1) data[idx] = newTask;
+                else data.unshift(newTask);
+
+                await fetch(CLOUD_API, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                alert('计划下达成功！');
+                location.reload();
+            } catch (e) {
+                alert('网络错误，请重试');
+                btn.disabled = false;
+                btn.innerText = "下达计划";
+            }
+        }
+
+        async function loadPool() {
+            const container = document.getElementById('poolContainer');
+            container.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">读取中...</div>';
+            try {
+                const res = await fetch(CLOUD_API);
+                const data = await res.json();
+                container.innerHTML = '';
+                data.filter(i => i.type === 'plan').forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 bg-indigo-50 rounded-lg flex justify-between items-center";
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-bold text-indigo-900">${item.po}</div>
+                            <div class="text-[10px] text-indigo-400">${item.style} | ${item.qty}件</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-2 py-1 bg-white text-indigo-600 rounded-full text-[10px] border border-indigo-200">${item.status}</span>
+                            <div class="text-[8px] text-gray-400 mt-1">${item.planDate || '未定日期'}</div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch(e) {}
+        }
+        loadPool();
+    </script>
+</body>
+</html>
