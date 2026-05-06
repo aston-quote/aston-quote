@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ASTON 任务中心 v7.0 (终极通车版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black text-slate-800 flex items-center">
+                <span class="w-2 h-8 bg-blue-600 mr-3 rounded-full"></span> 任务发布中心 v7.0
+            </h1>
+            <div class="text-[10px] font-black px-3 py-1 bg-green-500 text-white rounded-full">DUAL-CHANNEL ACTIVE</div>
+        </div>
+        
+        <div class="space-y-4 mb-8 bg-slate-50 p-8 rounded-[2rem] border border-slate-200">
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="po" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black uppercase shadow-sm" placeholder="PO号 (如: 001)">
+                <input type="text" id="style" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black shadow-sm" placeholder="款式 (如: Romper)">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" id="qty" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black shadow-sm" placeholder="数量">
+                <button onclick="addPlan()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl active:scale-95 shadow-lg">添加到列表</button>
+            </div>
+        </div>
+
+        <div id="planList" class="space-y-3 mb-10 min-h-[100px] border-2 border-dashed border-slate-100 rounded-3xl p-4"></div>
+
+        <button onclick="pushToCloud()" id="btnPush" class="w-full py-6 bg-slate-900 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] italic text-sm">
+            同步计划到云端 (V7)
+        </button>
+    </div>
+
+    <script>
+        // v7.0 双保险通道
+        const CHAN_A = "https://jsonblob.com/api/jsonBlob/019dfb3a-e88a-7406-92ba-437535a94e29";
+        const CHAN_B = "https://api.npoint.io/08803158c5765790588a";
+        let plans = [];
+
+        function addPlan() {
+            const po = document.getElementById('po').value.toUpperCase();
+            if(!po) return alert("请填写PO！");
+            plans.unshift({ po, style: document.getElementById('style').value || "None", qty: document.getElementById('qty').value || 0 });
+            render();
+            document.getElementById('po').value = ''; document.getElementById('style').value = ''; document.getElementById('qty').value = '';
+        }
+
+        function render() {
+            if(plans.length === 0) {
+                document.getElementById('planList').innerHTML = '<div class="text-center py-10 text-slate-200 font-bold">暂无待发任务</div>';
+                return;
+            }
+            document.getElementById('planList').innerHTML = plans.map((p, i) => `
+                <div class="flex justify-between items-center bg-white p-5 rounded-2xl border shadow-sm">
+                    <div><div class="font-black text-blue-600 text-lg">${p.po}</div><div class="text-[10px] font-bold text-slate-400 uppercase">${p.style} | ${p.qty} PCS</div></div>
+                    <button onclick="plans.splice(${i},1);render()" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-400 rounded-full font-black">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function pushToCloud() {
+            const btn = document.getElementById('btnPush');
+            btn.disabled = true; btn.innerText = "正在开启专线...";
+
+            try {
+                // 尝试通道 A
+                const res = await fetch(CHAN_A, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(plans)
+                });
+                if(!res.ok) throw new Error("A线忙");
+                
+                // 同时备份到通道 B (保证检验员必能看到)
+                fetch(CHAN_B, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(plans) });
+
+                alert("【同步成功】\n任务已发布！检验员打开手机即可开始。");
+                btn.innerText = "已发布 ✓";
+                btn.className = "w-full py-6 bg-green-600 text-white font-black rounded-3xl shadow-xl";
+                setTimeout(() => { btn.disabled = false; btn.innerText = "同步计划到云端 (V7)"; btn.className = "w-full py-6 bg-slate-900 text-white font-black rounded-3xl shadow-2xl"; }, 3000);
+            } catch(e) {
+                alert("专线拥堵，正在尝试备用线路...");
+                // 尝试通道 B
+                try {
+                    const resB = await fetch(CHAN_B, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(plans) });
+                    if(resB.ok) {
+                        alert("备用线路同步成功！");
+                        btn.innerText = "已发布 ✓";
+                    } else { throw new Error(); }
+                } catch(e2) {
+                    alert("发布失败，请检查您的网络是否可以访问外网（如 GitHub/npoint）。");
+                    btn.disabled = false; btn.innerText = "重试发布";
+                }
+            }
+        }
+        render();
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. v7.0 - 终极专业版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .defect-btn.active { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+        .section-pass.active { background-color: #16a34a !important; color: white !important; }
+        .section-fail.active { background-color: #dc2626 !important; color: white !important; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900 pb-32">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
+        <header class="bg-slate-900 text-white p-6 sticky top-0 z-30 flex justify-between items-center shadow-xl">
+            <div>
+                <h1 class="text-xl font-black italic tracking-tighter leading-none text-blue-500">ASTON Q.A.</h1>
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Professional V7.0</p>
+            </div>
+            <button onclick="loadPlans()" class="p-2 bg-slate-800 rounded-xl border border-slate-700 active:scale-90">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </header>
+
+        <section class="p-5">
+            <div class="bg-blue-600 p-6 rounded-[2rem] shadow-xl shadow-blue-100 mb-6 border-b-8 border-blue-900">
+                <label class="block text-[10px] font-black text-blue-200 mb-2 tracking-widest uppercase italic">Select Plan Order</label>
+                <select id="planSelector" onchange="applyPlan(this.value)" class="w-full bg-blue-700 text-white p-4 rounded-2xl border-none outline-none font-black text-lg appearance-none cursor-pointer">
+                    <option value="">-- LOADING... --</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="text" id="styleDesc" readonly class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm font-black text-slate-700 outline-none" placeholder="Style">
+                <input type="text" id="orderQty" readonly class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm font-black text-slate-700 outline-none" placeholder="Qty">
+            </div>
+        </section>
+
+        <!-- 17项瑕疵 -->
+        <section class="px-5 mb-8">
+            <h2 class="text-[11px] font-black text-slate-400 mb-4 tracking-widest uppercase flex items-center"><span class="w-6 h-[1px] bg-slate-200 mr-3"></span> Defect Points</h2>
+            <div id="defectContainer" class="grid grid-cols-3 gap-2"></div>
+        </section>
+
+        <!-- 6组外观检查 -->
+        <section class="px-5 mb-10 text-slate-800">
+            <h2 class="text-[11px] font-black text-slate-400 mb-4 tracking-widest uppercase flex items-center"><span class="w-6 h-[1px] bg-slate-200 mr-3"></span> Section Reviews</h2>
+            <div id="sectionContainer" class="space-y-3"></div>
+        </section>
+
+        <section class="px-5 mb-24">
+            <h2 class="text-[11px] font-black text-slate-400 mb-4 tracking-widest uppercase flex items-center"><span class="w-6 h-[1px] bg-slate-200 mr-3"></span> Required Photos</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="relative bg-slate-100 border-2 border-dashed border-slate-300 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30 text-[8px] font-black uppercase tracking-widest">+ Gate</div>
+                </div>
+                <div class="relative bg-slate-100 border-2 border-dashed border-slate-300 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30 text-[8px] font-black uppercase tracking-widest">+ Defect</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-2xl border-t border-slate-100 z-40">
+            <button id="btnSubmit" onclick="uploadData()" class="w-full py-5 bg-slate-900 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all text-[12px] tracking-[0.4em] uppercase italic italic">
+                Finalize Inspection
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // v7.0 双保险专线
+        const CHAN_A = "https://jsonblob.com/api/jsonBlob/019dfb3a-e88a-7406-92ba-437535a94e29";
+        const CHAN_B = "https://api.npoint.io/08803158c5765790588a";
+        const RESULT_ID = "07c1348873426e952613";
+        
+        const defects = ["Stains/污渍", "Skip Stitch/跳针", "Open Seam/脱线", "Shading/色差", "Measurement/尺寸", "Hole/破洞", "Dirty/脏污", "Wrinkle/折皱", "Zipper/拉链", "Label/标签", "Button/扣子", "Trim/线头", "Packing/包装", "Print/印花", "Fabric/面料", "Odour/异味", "Metal/金属"];
+        const sections = [{ name: "Fabric Check / 面料外观", icon: "🧵" }, { name: "Workmanship / 做工品质", icon: "✂️" }, { name: "Accessories / 辅料配件", icon: "📎" }, { name: "Labeling / 标签唛头", icon: "🏷️" }, { name: "Packaging / 包装规范", icon: "📦" }, { name: "Overall Rating / 总体评价", icon: "⭐" }];
+
+        let activePlans = []; let selectedDefects = []; let sectionStatus = {};
+
+        async function loadPlans() {
+            const selector = document.getElementById('planSelector');
+            selector.innerHTML = '<option value="">-- SYNCING... --</option>';
+            try {
+                // 先尝试 A，不行尝试 B
+                let data = [];
+                try {
+                    const res = await fetch(CHAN_A, {cache: 'no-cache'});
+                    data = await res.json();
+                } catch(e) {
+                    const resB = await fetch(CHAN_B, {cache: 'no-cache'});
+                    data = await resB.json();
+                }
+                if(Array.isArray(data)) {
+                    activePlans = data;
+                    selector.innerHTML = '<option value="">SELECT PO#</option>' + 
+                        data.map(p => `<option value="${p.po}">${p.po}</option>`).join('');
+                }
+            } catch(e) { selector.innerHTML = '<option value="">-- SYNC ERROR --</option>'; }
+        }
+
+        function applyPlan(po) {
+            const plan = activePlans.find(p => p.po === po);
+            if(plan) {
+                document.getElementById('styleDesc').value = plan.style;
+                document.getElementById('orderQty').value = plan.qty + " PCS";
+            }
+        }
+
+        const dContainer = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-2 text-[9px] font-black border-2 border-slate-50 rounded-xl bg-slate-50 text-slate-400 transition-all text-center h-12 flex items-center justify-center leading-tight";
+            btn.innerText = d.split('/')[0];
+            btn.onclick = () => {
+                if(selectedDefects.includes(d)) { selectedDefects = selectedDefects.filter(i => i !== d); btn.classList.remove('active'); }
+                else { selectedDefects.push(d); btn.classList.add('active'); }
+            };
+            dContainer.appendChild(btn);
+        });
+
+        const sContainer = document.getElementById('sectionContainer');
+        sections.forEach(s => {
+            const div = document.createElement('div');
+            div.className = "bg-white border border-slate-100 p-4 rounded-3xl flex items-center justify-between shadow-sm";
+            div.innerHTML = `<div class="flex items-center gap-3"><span class="text-xl">${s.icon}</span><span class="text-[10px] font-black uppercase text-slate-700">${s.name}</span></div><div class="flex gap-2"><button onclick="setSection('${s.name}', 'Pass', this)" class="section-pass w-12 h-10 rounded-xl bg-slate-50 text-slate-400 font-black text-[9px] border transition-all">PASS</button><button onclick="setSection('${s.name}', 'Fail', this)" class="section-fail w-12 h-10 rounded-xl bg-slate-50 text-slate-400 font-black text-[9px] border transition-all">FAIL</button></div>`;
+            sContainer.appendChild(div);
+        });
+
+        function setSection(name, status, btn) {
+            sectionStatus[name] = status; const parent = btn.parentElement;
+            parent.querySelectorAll('button').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+        }
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => { const el = document.getElementById(targetId); el.src = e.target.result; el.classList.remove('hidden'); };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadData() {
+            const po = document.getElementById('planSelector').value; if(!po) return alert('PO# Required!');
+            const btn = document.getElementById('btnSubmit'); btn.disabled = true; btn.innerText = "UPLOADING...";
+            const payload = { po, style: document.getElementById('styleDesc').value, qty: document.getElementById('orderQty').value, defects: selectedDefects, sections: sectionStatus, time: new Date().toLocaleString('zh-CN', { hour12: false }) };
+            try {
+                const res = await fetch(`https://api.npoint.io/${RESULT_ID}`);
+                let current = []; try { current = await res.json(); } catch(e) {}
+                current.unshift(payload);
+                await fetch(`https://api.npoint.io/${RESULT_ID}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(current.slice(0,50)) });
+                btn.innerText = "SUCCESS ✓"; alert('Synced!');
+                setTimeout(() => { btn.disabled = false; btn.innerText = "Finalize Inspection"; }, 3000);
+            } catch (e) { alert('ERROR: ' + e.message); btn.disabled = false; btn.innerText = "RETRY SYNC"; }
+        }
+        loadPlans();
+    </script>
+</body>
+</html>
