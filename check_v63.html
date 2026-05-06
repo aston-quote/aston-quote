@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. v6.3 - 终极稳定版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .defect-btn.active { background-color: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900 pb-32">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-2xl relative">
+        <header class="bg-slate-900 text-white p-5 sticky top-0 z-30 flex justify-between items-center shadow-lg border-b border-slate-800">
+            <div>
+                <h1 class="text-xl font-black italic tracking-tighter leading-none">ASTON Q.A. <span class="text-blue-500 italic text-sm">v6.3</span></h1>
+                <p class="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">Professional Version</p>
+            </div>
+            <button onclick="loadPlans()" class="p-2 bg-slate-800 rounded-xl active:scale-90 transition-all border border-slate-700 shadow-inner">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </header>
+
+        <section class="p-5">
+            <div class="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-[2rem] shadow-xl shadow-blue-100 mb-6 border-b-4 border-blue-900">
+                <label class="block text-[10px] font-black text-blue-200 mb-2 tracking-widest uppercase italic">Step 1: Choose Your Plan</label>
+                <select id="planSelector" onchange="applyPlan(this.value)" class="w-full bg-white/10 text-white p-4 rounded-2xl border border-white/20 outline-none font-black text-lg appearance-none cursor-pointer backdrop-blur-md">
+                    <option value="" class="text-slate-800 italic">-- SELECT PO# --</option>
+                </select>
+                <div class="flex justify-between items-center mt-3">
+                    <p id="planCount" class="text-[9px] text-blue-200 font-bold italic tracking-wide">Ready for action...</p>
+                    <span class="text-[9px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold uppercase">Stable V6.3</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-1 tracking-tighter">Style Name</label>
+                    <input type="text" id="styleDesc" readonly class="w-full bg-transparent text-xs font-black text-slate-700 outline-none" placeholder="Auto-fill">
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase mb-1 tracking-tighter">Order Quantity</label>
+                    <input type="text" id="orderQty" readonly class="w-full bg-transparent text-xs font-black text-slate-700 outline-none" placeholder="Units">
+                </div>
+            </div>
+        </section>
+
+        <section class="px-5 mb-8">
+            <h2 class="text-[11px] font-black text-slate-900 mb-4 tracking-widest uppercase flex items-center">
+                <span class="w-8 h-[2px] bg-red-500 mr-3 rounded-full"></span> 17 Defect Points
+            </h2>
+            <div id="defectContainer" class="grid grid-cols-3 gap-2"></div>
+        </section>
+
+        <section class="px-5 mb-10">
+            <h2 class="text-[11px] font-black text-slate-900 mb-4 tracking-widest uppercase flex items-center">
+                <span class="w-8 h-[2px] bg-blue-500 mr-3 rounded-full"></span> 6 Section Reviews
+            </h2>
+            <div id="sectionContainer" class="space-y-3"></div>
+        </section>
+
+        <section class="px-5 mb-24">
+            <h2 class="text-[11px] font-black text-slate-900 mb-4 tracking-widest uppercase flex items-center">
+                <span class="w-8 h-[2px] bg-slate-900 mr-3 rounded-full"></span> Mandatory Photos
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="relative bg-slate-100 border-2 border-dashed border-slate-300 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-all shadow-inner">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img1')">
+                    <img id="img1" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30">
+                        <div class="text-3xl font-light mb-1">+</div>
+                        <div class="text-[8px] font-black uppercase">Gate Photo</div>
+                    </div>
+                </div>
+                <div class="relative bg-slate-100 border-2 border-dashed border-slate-300 rounded-[2rem] aspect-square flex items-center justify-center overflow-hidden active:scale-95 transition-all shadow-inner">
+                    <input type="file" accept="image/*" capture="camera" class="absolute inset-0 opacity-0 z-10" onchange="previewImg(this, 'img2')">
+                    <img id="img2" class="hidden absolute inset-0 w-full h-full object-cover">
+                    <div class="text-center opacity-30">
+                        <div class="text-3xl font-light mb-1">+</div>
+                        <div class="text-[8px] font-black uppercase">Defect Photo</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-2xl border-t border-slate-100 z-40">
+            <button id="btnSubmit" onclick="uploadData()" class="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-2xl active:scale-95 transition-all text-[11px] tracking-[0.3em] uppercase italic flex items-center justify-center gap-3">
+                Finalize Inspection
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // v6.3 切换至 JSONBlob 稳定专线
+        const PLAN_API = "https://jsonblob.com/api/jsonBlob/019dfb3a-e88a-7406-92ba-437535a94e29";
+        const RESULT_ID = "07c1348873426e952613";
+        
+        const defects = ["Stains/污渍", "Skip Stitch/跳针", "Open Seam/脱线", "Shading/色差", "Measurement/尺寸", "Hole/破洞", "Dirty/脏污", "Wrinkle/折皱", "Zipper/拉链", "Label/标签", "Button/扣子", "Trim/线头", "Packing/包装", "Print/印花", "Fabric/面料", "Odour/异味", "Metal/金属"];
+        const sections = [{ name: "Fabric Check / 面料外观", icon: "🧵" }, { name: "Workmanship / 做工品质", icon: "✂️" }, { name: "Accessories / 辅料配件", icon: "📎" }, { name: "Labeling / 标签唛头", icon: "🏷️" }, { name: "Packaging / 包装规范", icon: "📦" }, { name: "Overall Rating / 总体评价", icon: "⭐" }];
+
+        let activePlans = [];
+        let selectedDefects = [];
+        let sectionStatus = {};
+
+        async function loadPlans() {
+            const selector = document.getElementById('planSelector');
+            selector.innerHTML = '<option value="">-- SYNCING... --</option>';
+            try {
+                const res = await fetch(PLAN_API, {cache: 'no-cache'});
+                const data = await res.json();
+                if(Array.isArray(data)) {
+                    activePlans = data;
+                    selector.innerHTML = '<option value="">CHOOSE PO#</option>' + 
+                        data.map(p => `<option value="${p.po}">${p.po}</option>`).join('');
+                }
+            } catch(e) { selector.innerHTML = '<option value="">-- SYNC ERROR --</option>'; }
+        }
+
+        function applyPlan(po) {
+            const plan = activePlans.find(p => p.po === po);
+            if(plan) {
+                document.getElementById('styleDesc').value = plan.style;
+                document.getElementById('orderQty').value = plan.qty + " Units";
+            }
+        }
+
+        const dContainer = document.getElementById('defectContainer');
+        defects.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = "p-2 text-[9px] font-black border-2 border-slate-50 rounded-xl bg-slate-50 text-slate-400 transition-all text-center h-12 flex items-center justify-center leading-tight";
+            btn.innerText = d.split('/')[0];
+            btn.onclick = () => {
+                if(selectedDefects.includes(d)) {
+                    selectedDefects = selectedDefects.filter(i => i !== d);
+                    btn.classList.remove('active');
+                } else {
+                    selectedDefects.push(d);
+                    btn.classList.add('active');
+                }
+            };
+            dContainer.appendChild(btn);
+        });
+
+        const sContainer = document.getElementById('sectionContainer');
+        sections.forEach(s => {
+            const div = document.createElement('div');
+            div.className = "bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm";
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span class="text-lg">${s.icon}</span>
+                    <span class="text-[10px] font-black uppercase text-slate-700">${s.name}</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="setSection('${s.name}', 'Pass', this)" class="w-10 h-8 rounded-lg bg-slate-50 text-slate-400 font-bold text-[8px] flex items-center justify-center transition-all border">PASS</button>
+                    <button onclick="setSection('${s.name}', 'Fail', this)" class="w-10 h-8 rounded-lg bg-slate-50 text-slate-400 font-bold text-[8px] flex items-center justify-center transition-all border">FAIL</button>
+                </div>
+            `;
+            sContainer.appendChild(div);
+        });
+
+        function setSection(name, status, btn) {
+            sectionStatus[name] = status;
+            const parent = btn.parentElement;
+            parent.querySelectorAll('button').forEach(b => b.className = "w-10 h-8 rounded-lg bg-slate-50 text-slate-400 font-bold text-[8px] flex items-center justify-center transition-all border");
+            btn.className = `w-10 h-8 rounded-lg ${status === 'Pass' ? 'bg-green-600' : 'bg-red-600'} text-white font-bold text-[8px] flex items-center justify-center transition-all border`;
+        }
+
+        function previewImg(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const el = document.getElementById(targetId);
+                    el.src = e.target.result; el.classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadData() {
+            const po = document.getElementById('planSelector').value;
+            if(!po) return alert('Select PO# first!');
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true; btn.innerText = "UPLOADING...";
+            const payload = { po, style: document.getElementById('styleDesc').value, qty: document.getElementById('orderQty').value, defects: selectedDefects, sections: sectionStatus, time: new Date().toLocaleString('zh-CN', { hour12: false }) };
+            try {
+                const res = await fetch(`https://api.npoint.io/${RESULT_ID}`);
+                let current = []; try { current = await res.json(); } catch(e) {}
+                current.unshift(payload);
+                await fetch(`https://api.npoint.io/${RESULT_ID}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(current.slice(0,50)) });
+                btn.innerText = "SUCCESS ✓"; alert('Synced!');
+                setTimeout(() => { btn.disabled = false; btn.innerText = "Finalize Inspection"; }, 3000);
+            } catch (e) { alert('ERROR: ' + e.message); btn.disabled = false; btn.innerText = "RETRY"; }
+        }
+        loadPlans();
+    </script>
+</body>
+</html>

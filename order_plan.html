@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>ASTON 任务发布中心 v6.2 (云端版)</title>
+    <title>ASTON 任务发布中心 v6.3 (超级稳定版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 p-6">
@@ -11,10 +11,9 @@
             <h1 class="text-2xl font-black text-slate-800 flex items-center">
                 <span class="w-2 h-8 bg-blue-600 mr-3 rounded-full"></span> 任务发布中心
             </h1>
-            <div id="statusTag" class="text-[10px] font-black px-3 py-1 bg-green-100 text-green-600 rounded-full">CLOUD READY</div>
+            <div id="statusTag" class="text-[10px] font-black px-3 py-1 bg-green-100 text-green-600 rounded-full">STABLE CLOUD</div>
         </div>
         
-        <!-- 录入区 -->
         <div class="space-y-4 mb-8 bg-slate-50 p-8 rounded-[2rem] border border-slate-200 shadow-inner">
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -37,7 +36,6 @@
             </div>
         </div>
 
-        <!-- 计划预览 -->
         <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">待发布任务预览</h2>
         <div id="planList" class="space-y-3 mb-10 min-h-[100px] border-2 border-dashed border-slate-100 rounded-3xl p-4"></div>
 
@@ -47,8 +45,8 @@
     </div>
 
     <script>
-        // v6.2 云端同步 ID
-        const PLAN_API = "https://api.npoint.io/08803158c5765790588a";
+        // v6.3 切换至超级稳定的 JSONBlob 服务
+        const PLAN_API = "https://jsonblob.com/api/jsonBlob/019dfb3a-e88a-7406-92ba-437535a94e29";
         let plans = [];
 
         function addPlan() {
@@ -84,17 +82,18 @@
             if(plans.length === 0) return alert("请先添加计划！");
             const btn = document.getElementById('btnPush');
             btn.disabled = true;
-            btn.innerText = "正在发布到云端...";
+            btn.innerText = "正在通过专线发布...";
 
             try {
+                // JSONBlob 使用 PUT 来更新
                 const res = await fetch(PLAN_API, {
-                    method: 'POST',
+                    method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(plans)
                 });
 
                 if(res.ok) {
-                    alert("【发布成功】\n\n计划已同步至云端，检验员刷新手机即可看到任务。");
+                    alert("【发布成功】\n\n专线已打通！检验员现在可以选单了。");
                     btn.innerText = "已发布 ✓";
                     btn.className = "w-full py-6 bg-green-600 text-white font-black rounded-3xl shadow-xl";
                     setTimeout(() => {
@@ -102,9 +101,9 @@
                         btn.innerText = "发布计划到检验员手机";
                         btn.className = "w-full py-6 bg-slate-900 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.3em] italic text-sm";
                     }, 3000);
-                } else { throw new Error("服务器繁忙"); }
+                } else { throw new Error("专线忙"); }
             } catch(e) {
-                alert("发布失败，请检查网络后再试。");
+                alert("发布失败：网络专线临时拥堵，请重试。");
                 btn.disabled = false;
                 btn.innerText = "重试发布";
             }
