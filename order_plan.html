@@ -1,128 +1,115 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASTON 跟单下单计划系统 v1.0</title>
+    <title>ASTON 任务发布中心 v6.2 (云端版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 min-h-screen p-4">
-    <div class="max-w-md mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
-        <header class="bg-indigo-600 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold italic">ASTON 跟单下单</h1>
-            <p class="text-xs opacity-80 mt-1">下达验货计划，实时同步云端</p>
-        </header>
-
-        <div class="p-6 space-y-6">
-            <!-- 核心表单 -->
-            <div class="space-y-4">
+<body class="bg-slate-50 p-6">
+    <div class="max-w-2xl mx-auto bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black text-slate-800 flex items-center">
+                <span class="w-2 h-8 bg-blue-600 mr-3 rounded-full"></span> 任务发布中心
+            </h1>
+            <div id="statusTag" class="text-[10px] font-black px-3 py-1 bg-green-100 text-green-600 rounded-full">CLOUD READY</div>
+        </div>
+        
+        <!-- 录入区 -->
+        <div class="space-y-4 mb-8 bg-slate-50 p-8 rounded-[2rem] border border-slate-200 shadow-inner">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">PO# 订单号</label>
-                    <input type="text" id="planPo" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none uppercase font-bold text-lg" placeholder="必填，如 PO24001">
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 tracking-widest uppercase">PO Number</label>
+                    <input type="text" id="po" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black uppercase shadow-sm" placeholder="PO-2024">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">款式描述</label>
-                    <input type="text" id="planStyle" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none" placeholder="如：婴儿连体衣">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">订单数量</label>
-                        <input type="number" id="planQty" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none" placeholder="件数">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">计划验货日</label>
-                        <input type="date" id="planDate" class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:border-indigo-500 outline-none text-sm">
-                    </div>
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 tracking-widest uppercase">Style Name</label>
+                    <input type="text" id="style" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black shadow-sm" placeholder="款式名称">
                 </div>
             </div>
-
-            <button onclick="publishTask()" id="btnPub" class="w-full py-4 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all hover:bg-indigo-700">
-                下达计划 (发布到云端)
-            </button>
-
-            <!-- 列表预览 -->
-            <div class="pt-6 border-t">
-                <h3 class="text-sm font-bold text-gray-400 mb-3 flex justify-between">
-                    <span>当前云端任务池</span>
-                    <button onclick="loadPool()" class="text-indigo-600 text-xs">点击刷新</button>
-                </h3>
-                <div id="poolContainer" class="space-y-2 max-h-60 overflow-y-auto">
-                    <!-- 动态加载 -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 mb-2 tracking-widest uppercase">Target Quantity</label>
+                    <input type="number" id="qty" class="w-full p-4 rounded-2xl border-2 border-white outline-none focus:border-blue-600 font-black shadow-sm" placeholder="1000">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="addPlan()" class="w-full py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg active:scale-95">添加至计划列表</button>
                 </div>
             </div>
         </div>
+
+        <!-- 计划预览 -->
+        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">待发布任务预览</h2>
+        <div id="planList" class="space-y-3 mb-10 min-h-[100px] border-2 border-dashed border-slate-100 rounded-3xl p-4"></div>
+
+        <button onclick="pushToCloud()" id="btnPush" class="w-full py-6 bg-slate-900 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.3em] italic text-sm">
+            发布计划到检验员手机
+        </button>
     </div>
 
     <script>
-        const CLOUD_API = "https://api.npoint.io/e2f3d3c8c4e5b9d2a1f0";
+        // v6.2 云端同步 ID
+        const PLAN_API = "https://api.npoint.io/08803158c5765790588a";
+        let plans = [];
 
-        async function publishTask() {
-            const po = document.getElementById('planPo').value;
-            if(!po) return alert('请输入 PO#');
+        function addPlan() {
+            const po = document.getElementById('po').value.toUpperCase();
+            const style = document.getElementById('style').value;
+            const qty = document.getElementById('qty').value;
+            if(!po || !style) return alert("请完整填写 PO 和款式！");
+            
+            plans.unshift({ po, style, qty });
+            render();
+            document.getElementById('po').value = '';
+            document.getElementById('style').value = '';
+            document.getElementById('qty').value = '';
+        }
 
-            const btn = document.getElementById('btnPub');
+        function render() {
+            if(plans.length === 0) {
+                document.getElementById('planList').innerHTML = '<div class="text-center py-10 text-slate-200 font-bold italic">暂无任务，请在上方录入</div>';
+                return;
+            }
+            document.getElementById('planList').innerHTML = plans.map((p, i) => `
+                <div class="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                    <div>
+                        <div class="font-black text-blue-600 text-lg tracking-tighter">${p.po}</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">${p.style} | ${p.qty} PCS</div>
+                    </div>
+                    <button onclick="plans.splice(${i},1);render()" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-400 rounded-full font-black">×</button>
+                </div>
+            `).join('');
+        }
+
+        async function pushToCloud() {
+            if(plans.length === 0) return alert("请先添加计划！");
+            const btn = document.getElementById('btnPush');
             btn.disabled = true;
-            btn.innerText = "同步中...";
-
-            const newTask = {
-                po: po.toUpperCase(),
-                style: document.getElementById('planStyle').value,
-                qty: document.getElementById('planQty').value,
-                planDate: document.getElementById('planDate').value,
-                status: "待验货",
-                type: "plan",
-                createTime: new Date().toLocaleString()
-            };
+            btn.innerText = "正在发布到云端...";
 
             try {
-                const res = await fetch(CLOUD_API);
-                let data = await res.json();
-                if(!Array.isArray(data)) data = [];
-
-                // 如果 PO 已存在计划，则更新它
-                const idx = data.findIndex(i => i.po === newTask.po);
-                if(idx > -1) data[idx] = newTask;
-                else data.unshift(newTask);
-
-                await fetch(CLOUD_API, {
+                const res = await fetch(PLAN_API, {
                     method: 'POST',
-                    body: JSON.stringify(data)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(plans)
                 });
 
-                alert('计划下达成功！');
-                location.reload();
-            } catch (e) {
-                alert('网络错误，请重试');
+                if(res.ok) {
+                    alert("【发布成功】\n\n计划已同步至云端，检验员刷新手机即可看到任务。");
+                    btn.innerText = "已发布 ✓";
+                    btn.className = "w-full py-6 bg-green-600 text-white font-black rounded-3xl shadow-xl";
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerText = "发布计划到检验员手机";
+                        btn.className = "w-full py-6 bg-slate-900 text-white font-black rounded-3xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.3em] italic text-sm";
+                    }, 3000);
+                } else { throw new Error("服务器繁忙"); }
+            } catch(e) {
+                alert("发布失败，请检查网络后再试。");
                 btn.disabled = false;
-                btn.innerText = "下达计划";
+                btn.innerText = "重试发布";
             }
         }
-
-        async function loadPool() {
-            const container = document.getElementById('poolContainer');
-            container.innerHTML = '<div class="text-center text-xs text-gray-400 py-4">读取中...</div>';
-            try {
-                const res = await fetch(CLOUD_API);
-                const data = await res.json();
-                container.innerHTML = '';
-                data.filter(i => i.type === 'plan').forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "p-3 bg-indigo-50 rounded-lg flex justify-between items-center";
-                    div.innerHTML = `
-                        <div>
-                            <div class="font-bold text-indigo-900">${item.po}</div>
-                            <div class="text-[10px] text-indigo-400">${item.style} | ${item.qty}件</div>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-1 bg-white text-indigo-600 rounded-full text-[10px] border border-indigo-200">${item.status}</span>
-                            <div class="text-[8px] text-gray-400 mt-1">${item.planDate || '未定日期'}</div>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch(e) {}
-        }
-        loadPool();
+        render();
     </script>
 </body>
 </html>
