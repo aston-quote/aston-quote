@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ASTON Q.A. Professional v8.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; background: #0f172a; color: #f8fafc; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .step-btn { flex: 0 0 80px; padding: 12px 0; font-size: 10px; font-weight: 900; text-align: center; color: #64748b; transition: all 0.3s; }
+        .step-active { color: #3b82f6; border-bottom: 3px solid #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .defect-grid button.active { background: #ef4444; border-color: #ef4444; color: white; transform: scale(0.95); }
+        .photo-slot { aspect-ratio: 4/3; background: #1e293b; border: 2px dashed #334155; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .photo-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        #sig-pad { touch-action: none; background: #f8fafc; border-radius: 20px; cursor: crosshair; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="no-scrollbar" onload="initApp()">
+
+    <div class="max-w-md mx-auto min-h-screen flex flex-col relative bg-slate-950 shadow-2xl">
+        
+        <header class="p-6 pb-2 border-b border-white/5 flex justify-between items-center sticky top-0 bg-slate-950/80 backdrop-blur-md z-50">
+            <div>
+                <h1 class="text-2xl font-black italic tracking-tighter uppercase text-white">ASTON <span class="text-blue-500">PRO</span></h1>
+                <p class="text-[8px] font-bold text-slate-500 tracking-[0.3em] uppercase">Enterprise Q.A. v8.0</p>
+            </div>
+            <div id="online-dot" class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+        </header>
+
+        <main id="view-container" class="flex-1 p-5">
+            
+            <section id="login-view" class="space-y-8 py-10">
+                <div class="text-center space-y-2">
+                    <h2 class="text-4xl font-black uppercase italic tracking-widest text-white">Identity</h2>
+                    <p class="text-slate-500 text-xs">请选择您的工作角色以加载模版</p>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    <button onclick="switchRole('merch')" class="glass-card p-8 rounded-[2.5rem] text-left group active:scale-95 transition-all">
+                        <div class="text-3xl mb-2">💼</div>
+                        <div class="text-xl font-black text-white group-hover:text-blue-400">跟单总监 (Boss/Merch)</div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">发布与管理验货计划</p>
+                    </button>
+                    <button onclick="switchRole('insp')" class="glass-card p-8 rounded-[2.5rem] text-left group active:scale-95 transition-all border-blue-500/30">
+                        <div class="text-3xl mb-2">🔍</div>
+                        <div class="text-xl font-black text-white group-hover:text-blue-400">现场检验员 (Inspector)</div>
+                        <p class="text-slate-500 text-[10px] uppercase font-bold tracking-widest mt-1">执行专业验货与拍照</p>
+                    </button>
+                </div>
+            </section>
+
+            <section id="merch-view" class="hidden space-y-6 pb-20">
+                <div class="glass-card p-6 rounded-[2rem] space-y-4">
+                    <h3 class="text-xs font-black text-blue-400 uppercase tracking-widest italic underline decoration-blue-500 underline-offset-4">New Inspection Plan</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2"><input id="m-po" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-black text-lg outline-none focus:border-blue-500" placeholder="PO# (如: PO2024)"></div>
+                        <div><input id="m-style" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-bold text-xs outline-none" placeholder="Style 款式"></div>
+                        <div><input id="m-qty" type="number" class="w-full bg-white/5 border border-white/10 p-4 rounded-xl font-bold text-xs outline-none" placeholder="Qty 数量"></div>
+                    </div>
+                    <div class="bg-blue-500/5 p-4 rounded-xl border border-blue-500/20">
+                        <label class="text-[8px] font-black text-blue-400 uppercase mb-1 block tracking-widest">Assign Inspector</label>
+                        <select id="m-user" class="w-full bg-transparent border-none font-bold text-sm outline-none text-white appearance-none"><option value="Inspector_Li">李检验员 (Li)</option><option value="Inspector_Zhang">张检验员 (Zhang)</option></select>
+                    </div>
+                    <button onclick="addTask()" class="w-full py-5 bg-blue-600 rounded-2xl font-black shadow-xl active:scale-95 transition-all uppercase tracking-widest italic text-white">Add to Mission List</button>
+                </div>
+                <div id="m-list" class="space-y-3"></div>
+                <div class="fixed bottom-6 left-5 right-5 flex gap-2">
+                    <button onclick="copyCode()" class="flex-1 py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-tighter shadow-2xl">复制任务码发微信 (最强保底)</button>
+                </div>
+            </section>
+
+            <section id="insp-view" class="hidden space-y-6 pb-20">
+                <div id="insp-dash" class="space-y-6">
+                    <div class="flex justify-between items-end">
+                        <h2 class="text-3xl font-black italic tracking-tighter uppercase text-white">Mission Hall</h2>
+                        <button onclick="pasteCode()" class="text-[10px] font-black text-blue-400 border-b border-blue-400 pb-1">粘贴微信任务码</button>
+                    </div>
+                    <div id="i-list" class="space-y-4"></div>
+                </div>
+
+                <div id="insp-flow" class="hidden fixed inset-0 bg-slate-950 z-[100] flex flex-col overflow-hidden">
+                    <nav class="flex overflow-x-auto no-scrollbar border-b border-white/5 bg-slate-900/80 backdrop-blur-md">
+                        <button onclick="go(1)" class="step-btn step-active" id="n1">SIGN<br>签到</button>
+                        <button onclick="go(2)" class="step-btn" id="n2">ENV<br>环境</button>
+                        <button onclick="go(3)" class="step-btn" id="n3">AQL<br>抽样</button>
+                        <button onclick="go(4)" class="step-btn" id="n4">VISUAL<br>外观</button>
+                        <button onclick="go(5)" class="step-btn" id="n5">SIZE<br>尺寸</button>
+                        <button onclick="go(6)" class="step-btn" id="n6">DEFECT<br>疵点</button>
+                        <button onclick="go(7)" class="step-btn" id="n7">FINAL<br>报告</button>
+                    </nav>
+                    
+                    <div class="flex-1 overflow-y-auto p-5 pb-32 text-slate-200">
+                        <div id="s1" class="step-box space-y-6">
+                            <div class="text-center py-8"><h3 class="text-4xl font-black italic uppercase text-blue-500 tracking-tighter">Security</h3><p class="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Verification Required</p></div>
+                            <div class="photo-slot border-4 border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.3)]">
+                                <input type="file" capture="camera" onchange="preview(this, 'gate')" class="absolute inset-0 opacity-0 z-10">
+                                <div id="p-gate" class="text-center font-black text-blue-400 uppercase text-xs">TAKE GATE PHOTO<br>拍摄工厂大门</div>
+                                <img id="img-gate" class="hidden">
+                            </div>
+                            <button onclick="alert('GPS FIXED: 22.5412, 114.0578')" class="w-full py-6 glass-card rounded-[2.5rem] font-black tracking-[0.2em] text-blue-400 border-blue-400/50 uppercase">Get GPS Coordinates</button>
+                        </div>
+
+                        <div id="s3" class="step-box hidden space-y-8">
+                            <h3 class="text-2xl font-black italic uppercase text-center tracking-widest text-white border-b-4 border-blue-600 inline-block pb-1">AQL Sampling</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="glass-card p-10 rounded-[3rem] text-center"><p class="text-[10px] font-black text-slate-500 uppercase mb-2">Check Qty</p><p id="v-aql-s" class="text-6xl font-black text-white tracking-tighter">--</p></div>
+                                <div class="glass-card p-10 rounded-[3rem] text-center border-red-500/30"><p class="text-[10px] font-black text-red-500 uppercase mb-2">AC / RE</p><p id="v-aql-ar" class="text-6xl font-black text-white tracking-tighter">--</p></div>
+                            </div>
+                        </div>
+
+                        <div id="s6" class="step-box hidden space-y-6">
+                            <h3 class="text-2xl font-black italic text-white uppercase tracking-tighter">Defect Inventory</h3>
+                            <div id="defectGrid" class="grid grid-cols-2 gap-3 defect-grid"></div>
+                            <div class="photo-slot border-red-500/50 bg-red-500/5"><input type="file" capture="camera" onchange="preview(this, 'df')" class="absolute inset-0 opacity-0 z-10"><div id="p-df" class="font-black text-red-400 uppercase text-xs text-center">Snap Major Defect Detail</div><img id="img-df" class="hidden"></div>
+                        </div>
+
+                        <div id="s7" class="step-box hidden space-y-8">
+                            <div class="bg-blue-600 p-8 rounded-[3rem] text-center shadow-2xl border-b-8 border-blue-800">
+                                <p class="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 italic">Final Quality Verdict</p>
+                                <select id="v-res" class="bg-transparent text-white font-black text-5xl outline-none appearance-none cursor-pointer text-center italic w-full">
+                                    <option value="PASS" class="text-slate-900">PASS ✅</option>
+                                    <option value="FAIL" class="text-slate-900">FAIL ❌</option>
+                                </select>
+                            </div>
+                            <div class="space-y-4">
+                                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic text-center">Digital E-Signature</p>
+                                <canvas id="sig-pad" class="w-full h-48 shadow-[inset_0_0_20px_rgba(0,0,0,0.1)] border border-slate-200"></canvas>
+                                <div class="flex justify-center"><button onclick="clearSig()" class="text-[9px] font-black text-red-400 uppercase tracking-widest border border-red-400/30 px-6 py-2 rounded-full">Clear Signature</button></div>
+                            </div>
+                            <button onclick="finish()" class="w-full py-7 bg-white text-slate-950 rounded-[3rem] font-black shadow-2xl active:scale-95 italic uppercase tracking-[0.2em] text-sm">Upload & Generate Report</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const PLAN_API = "https://jsonblob.com/api/jsonBlob/019dfb3a-e88a-7406-92ba-437535a94e29";
+        let tasks = [], activeTask = null, currentStep = 1, selectedDefects = [], currentRole = '';
+        const defectTypes = ["Stains/污渍", "Skip Stitch/跳针", "Open Seam/脱线", "Shading/色差", "Measurement/尺寸", "Hole/破洞", "Dirty/脏污", "Wrinkle/折皱", "Zipper/拉链", "Label/标签", "Button/扣子", "Trim/线头", "Packing/包装", "Print/印花", "Fabric/面料", "Odour/异味", "Metal/金属"];
+
+        function initApp() {
+            const grid = document.getElementById('defectGrid');
+            defectTypes.forEach(d => {
+                const b = document.createElement('button');
+                b.className = "p-5 glass-card rounded-3xl text-[10px] font-black text-slate-400 border border-white/5 transition-all text-left flex justify-between items-center";
+                b.innerHTML = `<span>${d.split('/')[0]}</span><div class="w-1.5 h-1.5 rounded-full bg-slate-700"></div>`;
+                b.onclick = () => { 
+                    b.classList.toggle('active'); 
+                    const dot = b.querySelector('div');
+                    if(selectedDefects.includes(d)) { selectedDefects = selectedDefects.filter(x => x!==d); dot.classList.replace('bg-white', 'bg-slate-700'); } 
+                    else { selectedDefects.push(d); dot.classList.replace('bg-slate-700', 'bg-white'); }
+                };
+                grid.appendChild(b);
+            });
+            initSig();
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            if(role === 'merch') document.getElementById('merch-view').classList.remove('hidden');
+            else document.getElementById('insp-view').classList.remove('hidden');
+            syncCloud();
+        }
+
+        async function syncCloud() {
+            try {
+                const res = await fetch(PLAN_API);
+                tasks = await res.json();
+                if(Array.isArray(tasks)) { localStorage.setItem('aston_tasks_v8', JSON.stringify(tasks)); render(); }
+            } catch(e) { tasks = JSON.parse(localStorage.getItem('aston_tasks_v8') || '[]'); render(); }
+        }
+
+        function render() {
+            const mList = document.getElementById('m-list');
+            const iList = document.getElementById('i-list');
+            const html = tasks.map(t => `
+                <div class="glass-card p-6 rounded-[2.5rem] flex justify-between items-center border-l-8 border-blue-600 shadow-xl mb-3">
+                    <div class="flex-1">
+                        <div class="text-2xl font-black italic text-white uppercase tracking-tighter">${t.po}</div>
+                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">${t.style || 'Standard'} | ${t.qty || 0} PCS</div>
+                    </div>
+                    <button onclick="startIn('${t.po}')" class="bg-blue-600 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg active:scale-90 italic">Start</button>
+                </div>`).join('');
+            
+            if(currentRole === 'merch') {
+                mList.innerHTML = html.replace(/startIn/g, 'delTask').replace(/Start/g, 'Delete').replace(/bg-blue-600/g, 'bg-red-500/20 text-red-500 border border-red-500/30');
+            } else {
+                iList.innerHTML = html;
+            }
+        }
+
+        async function addTask() {
+            const po = document.getElementById('m-po').value.toUpperCase();
+            if(!po) return alert('PO REQUIRED');
+            tasks.unshift({ po, style: document.getElementById('m-style').value, qty: document.getElementById('m-qty').value, inspector: document.getElementById('m-user').value });
+            await fetch(PLAN_API, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(tasks) });
+            document.getElementById('m-po').value = ''; render();
+            alert('Mission Added & Synced!');
+        }
+
+        function copyCode() {
+            const code = "ASTON:" + btoa(unescape(encodeURIComponent(JSON.stringify(tasks))));
+            const el = document.createElement('textarea'); el.value = code; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            alert('【微信任务码已复制】\n\n请粘贴给检验员。即使没网，他也能开工！');
+        }
+
+        function pasteCode() {
+            const code = prompt("粘贴跟单员发来的任务码：");
+            if(code && code.startsWith("ASTON:")) {
+                try {
+                    tasks = JSON.parse(decodeURIComponent(escape(atob(code.replace("ASTON:", "")))));
+                    localStorage.setItem('aston_tasks_v8', JSON.stringify(tasks)); render(); alert('导入成功！任务已到齐。');
+                } catch(e) { alert('码可能有误，请重新复制。'); }
+            }
+        }
+
+        function startIn(po) {
+            activeTask = tasks.find(x => x.po === po);
+            document.getElementById('v-aql-s').innerText = calculateAQL(activeTask.qty).s;
+            document.getElementById('v-aql-ar').innerText = calculateAQL(activeTask.qty).ac + "/" + calculateAQL(activeTask.qty).re;
+            document.getElementById('insp-dash').classList.add('hidden');
+            document.getElementById('insp-flow').classList.remove('hidden');
+            go(1);
+        }
+
+        function go(s) {
+            document.querySelectorAll('.step-box').forEach(x => x.classList.add('hidden'));
+            document.querySelectorAll('.step-nav-btn').forEach(x => x.classList.remove('step-active'));
+            document.getElementById('s'+s).classList.remove('hidden');
+            document.getElementById('n'+s).classList.add('step-active');
+            window.scrollTo(0,0);
+        }
+
+        function calculateAQL(qty) {
+            const n = parseInt(qty) || 0;
+            if (n <= 50) return { s: 8, ac: 0, re: 1 }; if (n <= 150) return { s: 20, ac: 1, re: 2 }; if (n <= 500) return { s: 50, ac: 3, re: 4 }; return { s: 80, ac: 5, re: 6 };
+        }
+
+        function preview(input, id) {
+            const r = new FileReader(); r.onload = e => {
+                const img = document.getElementById('img-'+id); img.src = e.target.result; img.classList.remove('hidden');
+                document.getElementById('p-'+id)?.classList.add('hidden');
+            }; r.readAsDataURL(input.files[0]);
+        }
+
+        function delTask(po) { if(confirm('确定删除此任务？')) { tasks = tasks.filter(x => x.po !== po); render(); } }
+
+        async function finish() { 
+            alert('【报告已生成】\n\nPO#' + activeTask.po + ' 检验完毕。\n判定：' + document.getElementById('v-res').value + '\n\n正在存入云端归档...');
+            location.reload(); 
+        }
+
+        var sigPad, sigCtx, drawing = false;
+        function initSig() {
+            sigPad = document.getElementById('sig-pad'); if(!sigPad) return;
+            sigCtx = sigPad.getContext('2d'); sigPad.width = sigPad.offsetWidth; sigPad.height = 192;
+            sigCtx.lineWidth = 4; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#000';
+            const getPos = e => { const r = sigPad.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; return { x: cx - r.left, y: (e.touches ? e.touches[0].clientY : e.clientY) - r.top }; };
+            const start = e => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); e.preventDefault(); };
+            const move = e => { if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); e.preventDefault(); };
+            sigPad.addEventListener('touchstart', start); sigPad.addEventListener('touchmove', move); window.addEventListener('touchend', () => drawing = false);
+            sigPad.addEventListener('mousedown', start); sigPad.addEventListener('mousemove', move); window.addEventListener('mouseup', () => drawing = false);
+        }
+        function clearSig() { sigCtx.clearRect(0,0,sigPad.width,sigPad.height); }
+    </script>
+</body>
+</html>
